@@ -21,11 +21,18 @@ def generate_features(case,statistic,kidney,index,intensities,
         name = 'intens'+str(name)
         entry[name] = bin_
     
+    canc_count,cyst_count = 0,0
+    print('feu.generate_features',case,kidney,canc_count,cyst_count)
     if is_labelled:
         for j in range(len(cancer_vols)):
-            if canc2kid[j]==index: entry['cancer_{}_vol'.format(j)] = cancer_vols[j]
+            if canc2kid[j]==index: 
+                entry['cancer_{}_vol'.format(canc_count)] = cancer_vols[j]
+                canc_count+=1
+            
         for j in range(len(cyst_vols)):
-            if cyst2kid[j]==index: entry['cyst_{}_vol'.format(j)] = cyst_vols[j]
+            if cyst2kid[j]==index: 
+                entry['cyst_{}_vol'.format(cyst_count)] = cyst_vols[j]
+                cyst_count+=1
 
     return entry
 

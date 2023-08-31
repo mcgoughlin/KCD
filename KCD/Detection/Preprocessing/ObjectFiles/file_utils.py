@@ -24,14 +24,10 @@ def save_obj(mesh_object, filepath):
 def save_smooth_object_data(entry,c,v,e,obj,obj_name,
                      co_p,c_p,v_p,e_p):
     for folder in [co_p,c_p,v_p,e_p]: create_folder(folder)
-    for bin_, name in zip(*feu.get_hist(c,range_=(-0.5,0.5))):
-        name = 'curv'+str(name)
-        entry[name] = bin_
     save_obj(obj,os.path.join(co_p,obj_name))
     np.save(os.path.join(c_p,obj_name[:-4]),c)
     np.save(os.path.join(v_p,obj_name[:-4]),v)
     np.save(os.path.join(e_p,obj_name[:-4]),e)
-    return entry
 
 def create_and_save_raw_object(raw_v_path,raw_obj_path,
                  obj,name):

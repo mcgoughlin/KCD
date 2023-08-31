@@ -7,12 +7,10 @@ Created on Wed Jan 11 11:42:49 2023
 
 import bpy
 import bmesh
-from mathutils import Vector
-from math import sqrt, asin
+from math import asin
 import os
 import numpy as np
-import pandas as pd
-import file_utils as fu
+import sys
 
 # Helper function to select vertices
 def select_vertices( obj, indices, end_with_mode ):
@@ -152,36 +150,5 @@ def extract_object_features(obj,name):
     edges = np.asarray([[vert for vert in polygon.vertices] for polygon in obj.data.edges])
     curvatures= mean_curvature( obj)
     return curvatures, vertices,edges
-
-
-if __name__ == "__main__":
-        
-    dataset = 'coreg_ncct'
-    obj_path = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Classification/object_dataset/{}/raw_objs'.format(dataset)
-    save_path = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Classification/object_dataset/{}'.format(dataset)
-    feature_csv_path = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Classification/object_dataset/{}/features_stage1.csv'.format(dataset)
-    cleaned_objs_path = os.path.join(save_path,'cleaned_objs')
-    curvature_path = os.path.join(save_path,'curvatures')
-    vertices_path = os.path.join(save_path,'vertices')
-    edges_path = os.path.join(save_path,'edges')
-    # df = pd.read_csv(feature_csv_path,index_col=0)
-    results = []
-    
-    for obj in os.listdir(obj_path):
-        entry={}
-        if not obj.endswith('.obj'): continue
-        nii_case = '_'.join(obj.split('_')[:-1])+'.nii.gz'
-        side = obj.split('_')[-1][:-4]
-        if side =='central': side = 'centre'
-        entry['case'] = nii_case
-        entry['position'] = side
-        
-        obj_file = smooth_object(obj,obj_path)
-        c,v,e = extract_object_features(obj_file,obj)
-        entry = fu.save_object_data(entry,c,v,e,obj_file,obj,cleaned_objs_path,
-                                 curvature_path,vertices_path,edges_path)
-        results.append(entry)
-        # df2 = pd.merge(left=df,right=pd.DataFrame(results),how='outer')
-        # df2.to_csv(os.path.join(save_path,'features_stage2.csv'))
 
 

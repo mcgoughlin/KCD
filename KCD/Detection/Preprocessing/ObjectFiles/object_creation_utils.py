@@ -136,13 +136,11 @@ def find_orientation(spacing,kidney_centroids,is_axes=True,im=None):
             
 
 def create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
-                   rawv_p,rawo_p,is_testing=False,size_thresh=200):
+                            rawv_p,rawo_p,cleano_p,c_p,v_p,e_p,is_testing=False,size_thresh=200):
     cases = [case for case in os.listdir(im_p) if case.endswith('.nii.gz')]
     cases.sort()
     feature_data = []
-    
     for case in cases:
-        
         ########### LOAD DATA #############
         print(case)
         inf_n = nib.load(os.path.join(infnii_p,case))
@@ -210,19 +208,25 @@ def create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
 
         obj_meta = np.array([[seg_2_mesh(segmentations[i],axes=axes,show=is_testing),case[:-7]+'_{}'.format(kidneys[i])] for i in range(len(kidneys))],dtype=object)
         objs,names = obj_meta[:,0],obj_meta[:,1].astype(str)
-        
+
         for i,statistic in enumerate(statistics):
+            obj_name = names[i]+'.obj'
+            location = locations[i]
             feature_set = feu.generate_features(case,statistic,kidneys[i],i,intensities[i],is_labelled=True,
                                             cancer_vols=cancer_vols,cyst_vols=cyst_vols,canc2kid=canc2kid,cyst2kid=cyst2kid)
+            verts = fu.create_and_save_raw_object(rawv_p,rawo_p,objs[i],names[i])
+            obj_file = gmu.smooth_object(obj_name,rawo_p)
+            c,v,e = gmu.extract_object_features(obj_file,obj_name)
+            for bin_, name in zip(*feu.get_hist(c,range_=(-0.5,0.5))): feature_set['curv'+str(name)] = bin_
+            fu.save_smooth_object_data(feature_set,c,v,e,obj_file,obj_name,cleano_p,curvature_path,vertices_path,edges_path)
             feature_data.append(feature_set)
             
-
-        for obj,name,location in zip(objs,names,locations):
-            verts = fu.create_and_save_raw_object(rawv_p,rawo_p,obj,name)
             if is_testing: 
                 xmin,ymin,zmin,xmax,ymax,zmax = location
                 verts_displaced = np.round(verts+np.array([xmin,ymin,zmin]))
                 tu.plot_obj_onlabel(verts_displaced,axes,inf_4mm)
+            
+
 
         ########### TESTING #############
         if is_testing: 
@@ -237,7 +241,7 @@ def create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
     return feature_data
 
 def create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
-                   rawv_p,rawo_p,is_testing=False,size_thresh=200):
+                   rawv_p,rawo_p,cleano_p,c_p,v_p,e_p,is_testing=False,size_thresh=200):
     fu.create_folder(save_dir), fu.create_folder(rawv_p),fu.create_folder(rawo_p)
 
     cases = [case for case in os.listdir(im_p) if case.endswith('.nii.gz')]
@@ -296,22 +300,26 @@ def create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
         if not ((inf.shape[lr]==512) and (inf.shape[ud] == 512)): 
             print("Strange im shape:",inf.shape)
             continue
-
-        for i,statistic in enumerate(statistics):
-            feature_set = feu.generate_features(case,statistic,kidneys[i],i,intensities[i],is_labelled=False)
-            feature_data.append(feature_set)
-            
-            
+        
         obj_meta = np.array([[seg_2_mesh(segmentations[i],axes=axes,show=is_testing),case[:-7]+'_{}'.format(kidneys[i])] for i in range(len(kidneys))],dtype=object)
         objs,names = obj_meta[:,0],obj_meta[:,1].astype(str)
 
-        for obj,name,location in zip(objs,names,locations):
-            verts = fu.create_and_save_raw_object(rawv_p,rawo_p,obj,name)
+        for i,statistic in enumerate(statistics):
+            obj_name = names[i]+'.obj'
+            location = locations[i]
+            feature_set = feu.generate_features(case,statistic,kidneys[i],i,intensities[i],is_labelled=False)
+            verts = fu.create_and_save_raw_object(rawv_p,rawo_p,objs[i],names[i])
+            obj_file = gmu.smooth_object(obj_name,rawo_p)
+            c,v,e = gmu.extract_object_features(obj_file,obj_name)
+            for bin_, name in zip(*feu.get_hist(c,range_=(-0.5,0.5))): feature_set['curv'+str(name)] = bin_
+            fu.save_smooth_object_data(feature_set,c,v,e,obj_file,obj_name,cleano_p,curvature_path,vertices_path,edges_path)
+            feature_data.append(feature_set)
+            
             if is_testing: 
                 xmin,ymin,zmin,xmax,ymax,zmax = location
                 verts_displaced = np.round(verts+np.array([xmin,ymin,zmin]))
                 tu.plot_obj_onlabel(verts_displaced,axes,inf_4mm)
-                    
+
         ########### TESTING #############
         if is_testing: 
             # Printing statistics for testing 
@@ -319,7 +327,6 @@ def create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
             # Plotting images for testing
             if single_kidney_flag: tu.plot_all_single_kidney(im,centre,centroids[0],kidneys[0],[ud_bone,lr_bone],axes=axes,is_labelled=False)
             else: tu.plot_all_double_kidney(im,centre,centroids,kidneys,axes=axes,is_labelled=False)
-
         print()
     return feature_data
     
@@ -336,36 +343,24 @@ if __name__ == '__main__':
     save_dir = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Classification/object_dataset/{}'.format(dataset)
     rawv_p = os.path.join(save_dir,"raw_vertices")
     rawo_p = os.path.join(save_dir,"raw_objs")
-    is_testing=True
-    
-    feature_data = create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,rawv_p,rawo_p,is_testing=is_testing)
-    # feature_data = create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,rawv_p,rawo_p,is_testing=is_testing)
-
-    df = pd.DataFrame(feature_data)
-    df.to_csv(os.path.join(save_dir,'features_stage1.csv'))
-    
-    feature_csv_path = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Classification/object_dataset/{}/features_stage1.csv'.format(dataset)
     cleaned_objs_path = os.path.join(save_dir,'cleaned_objs')
     curvature_path = os.path.join(save_dir,'curvatures')
     vertices_path = os.path.join(save_dir,'vertices')
     edges_path = os.path.join(save_dir,'edges')
-    # df = pd.read_csv(feature_csv_path,index_col=0)
-    results = []
+    is_testing=False
     
-    for obj in os.listdir(rawo_p):
-        entry={}
-        if not obj.endswith('.obj'): continue
-        nii_case = '_'.join(obj.split('_')[:-1])+'.nii.gz'
-        side = obj.split('_')[-1][:-4]
-        if side =='central': side = 'centre'
-        entry['case'] = nii_case
-        entry['position'] = side
-        
-        obj_file = gmu.smooth_object(obj,rawo_p)
-        c,v,e = gmu.extract_object_features(obj_file,obj)
-        entry = fu.save_smooth_object_data(entry,c,v,e,obj_file,obj,cleaned_objs_path,
-                                 curvature_path,vertices_path,edges_path)
-        results.append(entry)
-        
-    df2 = pd.merge(left=df,right=pd.DataFrame(results),how='outer')
-    df2.to_csv(os.path.join(save_dir,'features_stage2.csv'))
+    feature_data = create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
+                                         rawv_p,rawo_p,cleaned_objs_path,curvature_path,
+                                         vertices_path,edges_path,is_testing=is_testing)
+    df = pd.DataFrame(feature_data)
+    df.to_csv(os.path.join(save_dir,'features_labelled.csv'))
+    
+    # feature_data = create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
+    #                                      rawv_p,rawo_p,cleaned_objs_path,curvature_path,
+    #                                      vertices_path,edges_path,is_testing=is_testing)
+    # df = pd.DataFrame(feature_data)
+    # df.to_csv(os.path.join(save_dir,'features_unlabelled.csv'))
+
+    
+
+
