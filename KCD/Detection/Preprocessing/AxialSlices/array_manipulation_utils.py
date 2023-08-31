@@ -77,17 +77,11 @@ def nifti_2_correctarr(im_n):
     
     ##flips image along correct axis according to image properties
     flip_im = sitk.Flip(im, np.diag(aff[:3,:3]<-0).tolist())
-    
-    
     nda = np.rot90(sitk.GetArrayViewFromImage(flip_im))
     return nda.copy()
 
 def get_spacing(im_nib):
-    spacing = np.abs(im_nib.header['pixdim'][1:4])
-    temp = spacing[1]
-    spacing[1]=spacing[0]
-    spacing[0]=temp
-    return spacing
+    return np.abs(im_nib.header['pixdim'][1:4])
 
 def find_orientation(spacing,kidney_centroids):
     rounded_spacing = np.around(spacing,decimals=2)
