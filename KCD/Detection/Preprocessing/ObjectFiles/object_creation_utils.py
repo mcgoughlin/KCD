@@ -12,6 +12,7 @@ import feature_extraction_utils as feu
 import graph_smoothing_utils as gmu
 import file_utils as fu
 import csv
+
 def nifti_2_correctarr(im_n):
     aff = im_n.affine
     im = sitk.GetImageFromArray(im_n.get_fdata())
@@ -137,11 +138,14 @@ def find_orientation(spacing,kidney_centroids,is_axes=True,im=None):
             
 
 def create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
-                            rawv_p,rawo_p,cleano_p,c_p,v_p,e_p,is_testing=False,
-                            size_thresh=200,overwrite=True):
+                            is_testing=False,size_thresh=200,overwrite=True):
+    
+    fu.create_folder(save_dir)
+    rawv_p,rawo_p,cleano_p,c_p,v_p,e_p = fu.setup_save_folders(save_dir)
+    
     cases = [case for case in os.listdir(im_p) if case.endswith('.nii.gz')]
     cases.sort()
-    
+
     feature_fp = os.path.join(save_dir,'features_labelled.csv')
     if overwrite: 
         access='w'
@@ -232,7 +236,7 @@ def create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
                 c,v,e = gmu.extract_object_features(obj_file,obj_name)
                 feature_set = feu.generate_features(case,statistic,c,kidneys[i],i,intensities[i],is_labelled=True,
                                                 cancer_vols=cancer_vols,cyst_vols=cyst_vols,canc2kid=canc2kid,cyst2kid=cyst2kid)
-                fu.save_smooth_object_data(feature_set,c,v,e,obj_file,obj_name,cleano_p,curvature_path,vertices_path,edges_path)
+                fu.save_smooth_object_data(feature_set,c,v,e,obj_file,obj_name,cleano_p,c_p,v_p,e_p)
 
                 csv_writer = csv.DictWriter(feature_file, fieldnames=list(feature_set.keys()))
                 if ((case_index ==0) and (i==0))and ((not csv_exists)or overwrite):csv_writer.writeheader()
@@ -255,13 +259,14 @@ def create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
             print()
 
 def create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
-                   rawv_p,rawo_p,cleano_p,c_p,v_p,e_p,is_testing=False,
-                   size_thresh=200,overwrite=True):
-    fu.create_folder(save_dir), fu.create_folder(rawv_p),fu.create_folder(rawo_p)
-
+                   is_testing=False,size_thresh=200,overwrite=True):
+    
+    fu.create_folder(save_dir)
+    rawv_p,rawo_p,cleano_p,c_p,v_p,e_p = fu.setup_save_folders(save_dir)
+    
     cases = [case for case in os.listdir(im_p) if case.endswith('.nii.gz')]
     cases.sort()
-    
+
     feature_fp = os.path.join(save_dir,'features_unlabelled.csv')
     if overwrite: 
         access='w'
@@ -269,10 +274,15 @@ def create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
     else: 
         access='a'
         csv_exists = os.path.exists(feature_fp)
-    with open(feature_fp, access, newline="") as feature_file:  
+    with open(feature_fp, access, newline="") as feature_file:   
         for case_index,case in enumerate(cases):
             ########### LOAD DATA #############
             print(case)
+            if csv_exists:
+                with open(feature_fp, "r") as csv_check:
+                    written_cases =[row['case'] for row in csv.DictReader(csv_check)]
+                    if len(written_cases)==0:csv_exists=False
+                    elif case in written_cases:continue
             inf_n = nib.load(os.path.join(infnii_p,case))
             inf = nifti_2_correctarr(inf_n)
             kid_data = np.array(get_masses(inf>0,20),dtype=object)
@@ -333,7 +343,7 @@ def create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
                 obj_file = gmu.smooth_object(obj_name,rawo_p)
                 c,v,e = gmu.extract_object_features(obj_file,obj_name)
                 feature_set = feu.generate_features(case,statistic,c,kidneys[i],i,intensities[i],is_labelled=False)
-                fu.save_smooth_object_data(feature_set,c,v,e,obj_file,obj_name,cleano_p,curvature_path,vertices_path,edges_path)
+                fu.save_smooth_object_data(feature_set,c,v,e,obj_file,obj_name,cleano_p,c_p,v_p,e_p)
 
                 csv_writer = csv.DictWriter(feature_file, fieldnames=list(feature_set.keys()))
                 if ((case_index ==0) and (i==0))and ((not csv_exists)or overwrite):csv_writer.writeheader()
@@ -351,31 +361,3 @@ def create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
                 # Plotting images for testing
                 if single_kidney_flag: tu.plot_all_single_kidney(im,centre,centroids[0],kidneys[0],[ud_bone,lr_bone],axes=axes,is_labelled=False)
                 else: tu.plot_all_double_kidney(im,centre,centroids,kidneys,axes=axes,is_labelled=False)
-
-    
-
-if __name__ == '__main__':
-
-    import pandas as pd
-    dataset = 'coreg_ncct'
-    im_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/images/'.format(dataset)
-    infnpy_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/predictions_npy/{}/[4 4 4]mm/'.format(dataset)
-    infnii_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/predictions_nii/{}/[4 4 4]mm/'.format(dataset)
-    lb_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/coreg_ncct/labels/'
-    save_dir = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Classification/object_dataset/{}'.format(dataset)
-    rawv_p = os.path.join(save_dir,"raw_vertices")
-    rawo_p = os.path.join(save_dir,"raw_objs")
-    cleaned_objs_path = os.path.join(save_dir,'cleaned_objs')
-    curvature_path = os.path.join(save_dir,'curvatures')
-    vertices_path = os.path.join(save_dir,'vertices')
-    edges_path = os.path.join(save_dir,'edges')
-    is_testing_code=False
-    
-    # create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
-    #                                      rawv_p,rawo_p,cleaned_objs_path,curvature_path,
-    #                                      vertices_path,edges_path,is_testing=is_testing_code,
-    #                                      overwrite=False)
-    
-    create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
-                                          rawv_p,rawo_p,cleaned_objs_path,curvature_path,
-                                          vertices_path,edges_path,is_testing=is_testing_code)

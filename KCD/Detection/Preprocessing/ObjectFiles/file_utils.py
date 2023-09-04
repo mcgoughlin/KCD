@@ -7,6 +7,16 @@ import open3d as o3d
 
 def create_folder(folder):
     if not os.path.exists(folder):os.mkdir(folder)
+    
+def setup_save_folders(save_dir):
+    rawv_p = os.path.join(save_dir,"raw_vertices")
+    rawo_p = os.path.join(save_dir,"raw_objs")
+    cleano_p = os.path.join(save_dir,'cleaned_objs')
+    c_p = os.path.join(save_dir,'curvatures')
+    v_p = os.path.join(save_dir,'vertices')
+    e_p = os.path.join(save_dir,'edges')
+    
+    return rawv_p,rawo_p,cleano_p,c_p,v_p,e_p
 
 def save_obj(mesh_object, filepath):
     with open(filepath, 'w') as f:
