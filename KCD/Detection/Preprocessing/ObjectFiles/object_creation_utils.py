@@ -99,8 +99,9 @@ def seg_2_mesh(segmentation,axes=None, show=False):
     return np.array([verts,faces],dtype=object)
     
 def find_orientation(spacing,kidney_centroids,is_axes=True,im=None):
-    rounded_spacing = np.around(spacing,decimals=2)
-    assert(2 in np.unique(rounded_spacing,return_counts=True)[1])
+    rounded_spacing = np.around(spacing,decimals=1)
+
+    if not (2 in np.unique(rounded_spacing,return_counts=True)[1]): return 0,0,0
     inplane_spacing = stats.mode(rounded_spacing,keepdims=False)[0]
     indices = np.array([0,1,2])
     axial = indices[rounded_spacing!=inplane_spacing][0]
@@ -112,12 +113,14 @@ def find_orientation(spacing,kidney_centroids,is_axes=True,im=None):
             first_half = im[:256]
             second_half = im[256:]
             
-        # there should only be one plane of symmetry in a CT scan(roughly): 
-        # from the axial perspective that splits the spine in half. Thus, the symmetrical 
-        # plane for bones should be up-down. We know the axial plane already, so to determine 
-        # up-down, we simplysplit image along the first non-axial slice, and compare bone 
+        # there should only be one (rough) plane of symmetry in a CT scan: 
+        # from the axial perspective that splits the spine in half - leftright when facing person. 
+        # Thus, the symmetrical 
+        # plane for bones should be up-down. We know the axial plane index already, so to determine 
+        # up-down, we simplysplit image along the first non-axial dimension and in half,
+        # and compare bone 
         # totals in each half. if these are roughly similar (within 30% of each other) - we 
-        # say this is symmetry, and therefor the up-down plane.
+        # say this is symmetry, and therefore the up-down plane.
         try:first_total = np.array(regionprops((first_half>250).astype(int))[0].area)
         except(IndexError):first_total=0 # index error occurs when not a single bit of bone occurs
         try:second_total = np.array(regionprops((second_half>250).astype(int))[0].area)
@@ -166,9 +169,10 @@ def create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
             inf_n = nib.load(os.path.join(infnii_p,case))
             inf = nifti_2_correctarr(inf_n)
             kid_data = np.array(get_masses(inf>0,20),dtype=object)
+            if len(kid_data)==0:continue
             
             im_n = nib.load(os.path.join(im_p,case))
-            inf_4mm = np.load(os.path.join(infnpy_p,case[:-7]+'.npy'))
+            inf_4mm = np.load(os.path.join(infnpy_p,case[:-7]+'.npy'),allow_pickle=True)
             lb_n = nib.load(os.path.join(lb_p,case))
         
             im = nifti_2_correctarr(im_n)
@@ -176,8 +180,10 @@ def create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
             
             spacing = inf_n.header['pixdim'][1:4]
             spacing_axes = find_orientation(spacing,kid_data[:,1],is_axes=False)
+            if spacing_axes == (0,0,0):continue
             z_spac,inplane_spac = spacing[spacing_axes[0]], spacing[spacing_axes[1]]
             axes = find_orientation(im.shape,kid_data[:,1],is_axes=True,im=im)
+            if axes == (0,0,0):continue
             axial,lr,ud = axes
             vox_volmm = np.prod(spacing)
             
@@ -288,14 +294,16 @@ def create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
             kid_data = np.array(get_masses(inf>0,20),dtype=object)
             
             im_n = nib.load(os.path.join(im_p,case))
-            inf_4mm = np.load(os.path.join(infnpy_p,case[:-7]+'.npy'))    
+            inf_4mm = np.load(os.path.join(infnpy_p,case[:-7]+'.npy'),allow_pickle=True)    
             im = nifti_2_correctarr(im_n)
             
             spacing = inf_n.header['pixdim'][1:4]
             spacing_axes = find_orientation(spacing,kid_data[:,1],is_axes=False)
+            if spacing_axes == (0,0,0):continue
             z_spac,inplane_spac = spacing[spacing_axes[0]], spacing[spacing_axes[1]]
     
             axes = find_orientation(im.shape,kid_data[:,1],im=im)
+            if axes == (0,0,0):continue
             axial,lr,ud = axes
             
             if axial == 0:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/z_spac,4/inplane_spac,4/inplane_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])

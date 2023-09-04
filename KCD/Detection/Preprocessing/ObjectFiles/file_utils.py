@@ -16,7 +16,11 @@ def setup_save_folders(save_dir):
     v_p = os.path.join(save_dir,'vertices')
     e_p = os.path.join(save_dir,'edges')
     
-    return rawv_p,rawo_p,cleano_p,c_p,v_p,e_p
+    folders = rawv_p,rawo_p,cleano_p,c_p,v_p,e_p
+    
+    for fold in folders: create_folder(fold)
+    
+    return folders
 
 def save_obj(mesh_object, filepath):
     with open(filepath, 'w') as f:
