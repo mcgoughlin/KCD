@@ -11,7 +11,7 @@ import test_utils as tu
 import feature_extraction_utils as feu
 import graph_smoothing_utils as gmu
 import file_utils as fu
-
+import csv
 def nifti_2_correctarr(im_n):
     aff = im_n.affine
     im = sitk.GetImageFromArray(im_n.get_fdata())
@@ -117,10 +117,11 @@ def find_orientation(spacing,kidney_centroids,is_axes=True,im=None):
         # up-down, we simplysplit image along the first non-axial slice, and compare bone 
         # totals in each half. if these are roughly similar (within 30% of each other) - we 
         # say this is symmetry, and therefor the up-down plane.
-            
-        first_total = np.array(regionprops((first_half>250).astype(int))[0].area)
-        second_total = np.array(regionprops((second_half>250).astype(int))[0].area)
-        fraction = first_total/second_total
+        try:first_total = np.array(regionprops((first_half>250).astype(int))[0].area)
+        except(IndexError):first_total=0 # index error occurs when not a single bit of bone occurs
+        try:second_total = np.array(regionprops((second_half>250).astype(int))[0].area)
+        except(IndexError):second_total=0
+        fraction = first_total/(second_total+1e-6)
         if (fraction>0.7) and (fraction < 1.3):
             if axial==0: lr,ud, = 1,2
             elif axial ==1:lr,ud=0,2
@@ -136,205 +137,226 @@ def find_orientation(spacing,kidney_centroids,is_axes=True,im=None):
             
 
 def create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
-                            rawv_p,rawo_p,cleano_p,c_p,v_p,e_p,is_testing=False,size_thresh=200):
+                            rawv_p,rawo_p,cleano_p,c_p,v_p,e_p,is_testing=False,
+                            size_thresh=200,overwrite=True):
     cases = [case for case in os.listdir(im_p) if case.endswith('.nii.gz')]
     cases.sort()
-    feature_data = []
-    for case in cases:
-        ########### LOAD DATA #############
-        print(case)
-        inf_n = nib.load(os.path.join(infnii_p,case))
-        inf = nifti_2_correctarr(inf_n)
-        kid_data = np.array(get_masses(inf>0,20),dtype=object)
-        
-        im_n = nib.load(os.path.join(im_p,case))
-        inf_4mm = np.load(os.path.join(infnpy_p,case[:-7]+'.npy'))
-        lb_n = nib.load(os.path.join(lb_p,case))
     
-        im = nifti_2_correctarr(im_n)
-        lb = nifti_2_correctarr(lb_n)
-        
-        spacing = inf_n.header['pixdim'][1:4]
-        spacing_axes = find_orientation(spacing,kid_data[:,1],is_axes=False)
-        z_spac,inplane_spac = spacing[spacing_axes[0]], spacing[spacing_axes[1]]
+    feature_fp = os.path.join(save_dir,'features_labelled.csv')
+    if overwrite: 
+        access='w'
+        csv_exists=False
+    else: 
+        access='a'
+        csv_exists = os.path.exists(feature_fp)
+    with open(feature_fp, access, newline="") as feature_file:   
+        for case_index,case in enumerate(cases):
+            ########### LOAD DATA #############
+            print(case)
+            if csv_exists:
+                with open(feature_fp, "r") as csv_check:
+                    written_cases =[row['case'] for row in csv.DictReader(csv_check)]
+                    if len(written_cases)==0:csv_exists=False
+                    elif case in written_cases:continue
 
-        axes = find_orientation(im.shape,kid_data[:,1],im=im)
-        axial,lr,ud = axes
-        vox_volmm = np.prod(spacing)
-        
-        if axial == 0:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/z_spac,4/inplane_spac,4/inplane_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])
-        elif axial == 1:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/inplane_spac,4/z_spac,4/inplane_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])
-        else:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/inplane_spac,4/inplane_spac,4/z_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])
-        
-        inference_statistics = np.asarray([[im.image_filled.sum()*(4**3), im.solidity,im.axis_major_length*4,im.axis_minor_length*4,*im.inertia_tensor_eigvals] for im,_ in get_masses(inf_4mm==1,size_thresh)])
-        inference_segmentations = [im.image_filled for im,_ in get_masses(inf_4mm==1,size_thresh)]
-        inference_locations = [im.bbox for im,_ in get_masses(inf_4mm>0,size_thresh)]
-        inference_intensity = [im.image_intensity for im,_ in get_masses(inf,size_thresh,im)]
-
-        if len(inference_centroids)==1:
-            print(case, "has 1 kidney")
-            single_kidney_flag=  True
-            # check if sole kidney is central, and retrieve centroid of bone-attenuating tissue 
-            central_kidney_flag, ud_bone, lr_bone = is_sole_kidney_central(inference_centroids,im,inf,inf_n.header['pixdim'][3], axes=axes)
-            if central_kidney_flag:kidneys = ['central']
-            elif inference_centroids[0][lr] - lr_bone > 0: kidneys = ['left']
-            else:kidneys = ['right']
-            print("Sole kidney is in location {}.".format(kidneys[0]))
-        else:
-            if (len(inference_centroids)==0) or (len(inference_centroids)>2):continue
-            # assert(len(inference_centroids)==2)
-            single_kidney_flag=  False
-            if inference_centroids[0][lr] < inference_centroids[1][lr]: kidneys = ['right','left']
-            else: kidneys = ['left','right']
+            inf_n = nib.load(os.path.join(infnii_p,case))
+            inf = nifti_2_correctarr(inf_n)
+            kid_data = np.array(get_masses(inf>0,20),dtype=object)
             
-        centroids,statistics = [*inference_centroids], [*inference_statistics]
-        segmentations = [*inference_segmentations]
-        intensities = [*inference_intensity]
-        locations = [*inference_locations]
-        centre = np.mean(centroids,axis=0)
-
-        if not ((inf.shape[lr]==512) and (inf.shape[ud] == 512)): 
-            print("Strange im shape:",inf.shape)
-            continue
+            im_n = nib.load(os.path.join(im_p,case))
+            inf_4mm = np.load(os.path.join(infnpy_p,case[:-7]+'.npy'))
+            lb_n = nib.load(os.path.join(lb_p,case))
         
-        lb_cancers = np.array([np.array(centroid) for _, centroid in get_masses(lb==2,size_thresh/10)])
-        lb_cysts = np.array([np.array(centroid) for _, centroid in get_masses(lb==3,size_thresh/10)])
-        
-        canc2kid = assign_labels_2_kidneys(centroids,lb_cancers)
-        cyst2kid = assign_labels_2_kidneys(centroids,lb_cysts)
-        
-        cancer_vols = np.asarray([im.area*vox_volmm for im,centroid in get_masses(lb==2,size_thresh/10)])
-        cyst_vols = np.asarray([im.area*vox_volmm for im,centroid in get_masses(lb==3,size_thresh/10)])
-
-        obj_meta = np.array([[seg_2_mesh(segmentations[i],axes=axes,show=is_testing),case[:-7]+'_{}'.format(kidneys[i])] for i in range(len(kidneys))],dtype=object)
-        objs,names = obj_meta[:,0],obj_meta[:,1].astype(str)
-
-        for i,statistic in enumerate(statistics):
-            obj_name = names[i]+'.obj'
-            location = locations[i]
-            feature_set = feu.generate_features(case,statistic,kidneys[i],i,intensities[i],is_labelled=True,
-                                            cancer_vols=cancer_vols,cyst_vols=cyst_vols,canc2kid=canc2kid,cyst2kid=cyst2kid)
-            verts = fu.create_and_save_raw_object(rawv_p,rawo_p,objs[i],names[i])
-            obj_file = gmu.smooth_object(obj_name,rawo_p)
-            c,v,e = gmu.extract_object_features(obj_file,obj_name)
-            for bin_, name in zip(*feu.get_hist(c,range_=(-0.5,0.5))): feature_set['curv'+str(name)] = bin_
-            fu.save_smooth_object_data(feature_set,c,v,e,obj_file,obj_name,cleano_p,curvature_path,vertices_path,edges_path)
-            feature_data.append(feature_set)
+            im = nifti_2_correctarr(im_n)
+            lb = nifti_2_correctarr(lb_n)
             
+            spacing = inf_n.header['pixdim'][1:4]
+            spacing_axes = find_orientation(spacing,kid_data[:,1],is_axes=False)
+            z_spac,inplane_spac = spacing[spacing_axes[0]], spacing[spacing_axes[1]]
+            axes = find_orientation(im.shape,kid_data[:,1],is_axes=True,im=im)
+            axial,lr,ud = axes
+            vox_volmm = np.prod(spacing)
+            
+            if axial == 0:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/z_spac,4/inplane_spac,4/inplane_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])
+            elif axial == 1:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/inplane_spac,4/z_spac,4/inplane_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])
+            else:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/inplane_spac,4/inplane_spac,4/z_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])
+            
+            inference_statistics = np.asarray([[im.image_filled.sum()*(4**3), im.solidity,im.axis_major_length*4,im.axis_minor_length*4,*im.inertia_tensor_eigvals] for im,_ in get_masses(inf_4mm==1,size_thresh)])
+            inference_segmentations = [im.image_filled for im,_ in get_masses(inf_4mm==1,size_thresh)]
+            inference_locations = [im.bbox for im,_ in get_masses(inf_4mm>0,size_thresh)]
+            inference_intensity = [im.image_intensity for im,_ in get_masses(inf,size_thresh,im)]
+    
+            if len(inference_centroids)==1:
+                print(case, "has 1 kidney")
+                single_kidney_flag=  True
+                # check if sole kidney is central, and retrieve centroid of bone-attenuating tissue 
+                central_kidney_flag, ud_bone, lr_bone = is_sole_kidney_central(inference_centroids,im,inf,inf_n.header['pixdim'][3], axes=axes)
+                if central_kidney_flag:kidneys = ['central']
+                elif inference_centroids[0][lr] - lr_bone > 0: kidneys = ['left']
+                else:kidneys = ['right']
+                print("Sole kidney is in location {}.".format(kidneys[0]))
+            else:
+                if (len(inference_centroids)==0) or (len(inference_centroids)>2):continue
+                # assert(len(inference_centroids)==2)
+                single_kidney_flag=  False
+                if inference_centroids[0][lr] < inference_centroids[1][lr]: kidneys = ['right','left']
+                else: kidneys = ['left','right']
+                
+            centroids,statistics = [*inference_centroids], [*inference_statistics]
+            segmentations = [*inference_segmentations]
+            intensities = [*inference_intensity]
+            locations = [*inference_locations]
+            centre = np.mean(centroids,axis=0)
+    
+            if not ((inf.shape[lr]==512) and (inf.shape[ud] == 512)): 
+                print("Strange im shape:",inf.shape)
+                continue
+            
+            lb_cancers = np.array([np.array(centroid) for _, centroid in get_masses(lb==2,size_thresh/10)])
+            lb_cysts = np.array([np.array(centroid) for _, centroid in get_masses(lb==3,size_thresh/10)])
+            
+            canc2kid = assign_labels_2_kidneys(centroids,lb_cancers)
+            cyst2kid = assign_labels_2_kidneys(centroids,lb_cysts)
+            
+            cancer_vols = np.asarray([im.area*vox_volmm for im,centroid in get_masses(lb==2,size_thresh/10)])
+            cyst_vols = np.asarray([im.area*vox_volmm for im,centroid in get_masses(lb==3,size_thresh/10)])
+    
+            obj_meta = np.array([[seg_2_mesh(segmentations[i],axes=axes,show=is_testing),case[:-7]+'_{}'.format(kidneys[i])] for i in range(len(kidneys))],dtype=object)
+            objs,names = obj_meta[:,0],obj_meta[:,1].astype(str)
+    
+            for i,statistic in enumerate(statistics):
+                obj_name = names[i]+'.obj'
+                location = locations[i]
+                verts = fu.create_and_save_raw_object(rawv_p,rawo_p,objs[i],names[i])
+                obj_file = gmu.smooth_object(obj_name,rawo_p)
+                c,v,e = gmu.extract_object_features(obj_file,obj_name)
+                feature_set = feu.generate_features(case,statistic,c,kidneys[i],i,intensities[i],is_labelled=True,
+                                                cancer_vols=cancer_vols,cyst_vols=cyst_vols,canc2kid=canc2kid,cyst2kid=cyst2kid)
+                fu.save_smooth_object_data(feature_set,c,v,e,obj_file,obj_name,cleano_p,curvature_path,vertices_path,edges_path)
+
+                csv_writer = csv.DictWriter(feature_file, fieldnames=list(feature_set.keys()))
+                if ((case_index ==0) and (i==0))and ((not csv_exists)or overwrite):csv_writer.writeheader()
+                csv_writer.writerow(feature_set)    
+                
+                if is_testing: 
+                    xmin,ymin,zmin,xmax,ymax,zmax = location
+                    verts_displaced = np.round(verts+np.array([xmin,ymin,zmin]))
+                    tu.plot_obj_onlabel(verts_displaced,axes,inf_4mm)
+
+            ########### TESTING #############
             if is_testing: 
-                xmin,ymin,zmin,xmax,ymax,zmax = location
-                verts_displaced = np.round(verts+np.array([xmin,ymin,zmin]))
-                tu.plot_obj_onlabel(verts_displaced,axes,inf_4mm)
-            
-
-
-        ########### TESTING #############
-        if is_testing: 
-            # Printing statistics for testing 
-            for i, (vol, convexity, majdim, mindim, _,_,_) in enumerate(statistics):print("{} kidney has a volume of {:.3f}cm cubed.".format(kidneys[i],vol/1000)) 
-            for vol,assoc in zip(cancer_vols,canc2kid):print("Cancer has a volume of {:.3f}cm cubed, and belongs to the {} kidney.".format(vol/1000,kidneys[assoc]))
-            for vol,assoc in zip(cyst_vols,cyst2kid): print("Cyst has a volume of {:.3f}cm cubed, and belongs to the {} kidney.".format(vol/1000,kidneys[assoc]))
-            # Plotting images for testing
-            if single_kidney_flag: tu.plot_all_single_kidney(im,centre,centroids[0],kidneys[0],[ud_bone,lr_bone],axes,is_labelled=True,lb_cancers=lb_cancers,lb_cysts=lb_cysts)
-            else: tu.plot_all_double_kidney(im,centre,centroids,kidneys,axes,is_labelled=True,lb_cancers=lb_cancers,lb_cysts=lb_cysts)
-        print()
-    return feature_data
+                # Printing statistics for testing 
+                for i, (vol, convexity, majdim, mindim, _,_,_) in enumerate(statistics):print("{} kidney has a volume of {:.3f}cm cubed.".format(kidneys[i],vol/1000)) 
+                for vol,assoc in zip(cancer_vols,canc2kid):print("Cancer has a volume of {:.3f}cm cubed, and belongs to the {} kidney.".format(vol/1000,kidneys[assoc]))
+                for vol,assoc in zip(cyst_vols,cyst2kid): print("Cyst has a volume of {:.3f}cm cubed, and belongs to the {} kidney.".format(vol/1000,kidneys[assoc]))
+                # Plotting images for testing
+                if single_kidney_flag: tu.plot_all_single_kidney(im,centre,centroids[0],kidneys[0],[ud_bone,lr_bone],axes,is_labelled=True,lb_cancers=lb_cancers,lb_cysts=lb_cysts)
+                else: tu.plot_all_double_kidney(im,centre,centroids,kidneys,axes,is_labelled=True,lb_cancers=lb_cancers,lb_cysts=lb_cysts)
+            print()
 
 def create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
-                   rawv_p,rawo_p,cleano_p,c_p,v_p,e_p,is_testing=False,size_thresh=200):
+                   rawv_p,rawo_p,cleano_p,c_p,v_p,e_p,is_testing=False,
+                   size_thresh=200,overwrite=True):
     fu.create_folder(save_dir), fu.create_folder(rawv_p),fu.create_folder(rawo_p)
 
     cases = [case for case in os.listdir(im_p) if case.endswith('.nii.gz')]
     cases.sort()
-    feature_data = []
     
-    for case in cases:
-        ########### LOAD DATA #############
-        print(case)
-        inf_n = nib.load(os.path.join(infnii_p,case))
-        inf = nifti_2_correctarr(inf_n)
-        kid_data = np.array(get_masses(inf>0,20),dtype=object)
-        
-        im_n = nib.load(os.path.join(im_p,case))
-        inf_4mm = np.load(os.path.join(infnpy_p,case[:-7]+'.npy'))    
-        im = nifti_2_correctarr(im_n)
-        
-        spacing = inf_n.header['pixdim'][1:4]
-        spacing_axes = find_orientation(spacing,kid_data[:,1],is_axes=False)
-        z_spac,inplane_spac = spacing[spacing_axes[0]], spacing[spacing_axes[1]]
-
-        axes = find_orientation(im.shape,kid_data[:,1],im=im)
-        axial,lr,ud = axes
-        
-        if axial == 0:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/z_spac,4/inplane_spac,4/inplane_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])
-        elif axial == 1:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/inplane_spac,4/z_spac,4/inplane_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])
-        else:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/inplane_spac,4/inplane_spac,4/z_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])
-        
-        inference_statistics = np.asarray([[im.image_filled.sum()*(4**3), im.solidity,im.axis_major_length*4,im.axis_minor_length*4,*im.inertia_tensor_eigvals] for im,_ in get_masses(inf_4mm==1,size_thresh)])
-        inference_segmentations = [im.image_filled for im,_ in get_masses(inf_4mm==1,size_thresh)]
-        inference_locations = [im.bbox for im,_ in get_masses(inf_4mm==1,size_thresh)]
-        inference_intensity = [im.image_intensity for im,_ in get_masses(inf,size_thresh,im)]
-
-        if len(inference_centroids)==1:
-            print(case, "has 1 kidney")
-            single_kidney_flag=  True
-            # check if sole kidney is central, and retrieve centroid of bone-attenuating tissue 
-            central_kidney_flag, ud_bone, lr_bone = is_sole_kidney_central(inference_centroids,im,inf,inf_n.header['pixdim'][3], axes=axes)
-            if central_kidney_flag:kidneys = ['central']
-            elif inference_centroids[0][lr] - lr_bone > 0: kidneys = ['left']
-            else:kidneys = ['right']
-            print("Sole kidney is in location {}.".format(kidneys[0]))
-        else:
-            if (len(inference_centroids)==0) or (len(inference_centroids)>2):continue
-            # assert(len(inference_centroids)==2)
-            single_kidney_flag=  False
-            if inference_centroids[0][lr] < inference_centroids[1][lr]: kidneys = ['right','left']
-            else: kidneys = ['left','right']
+    feature_fp = os.path.join(save_dir,'features_unlabelled.csv')
+    if overwrite: 
+        access='w'
+        csv_exists=False
+    else: 
+        access='a'
+        csv_exists = os.path.exists(feature_fp)
+    with open(feature_fp, access, newline="") as feature_file:  
+        for case_index,case in enumerate(cases):
+            ########### LOAD DATA #############
+            print(case)
+            inf_n = nib.load(os.path.join(infnii_p,case))
+            inf = nifti_2_correctarr(inf_n)
+            kid_data = np.array(get_masses(inf>0,20),dtype=object)
             
-        centroids,statistics = [*inference_centroids], [*inference_statistics]
-        segmentations = [*inference_segmentations]
-        intensities = [*inference_intensity]
-        locations = [*inference_locations]
-        centre = np.mean(centroids,axis=0)
-
-        if not ((inf.shape[lr]==512) and (inf.shape[ud] == 512)): 
-            print("Strange im shape:",inf.shape)
-            continue
-        
-        obj_meta = np.array([[seg_2_mesh(segmentations[i],axes=axes,show=is_testing),case[:-7]+'_{}'.format(kidneys[i])] for i in range(len(kidneys))],dtype=object)
-        objs,names = obj_meta[:,0],obj_meta[:,1].astype(str)
-
-        for i,statistic in enumerate(statistics):
-            obj_name = names[i]+'.obj'
-            location = locations[i]
-            feature_set = feu.generate_features(case,statistic,kidneys[i],i,intensities[i],is_labelled=False)
-            verts = fu.create_and_save_raw_object(rawv_p,rawo_p,objs[i],names[i])
-            obj_file = gmu.smooth_object(obj_name,rawo_p)
-            c,v,e = gmu.extract_object_features(obj_file,obj_name)
-            for bin_, name in zip(*feu.get_hist(c,range_=(-0.5,0.5))): feature_set['curv'+str(name)] = bin_
-            fu.save_smooth_object_data(feature_set,c,v,e,obj_file,obj_name,cleano_p,curvature_path,vertices_path,edges_path)
-            feature_data.append(feature_set)
+            im_n = nib.load(os.path.join(im_p,case))
+            inf_4mm = np.load(os.path.join(infnpy_p,case[:-7]+'.npy'))    
+            im = nifti_2_correctarr(im_n)
             
+            spacing = inf_n.header['pixdim'][1:4]
+            spacing_axes = find_orientation(spacing,kid_data[:,1],is_axes=False)
+            z_spac,inplane_spac = spacing[spacing_axes[0]], spacing[spacing_axes[1]]
+    
+            axes = find_orientation(im.shape,kid_data[:,1],im=im)
+            axial,lr,ud = axes
+            
+            if axial == 0:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/z_spac,4/inplane_spac,4/inplane_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])
+            elif axial == 1:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/inplane_spac,4/z_spac,4/inplane_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])
+            else:inference_centroids = np.asarray([np.asarray([*centroid])*np.array([4/inplane_spac,4/inplane_spac,4/z_spac]) for _,centroid in get_masses(inf_4mm==1,size_thresh)])
+            
+            inference_statistics = np.asarray([[im.image_filled.sum()*(4**3), im.solidity,im.axis_major_length*4,im.axis_minor_length*4,*im.inertia_tensor_eigvals] for im,_ in get_masses(inf_4mm==1,size_thresh)])
+            inference_segmentations = [im.image_filled for im,_ in get_masses(inf_4mm==1,size_thresh)]
+            inference_locations = [im.bbox for im,_ in get_masses(inf_4mm==1,size_thresh)]
+            inference_intensity = [im.image_intensity for im,_ in get_masses(inf,size_thresh,im)]
+    
+            if len(inference_centroids)==1:
+                print(case, "has 1 kidney")
+                single_kidney_flag=  True
+                # check if sole kidney is central, and retrieve centroid of bone-attenuating tissue 
+                central_kidney_flag, ud_bone, lr_bone = is_sole_kidney_central(inference_centroids,im,inf,inf_n.header['pixdim'][3], axes=axes)
+                if central_kidney_flag:kidneys = ['central']
+                elif inference_centroids[0][lr] - lr_bone > 0: kidneys = ['left']
+                else:kidneys = ['right']
+                print("Sole kidney is in location {}.".format(kidneys[0]))
+            else:
+                if (len(inference_centroids)==0) or (len(inference_centroids)>2):continue
+                # assert(len(inference_centroids)==2)
+                single_kidney_flag=  False
+                if inference_centroids[0][lr] < inference_centroids[1][lr]: kidneys = ['right','left']
+                else: kidneys = ['left','right']
+                
+            centroids,statistics = [*inference_centroids], [*inference_statistics]
+            segmentations = [*inference_segmentations]
+            intensities = [*inference_intensity]
+            locations = [*inference_locations]
+            centre = np.mean(centroids,axis=0)
+    
+            if not ((inf.shape[lr]==512) and (inf.shape[ud] == 512)): 
+                print("Strange im shape:",inf.shape)
+                continue
+            
+            obj_meta = np.array([[seg_2_mesh(segmentations[i],axes=axes,show=is_testing),case[:-7]+'_{}'.format(kidneys[i])] for i in range(len(kidneys))],dtype=object)
+            objs,names = obj_meta[:,0],obj_meta[:,1].astype(str)
+    
+            for i,statistic in enumerate(statistics):
+                obj_name = names[i]+'.obj'
+                location = locations[i]
+                verts = fu.create_and_save_raw_object(rawv_p,rawo_p,objs[i],names[i])
+                obj_file = gmu.smooth_object(obj_name,rawo_p)
+                c,v,e = gmu.extract_object_features(obj_file,obj_name)
+                feature_set = feu.generate_features(case,statistic,c,kidneys[i],i,intensities[i],is_labelled=False)
+                fu.save_smooth_object_data(feature_set,c,v,e,obj_file,obj_name,cleano_p,curvature_path,vertices_path,edges_path)
+
+                csv_writer = csv.DictWriter(feature_file, fieldnames=list(feature_set.keys()))
+                if ((case_index ==0) and (i==0))and ((not csv_exists)or overwrite):csv_writer.writeheader()
+                csv_writer.writerow(feature_set)    
+                
+                if is_testing: 
+                    xmin,ymin,zmin,xmax,ymax,zmax = location
+                    verts_displaced = np.round(verts+np.array([xmin,ymin,zmin]))
+                    tu.plot_obj_onlabel(verts_displaced,axes,inf_4mm)
+    
+            ########### TESTING #############
             if is_testing: 
-                xmin,ymin,zmin,xmax,ymax,zmax = location
-                verts_displaced = np.round(verts+np.array([xmin,ymin,zmin]))
-                tu.plot_obj_onlabel(verts_displaced,axes,inf_4mm)
+                # Printing statistics for testing 
+                for i, (vol, convexity, majdim, mindim, _,_,_) in enumerate(statistics):print("{} kidney has a volume of {:.3f}cm cubed.".format(kidneys[i],vol/1000)) 
+                # Plotting images for testing
+                if single_kidney_flag: tu.plot_all_single_kidney(im,centre,centroids[0],kidneys[0],[ud_bone,lr_bone],axes=axes,is_labelled=False)
+                else: tu.plot_all_double_kidney(im,centre,centroids,kidneys,axes=axes,is_labelled=False)
 
-        ########### TESTING #############
-        if is_testing: 
-            # Printing statistics for testing 
-            for i, (vol, convexity, majdim, mindim, _,_,_) in enumerate(statistics):print("{} kidney has a volume of {:.3f}cm cubed.".format(kidneys[i],vol/1000)) 
-            # Plotting images for testing
-            if single_kidney_flag: tu.plot_all_single_kidney(im,centre,centroids[0],kidneys[0],[ud_bone,lr_bone],axes=axes,is_labelled=False)
-            else: tu.plot_all_double_kidney(im,centre,centroids,kidneys,axes=axes,is_labelled=False)
-        print()
-    return feature_data
     
 
 if __name__ == '__main__':
 
     import pandas as pd
-    # is_testing = True shows you statistics and images as you go. test num allows you to choose what case to start at.
     dataset = 'coreg_ncct'
     im_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/images/'.format(dataset)
     infnpy_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/predictions_npy/{}/[4 4 4]mm/'.format(dataset)
@@ -347,20 +369,13 @@ if __name__ == '__main__':
     curvature_path = os.path.join(save_dir,'curvatures')
     vertices_path = os.path.join(save_dir,'vertices')
     edges_path = os.path.join(save_dir,'edges')
-    is_testing=False
+    is_testing_code=False
     
-    feature_data = create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
-                                         rawv_p,rawo_p,cleaned_objs_path,curvature_path,
-                                         vertices_path,edges_path,is_testing=is_testing)
-    df = pd.DataFrame(feature_data)
-    df.to_csv(os.path.join(save_dir,'features_labelled.csv'))
-    
-    # feature_data = create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
+    # create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
     #                                      rawv_p,rawo_p,cleaned_objs_path,curvature_path,
-    #                                      vertices_path,edges_path,is_testing=is_testing)
-    # df = pd.DataFrame(feature_data)
-    # df.to_csv(os.path.join(save_dir,'features_unlabelled.csv'))
-
+    #                                      vertices_path,edges_path,is_testing=is_testing_code,
+    #                                      overwrite=False)
     
-
-
+    create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
+                                          rawv_p,rawo_p,cleaned_objs_path,curvature_path,
+                                          vertices_path,edges_path,is_testing=is_testing_code)
