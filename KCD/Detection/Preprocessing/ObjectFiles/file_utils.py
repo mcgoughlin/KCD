@@ -1,9 +1,10 @@
 import os
 import numpy as np
-import feature_extraction_utils as feu
+from pandas.api.types import is_numeric_dtype
 from stl import mesh
 from pymeshfix._meshfix import PyTMesh
 import open3d as o3d
+import pandas as pd
 
 def create_folder(folder):
     if not os.path.exists(folder):os.mkdir(folder)
@@ -69,3 +70,25 @@ def create_and_save_raw_object(raw_v_path,raw_obj_path,
     # smoothed_object = gmu.smooth_object(filename[:-4]+".obj",raw_obj_path)
     
     return verts
+
+def save_normalisation_params(save_fold:str,overwrite=True,is_labelled=True):
+    assert(os.path.exists(save_fold))
+    if is_labelled:features_fp = os.path.join(save_fold,'features_labelled.csv')
+    else:features_fp = os.path.join(save_fold,'features_unlabelled.csv')
+    assert(os.path.exists(features_fp))
+    
+    params_fp = os.path.join(save_fold,'normalisation_params.csv')
+    if os.path.exists(params_fp) and (not overwrite): return
+    
+    features = pd.read_csv(features_fp)
+    
+    stats = []
+    for col in [column for column in features.columns if (not column.endswith('_vol')) and (is_numeric_dtype(features[column]))]:
+        entry = {}
+        entry['col']=col
+        entry['mean']=features[col].mean()
+        entry['std']=features[col].std()
+        stats.append(entry)
+        
+    params = pd.DataFrame(stats)
+    params.to_csv(params_fp)

@@ -140,10 +140,12 @@ def find_orientation(spacing,kidney_centroids,is_axes=True,im=None):
     else:return axial,*indices[rounded_spacing==inplane_spacing][::-1]
             
 
-def create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
+def create_labelled_dataset(path,dataset,im_p,infnpy_p,infnii_p,lb_p,
                             is_testing=False,size_thresh=200,overwrite=True):
     
-    fu.create_folder(save_dir)
+    home = os.path.join(path,'objects')
+    save_dir = os.path.join(home,dataset)
+    fu.create_folder(home),fu.create_folder(save_dir)
     rawv_p,rawo_p,cleano_p,c_p,v_p,e_p = fu.setup_save_folders(save_dir)
     
     cases = [case for case in os.listdir(im_p) if case.endswith('.nii.gz')]
@@ -264,10 +266,12 @@ def create_labelled_dataset(dataset,im_p,infnpy_p,infnii_p,lb_p,save_dir,
                 else: tu.plot_all_double_kidney(im,centre,centroids,kidneys,axes,is_labelled=True,lb_cancers=lb_cancers,lb_cysts=lb_cysts)
             print()
 
-def create_unseen_dataset(dataset,im_p,infnpy_p,infnii_p,save_dir,
+def create_unseen_dataset(path,dataset,im_p,infnpy_p,infnii_p,
                    is_testing=False,size_thresh=200,overwrite=True):
     
-    fu.create_folder(save_dir)
+    home = os.path.join(path,'objects')
+    save_dir = os.path.join(home,dataset)
+    fu.create_folder(home),fu.create_folder(save_dir)
     rawv_p,rawo_p,cleano_p,c_p,v_p,e_p = fu.setup_save_folders(save_dir)
     
     cases = [case for case in os.listdir(im_p) if case.endswith('.nii.gz')]

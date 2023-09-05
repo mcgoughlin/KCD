@@ -9,7 +9,7 @@ import os
 
 def create_save_path_structure(path,save_dir,thresh,data_name=None):
     assert(os.path.exists(save_dir))
-    save_path = os.path.join(save_dir,"test")
+    save_path = os.path.join(save_dir,"slices")
     if not os.path.exists(save_path): os.mkdir(save_path)
     assert( not (data_name == None))
     save_path = os.path.join(save_path,data_name)

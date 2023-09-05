@@ -3,7 +3,7 @@ import numpy as np
 
 data_name = 'add_ncct_unseen'
 path = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/images".format(data_name)
-save_dir = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Classification/CNN_dataset'
+save_dir = '/Users/mcgoug01/Downloads/CNN_dataset'
 segpath='/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/predictions_nii/{}/[4 4 4]mm'.format(data_name)
 
 overlap_mm = 40 ## this dictates the minimum distance apart between each slice! not the overlap.

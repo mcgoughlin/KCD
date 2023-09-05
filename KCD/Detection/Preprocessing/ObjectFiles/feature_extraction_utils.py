@@ -37,4 +37,3 @@ def generate_features(case,statistic,curvatures,kidney,index,intensities,
         entry = generate_mass_labels(entry,cyst_vols,cyst2kid,index,mass='cyst',upto=upto)
 
     return entry
-
