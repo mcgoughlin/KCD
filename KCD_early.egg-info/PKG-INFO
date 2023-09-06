@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: KCD-early
+Version: 0.1
+Summary: Python Package for the early detection of renal cancer
+Home-page: https://github.com/mcgoughlin/KCD
+Author: bmcgough
+Author-email: billy.mcgough1@hotmail.com
+Keywords: pip,pytorch,cancer
+License-File: LICENSE

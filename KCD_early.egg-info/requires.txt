@@ -1,0 +1,13 @@
+pytorch-cuda==11.7
+dgl==1.0.2
+matplotlib==3.6.2
+nibabel==5.0.0
+numpy==1.23.5
+opencv-python==4.7.0.68
+pandas==1.5.3
+pydicom==2.3.1
+scikit-image==0.19.3
+scikit-learn==1.2.2
+scipy==1.10.1
+simpleitk==2.2.1
+torchvision==0.15.2
