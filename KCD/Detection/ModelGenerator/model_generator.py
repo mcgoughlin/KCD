@@ -1,16 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jun  6 14:17:07 2023
-
-@author: mcgoug01
-"""
-
+from KCD.Detection.ModelGenerator.modifiedGAP import GlobalAttentionPoolingPMG
 from torchvision import models
 import torch
 import torch.nn as nn
 from dgl.nn import ChebConv
-from modifiedGAP import GlobalAttentionPoolingPMG
 import torch.nn.functional as F
 import copy
 
