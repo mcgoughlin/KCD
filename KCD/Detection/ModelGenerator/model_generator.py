@@ -9,32 +9,16 @@ Created on Tue Jun  6 14:17:07 2023
 from torchvision import models
 import torch
 import torch.nn as nn
-import numpy as np
 from dgl.nn import ChebConv
 from modifiedGAP import GlobalAttentionPoolingPMG
 import torch.nn.functional as F
+import copy
 
 class MLP_classifier(nn.Module):
     def __init__(self,num_features, num_labels, enc1_size=256, enc1_layers=3,
                  enc2_size=32, enc2_layers = 3, final_layers = 3,dev='cpu'):
         super(MLP_classifier, self).__init__()
-        # self.enc1_block = []
-        # self.enc2_block = []
-        # self.final_block = []
-        # enc1_params = np.linspace(num_features, enc1_size, enc1_layers+1)
-        # enc2_params = np.linspace(enc1_size, enc2_size, enc2_layers+1)
-        # final_params = np.linspace(enc2_size, num_labels, final_layers+1)
-        
-        # for i in range(len(enc1_params)-1):
-        #     self.enc1_block.append(nn.Linear(int(enc1_params[i]),int(enc1_params[i+1])).to(dev))
-         
-        # self.enc1_block = nn.ModuleList(self.enc1_block)
-        # for i in range(len(enc1_params)-1):
-        #     self.enc2_block.append(nn.Linear(int(enc2_params[i]),int(enc2_params[i+1])).to(dev))
-        # self.enc2_block = nn.ModuleList(self.enc2_block)
-        # for i in range(len(final_params)-1):
-        #     self.final_block.append(nn.Linear(int(final_params[i]),int(final_params[i+1])).to(dev))
-        # self.final_block = nn.ModuleList(self.final_block)
+
 
         self.layer1 = nn.Linear(num_features,enc1_size,bias= False).to(dev)
         
@@ -49,22 +33,13 @@ class MLP_classifier(nn.Module):
         
     def forward(self,x):
         x = self.dropout(x)
-        # x_comp = x
-        # for layer in self.enc1_block:
-        #     x_comp = self.actv(layer(x_comp))
-            
         layer1 = self.dropout(self.actv(self.layer1(x)))
-        # x_enc = skip1
-        # for layer in self.enc2_block:
-        #     x_enc = self.actv(layer(x_enc))
-            
-            
         layer2 = self.dropout(self.skip1(x) + self.actv(self.layer2(layer1)))
         return self.tanh(self.skip2(x) + self.actv(self.layer3(layer2)))
 
-class Classifier_gen_original(nn.Module):
+class GNN_classifier(nn.Module):
     def __init__(self, in_dim, hidden_dim_graph,n_classes,neighbours=10,layers_deep = 4,device='cpu'):
-        super(Classifier_gen_original, self).__init__()
+        super(GNN_classifier, self).__init__()
         # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want 
         # multiple filters in parallel!
         self.conv1 = ChebConv(in_dim, hidden_dim_graph, neighbours).to(device)
@@ -96,337 +71,11 @@ class Classifier_gen_original(nn.Module):
         a2=self.classify(hg)
         a3=self.classify2(a2)
         return a3
-    
-class ShapeEnsemble_V1(nn.Module):
-    def __init__(self, MLP:MLP_classifier, CNN:models.efficientnet.EfficientNet,
-                 GNN:Classifier_gen_original,n1=128,n2=16,num_labels=2,device='cpu',dropout=0.8):
-        super(ShapeEnsemble_V1, self).__init__()
-        # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want 
-        # multiple filters in parallel!
-        
-        self.MLP = MLP.to(device)
-        self.CNN = CNN.to(device)
-        self.GNN = GNN.to(device)
-        
-        self.n1=n1
-        self.n2=n2
-        
-        # ensure all classifiers each output a vector of common dimensionality, dictated by n
-        self.GNN.classify2 = nn.Linear(self.GNN.hidden_dim_graph,n1).to(device)
-        self.CNN.classifier[1] = nn.Linear(self.CNN.classifier[1].in_features,n1).to(device)
-        self.MLP.final_block[-1] = nn.Linear(self.MLP.final_block[-1].in_features,n1).to(device)
-        self.MLP.skip3 = nn.Linear(self.MLP.skip3.in_features,n1).to(device)
-        
-        self.skip = nn.Linear(n1,n2).to(device)
-        self.process1 = nn.Linear(n1,n2).to(device)
-        self.process2 = nn.Linear(n2,n2).to(device)
-        self.final = nn.Linear(n2,num_labels).to(device)
-        self.dropout = nn.Dropout(dropout)
-        self.actv = nn.ReLU()
-        
-        self.device=device
-        
-    def forward(self, features,svim,graph):
-        graph_enc = self.GNN(graph)
-        cnn_enc = self.CNN(svim)
-        mlp_enc = self.MLP(features)
-        
-        common_128 = self.actv(self.dropout(graph_enc+cnn_enc+mlp_enc))
-        common_16 = self.actv(self.dropout(self.process1(common_128)))
-        penultimate = self.actv(self.dropout(self.process2(common_16)+self.skip(graph_enc+cnn_enc+mlp_enc)))
-        
-        return self.final(penultimate)
-    
-class ShapeEnsemble_V2(nn.Module):
-    def __init__(self, MLP:MLP_classifier, CNN:models.efficientnet.EfficientNet,
-                 GNN:Classifier_gen_original,n1=128,n2=16,num_labels=2,device='cpu',dropout=0.8):
-        super(ShapeEnsemble_V2, self).__init__()
-        # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want 
-        # multiple filters in parallel!
-        
-        self.MLP = MLP.to(device)
-        self.CNN = CNN.to(device)
-        self.GNN = GNN.to(device)
-        
-        self.n1=n1
-        self.n2=n2
-        
-        # ensure all classifiers each output a vector of common dimensionality, dictated by n
-        self.GNN.classify2 = nn.Linear(self.GNN.hidden_dim_graph,n1).to(device)
-        self.CNN.classifier[1] = nn.Linear(self.CNN.classifier[1].in_features,n1).to(device)
-        self.MLP.final_block[-1] = nn.Linear(self.MLP.final_block[-1].in_features,n1).to(device)
-        self.MLP.skip3 = nn.Linear(self.MLP.skip3.in_features,n1).to(device)
-        
-        self.process1 = nn.Linear(n1,n2).to(device)
-        self.final = nn.Linear(n2,num_labels).to(device)
-        self.dropout = nn.Dropout(dropout)
-        self.actv = nn.ReLU()
-        
-        self.device=device
-        
-    def forward(self, features,svim,graph):
-        graph_enc = self.GNN(graph)
-        cnn_enc = self.CNN(svim)
-        mlp_enc = self.MLP(features)
-        
-        common_16 = self.actv(self.dropout(self.process1(graph_enc+cnn_enc+mlp_enc)))
-        
-        return self.final(common_16)
-    
-class ShapeEnsemble_V3(nn.Module):
-    def __init__(self, MLP:MLP_classifier, CNN:models.efficientnet.EfficientNet,
-                 GNN:Classifier_gen_original,n1=128,n2=16,num_labels=2,device='cpu',dropout=0.8):
-        super(ShapeEnsemble_V3, self).__init__()
-        # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want 
-        # multiple filters in parallel!
-        
-        self.MLP = MLP.to(device)
-        self.CNN = CNN.to(device)
-        self.GNN = GNN.to(device)
-        
-        self.n1=n1
-        self.n2=n2
-        
-        # ensure all classifiers each output a vector of common dimensionality, dictated by n
-        self.GNN.classify2 = nn.Linear(self.GNN.hidden_dim_graph,n1).to(device)
-        self.CNN.classifier[1] = nn.Linear(self.CNN.classifier[1].in_features,n1).to(device)
-        self.MLP.final_block[-1] = nn.Linear(self.MLP.final_block[-1].in_features,n1).to(device)
-        self.MLP.skip3 = nn.Linear(self.MLP.skip3.in_features,n1).to(device)
-        
-        self.process1 = nn.Linear(n1*3,n2).to(device)
-        self.final = nn.Linear(n2,num_labels).to(device)
-        self.dropout = nn.Dropout(dropout)
-        self.actv = nn.ReLU()
-        
-        self.device=device
-        
-    def forward(self, features,svim,graph):
-        graph_enc = self.GNN(graph)
-        cnn_enc = self.CNN(svim)
-        mlp_enc = self.MLP(features)
-        enc = torch.cat([graph_enc,cnn_enc,mlp_enc],dim=-1)
-        common_16 = self.actv(self.dropout(self.process1(enc)))
-        
-        return self.final(common_16)
-    
-class CompleteEnsemble_V1(nn.Module):
-    def __init__(self, ShapeEnsemble:ShapeEnsemble_V1, tilewise_CNN:models.efficientnet.EfficientNet,
+   
+class ShapeEnsemble(nn.Module):
+    def __init__(self, MLP:MLP_classifier,GNN:GNN_classifier,
                  n1=128,n2=16,num_labels=2,device='cpu',dropout=0.8):
-        super(CompleteEnsemble_V1, self).__init__()
-        # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want 
-        # multiple filters in parallel!
-        
-        self.MLP = ShapeEnsemble.MLP.to(device)
-        self.svCNN = ShapeEnsemble.CNN.to(device)
-        self.GNN = ShapeEnsemble.GNN.to(device)
-        self.twCNN = tilewise_CNN.to(device)
-        self.n1=n1
-        self.n2=n2
-
-        self.tw_conv1 = nn.Conv1d(3,3,5,stride=1,padding=2).to(device) #padding ensures dimentionality of input doesn't change
-        self.tw_conv2 = nn.Conv1d(3,1,15,stride=1,padding=7).to(device)
-        self.tw_process = nn.Linear(self.n2,self.n2).to(device)
-        
-        self.process1 = ShapeEnsemble.process1.to(device)
-        self.process2 = ShapeEnsemble.process2.to(device)
-        self.final = ShapeEnsemble.final.to(device)
-        self.skip = ShapeEnsemble.skip.to(device)
-        self.dropout = nn.Dropout(dropout)
-        self.actv = nn.ReLU()
-        
-        self.device=device
-        
-    def forward(self, features,svim,graph,tilestack):
-        graph_enc = self.GNN(graph)
-        cnn_enc = self.svCNN(svim)
-        mlp_enc = self.MLP(features)
-        # there is a problem here - how do we integrate the kw tile classifiers with the shape ensemble..
-        
-        tile_stacks = torch.stack([self.twCNN(tile) for tile in tilestack]).squeeze()  #extract B x N x 3 features - N is num of tiles in case
-        tile_stacks = torch.swapaxes(tile_stacks,-2,-1)
-        tw_conv1 = self.actv(self.dropout(self.tw_conv1(tile_stacks))) # Convolve over features, output should be N x 3 again
-        vals,indices = torch.topk(self.tw_conv2(tw_conv1),k=self.n2,dim=-1)  #Convolve over features, N x 1 
-        tw_enc = self.tw_process(vals) # should be a vector of 16 features
-        
-        common_128 = self.actv(self.dropout(graph_enc+cnn_enc+mlp_enc))
-        common_16 = self.actv(self.dropout(self.process1(common_128)+tw_enc.squeeze()))
-        penultimate = self.actv(self.dropout(self.process2(common_16)+self.skip(graph_enc+cnn_enc+mlp_enc)+tw_enc.squeeze()))
-        
-        return self.final(penultimate)
-    
-class CompleteEnsemble_V2(nn.Module):
-    def __init__(self, ShapeEnsemble:ShapeEnsemble_V2, tilewise_CNN:models.efficientnet.EfficientNet,
-                 n1=128,n2=16,num_labels=2,device='cpu',dropout=0.8):
-        super(CompleteEnsemble_V2, self).__init__()
-        # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want 
-        # multiple filters in parallel!
-        
-        self.MLP = ShapeEnsemble.MLP.to(device)
-        self.svCNN = ShapeEnsemble.CNN.to(device)
-        self.GNN = ShapeEnsemble.GNN.to(device)
-        self.twCNN = tilewise_CNN.to(device)
-        self.n1=n1
-        self.n2=n2
-
-        self.tw_conv = nn.Conv1d(3,1,15,stride=1,padding=7).to(device)
-        
-        self.process1 = ShapeEnsemble.process1.to(device)
-        self.final = ShapeEnsemble.final.to(device)
-        self.dropout = nn.Dropout(dropout)
-        self.actv = nn.ReLU()
-        
-        self.device=device
-        
-    def forward(self, features,svim,graph,tilestack):
-        graph_enc = self.GNN(graph)
-        cnn_enc = self.svCNN(svim)
-        mlp_enc = self.MLP(features)
-        # there is a problem here - how do we integrate the kw tile classifiers with the shape ensemble..
-        
-        tile_stacks = torch.stack([self.twCNN(tile) for tile in tilestack]).squeeze()  #extract B x N x 3 features - N is num of tiles in case
-        tile_stacks = torch.swapaxes(tile_stacks,-2,-1)
-        tw_conv1 = self.actv(self.dropout(self.tw_conv(tile_stacks))) # Convolve over features, output should be N x 3 again
-        vals,indices = torch.topk(tw_conv1,k=self.n2,dim=-1)  
-        common_16 = self.actv(self.dropout(self.process1(graph_enc+cnn_enc+mlp_enc)+vals))
-        
-        return self.final(common_16)
-    
-class CompleteEnsemble_V3(nn.Module):
-    def __init__(self, ShapeEnsemble:ShapeEnsemble_V2, tilewise_CNN:models.efficientnet.EfficientNet,
-                 n1=128,n2=16,num_labels=2,device='cpu',dropout=0.8):
-        super(CompleteEnsemble_V3, self).__init__()
-        # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want 
-        # multiple filters in parallel!
-        
-        self.MLP = ShapeEnsemble.MLP.to(device)
-        self.svCNN = ShapeEnsemble.CNN.to(device)
-        self.GNN = ShapeEnsemble.GNN.to(device)
-        self.twCNN = tilewise_CNN.to(device)
-        self.n1=n1
-        self.n2=n2
-
-        self.tw_conv = nn.Conv1d(3,1,15,stride=1,padding=7,bias=False).to(device)
-        self.tw_process = nn.Linear(n2,n2,bias=False).to(device)
-        
-        self.process1 = ShapeEnsemble.process1.to(device)
-        self.final = ShapeEnsemble.final.to(device)
-        self.dropout = nn.Dropout(dropout)
-        self.actv = nn.ReLU()
-        
-        self.device=device
-        
-    def forward(self, features,svim,graph,tilestack):
-        graph_enc = self.GNN(graph)
-        cnn_enc = self.svCNN(svim)
-        mlp_enc = self.MLP(features)
-        # there is a problem here - how do we integrate the kw tile classifiers with the shape ensemble..
-        
-        tile_stacks = torch.stack([self.twCNN(tile) for tile in tilestack]).squeeze()  #extract B x N x 3 features - N is num of tiles in case
-        tile_stacks = torch.swapaxes(tile_stacks,-2,-1)
-        tw_conv1 = self.actv(self.dropout(self.tw_conv(tile_stacks))) # Convolve over features, output should be N x 3 again
-        vals,indices = torch.topk(tw_conv1,k=self.n2,dim=-1)  
-        tw_enc = self.actv(self.tw_process(vals))
-        common_16 = self.actv(self.dropout(self.process1(graph_enc+cnn_enc+mlp_enc)+tw_enc))
-        
-        return self.final(common_16)
-    
-class CompleteEnsemble_V4(nn.Module):
-    def __init__(self, ShapeEnsemble:ShapeEnsemble_V3, tilewise_CNN:models.efficientnet.EfficientNet,
-                 n1=128,n2=16,num_labels=2,device='cpu',dropout=0.8):
-        super(CompleteEnsemble_V4, self).__init__()
-        # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want 
-        # multiple filters in parallel!
-        
-        self.MLP = ShapeEnsemble.MLP.to(device)
-        self.svCNN = ShapeEnsemble.CNN.to(device)
-        self.GNN = ShapeEnsemble.GNN.to(device)
-        self.twCNN = tilewise_CNN.to(device)
-        self.n1=n1
-        self.n2=n2
-
-        self.tw_conv = nn.Conv1d(3,1,15,stride=1,padding=7).to(device)
-        self.tw_process = nn.Linear(n2,n2).to(device)
-        self.tw_pool = nn.AdaptiveMaxPool1d(n2)
-        
-        self.process1 = ShapeEnsemble.process1.to(device)
-        self.process2 = nn.Linear(2*n2,n2).to(device)
-        self.final = nn.Linear(n2,num_labels).to(device)
-        self.dropout = nn.Dropout(dropout)
-        self.actv = nn.ReLU()
-        
-        self.device=device
-        
-    def forward(self, features,svim,graph,tilestack):
-        graph_enc = self.GNN(graph)
-        cnn_enc = self.svCNN(svim)
-        mlp_enc = self.MLP(features)
-        shape_enc = torch.cat([graph_enc,cnn_enc,mlp_enc],dim=-1)
-        shape_n1 = self.actv(self.dropout(self.process1(shape_enc)))
-
-        # there is a problem here - how do we integrate the kw tile classifiers with the shape ensemble..
-        with torch.no_grad(): #prevent gradient flow through twCNN - reduce VRAM burden and unnecessary trainin
-            tile_stacks = torch.stack([self.twCNN(tile) for tile in tilestack]).squeeze()  #extract B x N x 3 features - N is num of tiles in case
-            tile_stacks = torch.swapaxes(tile_stacks,-2,-1)
-        tw_conv1 = self.tw_conv(tile_stacks) # Convolve over features, output should be N x 3 again
-        top_k = self.tw_pool(tw_conv1) 
-        pre_squeeze = self.actv(self.dropout(self.tw_process(top_k)))
-        if len(pre_squeeze.shape)==3:
-            tw_enc = torch.squeeze(pre_squeeze,-2)
-        elif len(pre_squeeze.shape)==2:
-            tw_enc = pre_squeeze
-        else:
-            print(pre_squeeze.shape)
-            assert(1==2)
-        common_n2 = self.process2(torch.cat([shape_n1,tw_enc],dim=-1))
-        return self.final(self.actv(common_n2))
-    
-class CompleteEnsemble_V5(nn.Module):
-    def __init__(self, ShapeEnsemble:ShapeEnsemble_V2, tilewise_CNN:models.efficientnet.EfficientNet,
-                 n1=128,n2=16,num_labels=2,device='cpu',dropout=0.8):
-        super(CompleteEnsemble_V5, self).__init__()
-        # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want 
-        # multiple filters in parallel!
-        
-        self.MLP = ShapeEnsemble.MLP.to(device)
-        self.svCNN = ShapeEnsemble.CNN.to(device)
-        self.GNN = ShapeEnsemble.GNN.to(device)
-        self.twCNN = tilewise_CNN.to(device)
-        self.n1=n1
-        self.n2=n2
-
-        self.tw_conv = nn.Conv1d(1,1,15,stride=1,padding=7).to(device)
-        self.tw_process = nn.Linear(n2,n2).to(device)
-        
-        self.process1 = ShapeEnsemble.process1.to(device)
-        self.final = ShapeEnsemble.final.to(device)
-        self.dropout = nn.Dropout(dropout)
-        self.actv = nn.ReLU()
-        
-        self.device=device
-        self.softmax = nn.Softmax(dim=1)
-        
-    def forward(self, features,svim,graph,tilestack):
-        graph_enc = self.GNN(graph)
-        cnn_enc = self.svCNN(svim)
-        mlp_enc = self.MLP(features)
-        # there is a problem here - how do we integrate the kw tile classifiers with the shape ensemble..
-        with torch.no_grad(): #prevent gradient flow through twCNN - reduce VRAM burden and unnecessary trainin
-            tile_stacks = torch.stack([self.twCNN(tile) for tile in tilestack]).squeeze(dim=1)  #extract B x N x 3 features - N is num of tiles in case
-            tile_stacks = self.softmax(torch.swapaxes(tile_stacks,-2,-1))
-            
-        #extract only the prediction values for cancer
-        tile_stacks = tile_stacks[:,2:]
-        tw_conv1 = self.actv(self.dropout(self.tw_conv(tile_stacks))) # Convolve over features, output should be N x 3 again
-        vals,indices = torch.topk(tw_conv1,k=self.n2,dim=-1)  
-        tw_enc = self.actv(self.tw_process(vals)).squeeze(dim=-2)
-        common_16 = self.actv(self.dropout(self.process1(graph_enc+cnn_enc+mlp_enc)+tw_enc))
-        return self.final(common_16)
-    
-    
-class ShapeEnsemble_noCNN(nn.Module):
-    def __init__(self, MLP:MLP_classifier,
-                 GNN:Classifier_gen_original,n1=128,n2=16,num_labels=2,device='cpu',dropout=0.8):
-        super(ShapeEnsemble_noCNN, self).__init__()
+        super(ShapeEnsemble, self).__init__()
         # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want 
         # multiple filters in parallel!
         
@@ -500,24 +149,300 @@ def return_resnext(size='small',dev='cpu',in_channels=1,out_channels=3):
     
     return axial_tile_model.to(dev)
 
+def return_efficientnet(size='small',dev='cpu',in_channels=1,out_channels=3):
+    if size == 'small':
+        model_generator = models.efficientnet_v2_s
+        weights = models.EfficientNet_V2_S_Weights.IMAGENET1K_V1
+    elif size == 'medium':
+        model_generator = models.efficientnet_v2_m
+        weights = models.EfficientNet_V2_M_Weights.IMAGENET1K_V1
+    elif size == 'large':
+        model_generator = models.efficientnet_v2_l
+        weights = models.EfficientNet_V2_L_Weights.IMAGENET1K_V1
+    else:
+        assert(1==2)
+    axial_tile_model = model_generator(weights = weights).to(dev)
+    
+    if size == 'large':
+        axial_tile_model.features[0][0] = nn.Conv2d(in_channels,32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False).to(dev)
+    else:
+        axial_tile_model.features[0][0] = nn.Conv2d(in_channels,24, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False).to(dev)
+        
+    axial_tile_model.classifier[-1]= nn.Linear(1280,out_channels,bias=True).to(dev) 
+    
+    return axial_tile_model.to(dev)
+
+def return_swin(size='small',dev='cpu',in_channels=1,out_channels=3):
+    if size == 'small':
+        model_generator = models.swin_v2_t
+        weights = models.Swin_V2_T_Weights.IMAGENET1K_V1
+    elif size == 'medium':
+        model_generator = models.swin_v2_s
+        weights = models.Swin_V2_S_Weights.IMAGENET1K_V1
+    elif size == 'large':
+        model_generator = models.swin_v2_b
+        weights = models.Swin_V2_B_Weights.IMAGENET1K_V1
+    else:
+        assert(1==2)
+    axial_tile_model = model_generator(weights = weights).to(dev)
+
+    if size == 'large':
+        axial_tile_model.features[0][0] = nn.Conv2d(in_channels,128,kernel_size=(4, 4), stride=(4, 4)).to(dev)
+        axial_tile_model.head= nn.Linear(1024,out_channels,bias=True).to(dev) 
+    else:
+        axial_tile_model.features[0][0] = nn.Conv2d(in_channels,96,kernel_size=(4, 4), stride=(4, 4)).to(dev)
+        axial_tile_model.head= nn.Linear(768,out_channels,bias=True).to(dev) 
+    
+    return axial_tile_model.to(dev)
+
+def return_vit(size='small',dev='cpu',in_channels=1,out_channels=3):
+    if size == 'small':
+        model_generator = models.vit_b_16
+        weights = models.ViT_B_16_Weights.IMAGENET1K_V1
+    elif size == 'medium':
+        model_generator = models.vit_b_32
+        weights = models.ViT_B_32_Weights.IMAGENET1K_V1
+    elif size == 'large':
+        model_generator = models.vit_l_32
+        weights = models.ViT_L_32_Weights.IMAGENET1K_V1
+    else:
+        assert(1==2)
+        
+    axial_tile_model = model_generator(weights = weights).to(dev)
+
+    if size == 'large':
+        axial_tile_model.conv_proj = nn.Conv2d(in_channels,1024,kernel_size=(32, 32), stride=(32, 32)).to(dev)
+        axial_tile_model.heads.head= nn.Linear(1024,out_channels,bias=True).to(dev) 
+    elif size == 'medium':
+        axial_tile_model.conv_proj = nn.Conv2d(in_channels,768,kernel_size=(32, 32), stride=(32, 32)).to(dev)
+        axial_tile_model.heads.head= nn.Linear(768,out_channels,bias=True).to(dev) 
+    else:
+        axial_tile_model.conv_proj = nn.Conv2d(in_channels,768,kernel_size=(16,16), stride=(16,16)).to(dev)
+        axial_tile_model.heads.head= nn.Linear(768,out_channels,bias=True).to(dev) 
+    
+    return axial_tile_model.to(dev)
+
+def return_resnet(size='small',dev='cpu',in_channels=1,out_channels=3):
+    if size == 'small':
+        model_generator = models.resnet50
+        weights = models.ResNet50_Weights.IMAGENET1K_V1
+    elif size == 'medium':
+        model_generator = models.resnet101
+        weights = models.ResNet101_Weights.IMAGENET1K_V1
+    elif size == 'large':
+        model_generator = models.resnet152
+        weights = models.ResNet152_Weights.IMAGENET1K_V1
+    else:
+        assert(1==2)
+
+    axial_tile_model = model_generator(weights = weights).to(dev)
+    
+    axial_tile_model.conv1 = nn.Conv2d(in_channels,64,kernel_size=(4, 4), stride=(4, 4)).to(dev)
+    axial_tile_model.fc= nn.Linear(2048,out_channels,bias=True).to(dev) 
+    
+    return axial_tile_model.to(dev)
+
+def return_resnext(size='small',dev='cpu',in_channels=1,out_channels=3):
+    if size == 'small':
+        model_generator = models.resnext50_32x4d
+        weights = models.ResNeXt50_32X4D_Weights.IMAGENET1K_V1
+    elif size == 'medium':
+        model_generator = models.resnext101_64x4d
+        weights = models.ResNeXt101_64X4D_Weights.IMAGENET1K_V1
+    elif size == 'large':
+        model_generator = models.resnext101_32x8d
+        weights = models.ResNeXt101_32X8D_Weights.IMAGENET1K_V1
+    else:
+        assert(1==2)
+        
+    axial_tile_model = model_generator(weights = weights).to(dev)
+
+    axial_tile_model.conv1 = nn.Conv2d(in_channels,64,kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False).to(dev)
+    axial_tile_model.fc= nn.Linear(2048,out_channels,bias=True).to(dev) 
+    
+    return axial_tile_model.to(dev)
+
+def return_convnext(size='small',dev='cpu',in_channels=1,out_channels=3):
+    if size == 'small':
+        model_generator = models.convnext_small
+        weights = models.ConvNeXt_Small_Weights.IMAGENET1K_V1
+    elif size == 'medium':
+        model_generator = models.convnext_base
+        weights = models.ConvNeXt_Base_Weights.IMAGENET1K_V1
+    elif size == 'large':
+        model_generator = models.convnext_large
+        weights = models.ConvNeXt_Large_Weights.IMAGENET1K_V1
+    else:
+        assert(1==2)
+        
+        
+    axial_tile_model = model_generator(weights = weights).to(dev)
+    
+    if size == 'large':
+        axial_tile_model.features[0][0] = nn.Conv2d(in_channels,192,kernel_size=(4, 4), stride=(4, 4)).to(dev)
+        axial_tile_model.classifier[-1]= nn.Linear(1536,out_channels,bias=True).to(dev) 
+    elif size =='medium':
+        axial_tile_model.features[0][0] = nn.Conv2d(in_channels,128, kernel_size=(4, 4), stride=(4, 4)).to(dev)
+        axial_tile_model.classifier[-1]= nn.Linear(1024,out_channels,bias=True).to(dev) 
+    else:
+        axial_tile_model.features[0][0] = nn.Conv2d(in_channels,96, kernel_size=(4, 4), stride=(4, 4)).to(dev)
+        axial_tile_model.classifier[-1]= nn.Linear(768,out_channels,bias=True).to(dev) 
+
+
+    return axial_tile_model.to(dev)
+    
+def replace2d_to3d(layer,dev='cpu'):
+    if str(type(layer))=="<class \'torch.nn.modules.linear.Linear\'>":
+        return layer
+    elif str(type(layer))=="<class \'torch.nn.modules.batchnorm.BatchNorm2d\'>":
+        feat,mom,eps,aff = layer.num_features,layer.momentum,layer.eps,layer.affine
+        # print(feat,mom,eps)
+        return nn.BatchNorm3d(feat,eps,mom,affine=aff,device=dev)
+    elif str(type(layer))=="<class \'torch.nn.modules.conv.Conv2d\'>":
+        inc,outc,stride,pad,kern,is_bias = layer.in_channels,layer.out_channels,layer.stride[0],layer.padding[0],layer.kernel_size[0],layer.bias==None
+        return nn.Conv3d(inc,outc,stride=stride,padding=pad,kernel_size=kern,bias=is_bias,device=dev)
+    else:
+        print(layer)
+        assert(1==2)
+
+
+
+def return_efficientnet3D(size='small',dev='cpu',in_channels=1,out_channels=3):
+    eff2d = return_efficientnet(size,dev,in_channels,out_channels)
+    
+    completed_layers = []
+    for name, _ in eff2d.named_parameters():
+        # print(name)
+        split_list = name.split('.')
+        
+        if len(split_list)==4:
+            layname,id1,id2,_ = split_list
+            blockname,id3,id4=[None]*3
+        elif len(split_list)==7:    
+            layname,id1,id2,blockname,id3,id4,_ = split_list
+        elif len(split_list)==3:
+            layname,id1,_ = split_list
+            id2,blockname,id3,id4=[None]*4
+        else:
+            assert(1==2)
+            
+        layer_metadata = (id1,id2,blockname,id3,id4)
+        if layer_metadata in completed_layers:continue
+        completed_layers.append(layer_metadata)
+        
+        if layname=='features':
+            if blockname!=None:
+                if id4.isnumeric():
+                    layer = eff2d.features[int(id1)][int(id2)].block[int(id3)][int(id4)]
+                    
+                    new_layer = replace2d_to3d(layer,dev=dev)
+                    eff2d.features[int(id1)][int(id2)].block[int(id3)][int(id4)] = new_layer
+                elif id4=='fc1':
+                    layer = eff2d.features[int(id1)][int(id2)].block[int(id3)].fc1
+                    new_layer = replace2d_to3d(layer,dev=dev)
+                    eff2d.features[int(id1)][int(id2)].block[int(id3)].fc1 = new_layer
+                elif id4=='fc2':
+                    layer= eff2d.features[int(id1)][int(id2)].block[int(id3)].fc2
+                    new_layer = replace2d_to3d(layer,dev=dev)
+                    eff2d.features[int(id1)][int(id2)].block[int(id3)].fc2 = new_layer
+                else:
+                    assert(1==2)
+            else:
+                layer = eff2d.features[int(id1)][int(id2)]
+                new_layer = replace2d_to3d(layer,dev=dev)
+                eff2d.features[int(id1)][int(id2)] = new_layer
+        elif layname=='classifier':
+            layer = eff2d.classifier[int(id1)]
+            new_layer = replace2d_to3d(layer,dev=dev)
+            eff2d.classifier[int(id1)] = new_layer
+            
+        completed_layers.append(str(type(new_layer)))
+        
+    completed_layers = list(set(completed_layers))
+    eff2d.avgpool = nn.AdaptiveMaxPool3d(output_size=1)
+    
+    return eff2d.to(dev)
+
+def resnext_layerreplacer(layer):
+    newlayer = copy.copy(layer)
+    for subidx in range(len(layer)):
+        sublayer = layer[subidx]
+        newlayer[subidx].conv1 = replace2d_to3d(sublayer.conv1)
+        newlayer[subidx].conv2 = replace2d_to3d(sublayer.conv2)
+        newlayer[subidx].conv3 = replace2d_to3d(sublayer.conv3)
+        newlayer[subidx].bn1 = replace2d_to3d(sublayer.bn1)
+        newlayer[subidx].bn2 = replace2d_to3d(sublayer.bn2)
+        newlayer[subidx].bn3 = replace2d_to3d(sublayer.bn3)
+        if sublayer.downsample!=None:
+            newlayer[subidx].downsample[0] = replace2d_to3d(sublayer.downsample[0])
+            newlayer[subidx].downsample[1] = replace2d_to3d(sublayer.downsample[1])
+        
+    return newlayer
+        
+
+def return_resnext3D(size='small',dev='cpu',in_channels=1,out_channels=3):
+    rnxt2d = return_resnext(size,dev,in_channels,out_channels)
+    rnxt3d = copy.deepcopy(rnxt2d)
+    completed_layers = []
+    for name, _ in rnxt2d.named_parameters():
+        # print(name)
+        split_list = name.split('.')
+        if len(split_list)==2:
+            layname,_ = split_list
+            blockname,id1,id2=[None]*3
+        elif len(split_list)==4:    
+            blockname,id1,layname,_ = split_list
+            id2=None
+        elif len(split_list)==5:
+            blockname,id1,layname,id2,_ = split_list
+        else:
+            assert(1==2)
+            
+        layer_metadata = (blockname)
+        if layer_metadata in completed_layers:continue
+        completed_layers.append(layer_metadata)
+        
+        
+        if blockname==None:
+            layer1 = rnxt2d.conv1
+            layer2 = rnxt2d.bn1
+            layer3 = rnxt3d.fc
+            rnxt3d.conv1 = replace2d_to3d(layer1,dev=dev)
+            rnxt3d.bn1=replace2d_to3d(layer2,dev=dev)
+            rnxt3d.fc=replace2d_to3d(layer3,dev=dev)
+        elif blockname=='layer1':
+            layer = rnxt2d.layer1
+            rnxt3d.layer1 = resnext_layerreplacer(layer)
+        elif blockname=='layer2':
+            layer = rnxt2d.layer2
+            rnxt3d.layer2 = resnext_layerreplacer(layer)
+        elif blockname=='layer3':
+            layer = rnxt2d.layer3
+            rnxt3d.layer3 = resnext_layerreplacer(layer)
+        elif blockname=='layer4':
+            layer = rnxt2d.layer4
+            rnxt3d.layer4 = resnext_layerreplacer(layer)            
+        else:
+            assert(1==2)
+        
+    completed_layers = list(set(completed_layers))
+    rnxt3d.maxpool = nn.MaxPool3d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+    rnxt3d.avgpool = nn.AdaptiveMaxPool3d(output_size=1)
+    
+    return rnxt3d.to(dev)
+
 
 def return_MLP(num_features=28, num_labels=2, enc1_size=128, enc1_layers=1,
              enc2_size=32, enc2_layers = 1, final_layers = 1,dev='cpu'):
     return MLP_classifier(num_features, num_labels, enc1_size, enc1_layers,
                  enc2_size, enc2_layers, final_layers,dev).to(dev)
 
-def return_graphnn(num_features=4,hidden_dim=50,num_labels=2,layers_deep=8,neighbours=8,dev='cpu'):
-    return Classifier_gen_original(num_features,hidden_dim,num_labels,layers_deep,neighbours,dev).to(dev)
+def return_GNN(num_features=4,hidden_dim=50,num_labels=2,layers_deep=8,neighbours=8,dev='cpu'):
+    return GNN_classifier(num_features,hidden_dim,num_labels,layers_deep,neighbours,dev).to(dev)
 
-def return_shapeensemble(CNN,MLP,GNN,n1=128,n2=16,num_labels=2,dev='cpu'):
-    return ShapeEnsemble_V2(MLP,CNN,GNN,n1=n1,n2=n2,num_labels=num_labels,device=dev).to(dev)
 
-def return_shapeensemble_noCNN(MLP,GNN,n1=128,n2=16,num_labels=2,dev='cpu'):
-    return ShapeEnsemble_noCNN(MLP,GNN,n1=n1,n2=n2,num_labels=num_labels,device=dev).to(dev)
-
-def return_completeensemble(ShapeEnsemble:ShapeEnsemble_V2, tilewise_CNN:models.efficientnet.EfficientNet,
-             n1=128,n2=16,num_labels=2,dev='cpu'):
-    return CompleteEnsemble_V5(ShapeEnsemble,tilewise_CNN,n1=n1,n2=n2,num_labels=num_labels,device=dev).to(dev)
+def return_shapeensemble(MLP,GNN,n1=128,n2=16,num_labels=2,dev='cpu'):
+    return ShapeEnsemble(MLP,GNN,n1=n1,n2=n2,num_labels=num_labels,device=dev).to(dev)
 
 
 
