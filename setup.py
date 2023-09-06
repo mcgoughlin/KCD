@@ -11,7 +11,7 @@ setup(
               'numpy','opencv-python','pandas','pydicom',
               'scikit-image','scikit-learn','scipy',
               'simpleitk','torchvision'],
-    python_requires='>=3.6, <=3.10',
+    python_requires='>=3.6, <=3.10.9',
     description='Python Package for the early detection of renal cancer',
     version='0.1',
     url='https://github.com/mcgoughlin/KCD',
