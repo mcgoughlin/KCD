@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Dec 24 20:12:22 2022
-
-@author: mcgoug01
-"""
 from KCD.Detection.Training import train_utils as tu
 import KCD.Detection.Evaluation.eval_scripts as eval_
 from KCD.Detection.ModelGenerator import model_generator
@@ -96,4 +90,4 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
         
 if __name__ == '__main__':
     dataset = 'coreg_ncct'
-    train_cv_slice_model(dataname=dataset)
+    train_cv_slice_model(dataname=dataset,is_3D=True)

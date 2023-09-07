@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon May  9 17:16:53 2022
-
-@author: mcgoug01
-"""
 import os
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -27,6 +21,7 @@ class SW_Data_labelled(Dataset):
         if depth_z>1:home = os.path.join(folder,"3D-Depth"+str(depth_z)+'mm-Boundary'+str(boundary_z)+'mm','labelled_data')
         else:home = os.path.join(folder,"2D-Boundary"+str(boundary_z)+'mm','labelled_data')
         
+        print(home)
         assert(os.path.exists(home))
         assert([folder in os.listdir(home)for folder in ["tumour","kidney","none"]])
 
