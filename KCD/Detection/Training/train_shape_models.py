@@ -131,8 +131,8 @@ def plot_roc(name,model_name,ROC):
     plt.xlabel('100 - Specificity / %')
     
 
-def train_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname='merged_training_set',
-                            splits:list=[0],params:dict=None):
+def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname='merged_training_set',
+                            splits:list=[0],folds=5,params:dict=None):
     # Suppress warnings
     warnings.filterwarnings("ignore") #makes dgl stop complaining!
 
@@ -156,7 +156,7 @@ def train_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
             os.mkdir(split_path)
             
         split_fp = os.path.join(split_path,'split.npy')
-        five_fold_strat = kfold_strat(n_splits=5, shuffle=True)
+        five_fold_strat = kfold_strat(n_splits=folds, shuffle=True)
 
         if os.path.exists(split_fp):
             fold_split = np.load(split_fp,allow_pickle=True)
@@ -221,8 +221,8 @@ def train_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
         return MLP,GNN
 
 
-def train_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='merged_training_set',
-                         splits:list=[0],params:dict=None):
+def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='merged_training_set',
+                         splits:list=[0],params:dict=None,folds=5):
     # Suppress warnings
     warnings.filterwarnings("ignore") #makes dgl stop complaining!
 
@@ -244,7 +244,7 @@ def train_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='merg
             os.mkdir(split_path)
             
         split_fp = os.path.join(split_path,'split.npy')
-        five_fold_strat = kfold_strat(n_splits=5, shuffle=True)
+        five_fold_strat = kfold_strat(n_splits=folds, shuffle=True)
 
         if os.path.exists(split_fp):
             fold_split = np.load(split_fp,allow_pickle=True)
@@ -315,4 +315,4 @@ def train_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='merg
 
 if __name__ == '__main__':
     # MLP,GNN = train_individual_models()
-    train_shape_ensemble()
+    train_cv_shape_ensemble()
