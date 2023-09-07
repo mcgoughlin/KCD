@@ -90,7 +90,6 @@ class SW_Data_labelled(Dataset):
         
     def _blur(self,tensor,p=0.3):
         if random()>p: return tensor
-        print(tensor.shape)
         return self.blur_kernel(tensor)
         
     def _contrast(self, img):
@@ -101,10 +100,10 @@ class SW_Data_labelled(Dataset):
         img = (img - mean) * fac + mean
         
         return img.clip(mn, mx)
+    
     def apply_foldsplit(self,split_ratio=0.8,train_cases=None):
         if type(train_cases)==type(None):
             self.train_cases = np.random.choice(self.cases,int(split_ratio*len(self.cases)),replace=False)
-            
         else:
             self.train_cases = train_cases
             
