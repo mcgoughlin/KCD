@@ -4,6 +4,7 @@ import numpy as np
 import os
 import torch
 import dgl
+import matplotlib.pyplot as plt
 
 
 def initialize_device():
