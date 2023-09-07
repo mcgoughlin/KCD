@@ -224,90 +224,10 @@ def eval_shape_ensemble(shape_ensemble,test_dl,plot_path=None,dev='cpu'):
                 test_dl.dataset.set_val_kidney(case,position)
                 entry = {'case':case,
                          'position':position}
-                for sv_im,features,graph, lb in test_dl:
-                    sv_lb,feat_lb,graph_lb = lb.T
-                    pred = softmax(shape_ensemble(features,sv_im,graph))
-
-                entry['label']=sv_lb.item()
-                entry['pred']=pred[0,1].item()
-
-                train_res.append(entry)
-
-        test_dl.dataset.is_train=False
-        for case in test_dl.dataset.test_cases:
-            for position in test_dl.dataset.case_data[test_dl.dataset.case_data['case'] ==case].position.unique():
-                test_dl.dataset.set_val_kidney(case,position)
-                entry = {'case':case,
-                         'position':position}
-                for sv_im,features,graph, lb in test_dl:
-                    sv_lb,feat_lb,graph_lb = lb.T
-                    pred = softmax(shape_ensemble(features,sv_im,graph))
-                    
-                entry['label']=sv_lb.item()
-                entry['pred']=pred[0,1].item()
-                test_res.append(entry)
-            
-    train_df = pd.DataFrame(train_res)
-    test_df = pd.DataFrame(test_res)
-    
-    for df, df_name in zip([train_df,test_df],['train','test']):
-        pred = df.pred.values
-        label = df.label.values
-                
-        ens_ROC= ROC_func(pred,label,max_pred=1,intervals=1000)
-        AUC = np.trapz(ens_ROC[:,0],ens_ROC[:,1])
-        
-        if df_name=='test':
-            fig = plt.figure(figsize=(12,8))
-            plt.plot(ens_ROC[:,1],ens_ROC[:,0],'--b',label='ROC')
-            plt.xlabel('Specificity')
-            plt.ylabel('Sensitivity')
-            plt.legend()
-            plt.savefig(plot_path)
-            plt.close()
-        
-        sens98spec=ens_ROC[ens_ROC[:,1]>0.98][:,0].max()
-        sens95spec=ens_ROC[ens_ROC[:,1]>0.95][:,0].max()
-        sens90spec=ens_ROC[ens_ROC[:,1]>0.90][:,0].max()
-        sens100spec=ens_ROC[ens_ROC[:,1]==1.0][:,0].max()
-        
-        boundary90 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens90spec])/len(ens_ROC)
-        boundary95 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens95spec])/len(ens_ROC)
-        boundary98 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens98spec])/len(ens_ROC)
-        boundary100 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens100spec])/len(ens_ROC)
-
-                
-        final_results.append({'dataset_loc':df_name,
-                'AUC':AUC,
-                'Highest Cancer Sens @ 100% Cancer Spec':sens100spec,
-                'Highest Cancer Sens @ 98% Cancer Spec':sens98spec,
-                'Highest Cancer Sens @ 95% Cancer Spec':sens95spec,
-                'Highest Cancer Sens @ 90% Cancer Spec':sens90spec,
-                'Boundary 90':boundary90,
-                'Boundary 95':boundary95,
-                'Boundary 98':boundary98,
-                'Boundary 100':boundary100})
-
-
-        
-    results_df = pd.DataFrame(final_results).groupby(['dataset_loc']).mean()
-    return results_df,test_df
-
-def eval_shape_ensemble_nocnn(shape_ensemble,test_dl,plot_path=None,dev='cpu'):
-    test_dl.dataset.is_train=True
-    train_res,test_res,final_results = [],[],[]
-    softmax = nn.Softmax(dim=-1)
-    with torch.no_grad():
-        for case in test_dl.dataset.train_cases:
-            for position in test_dl.dataset.case_data[test_dl.dataset.case_data['case'] ==case].position.unique():
-                test_dl.dataset.set_val_kidney(case,position)
-                entry = {'case':case,
-                         'position':position}
                 for features,graph, lb in test_dl:
-                    feat_lb,graph_lb = lb.T
                     pred = softmax(shape_ensemble(features,graph))
 
-                entry['label']=feat_lb.item()
+                entry['label']=lb.item()
                 entry['pred']=pred[0,1].item()
 
                 train_res.append(entry)
@@ -319,10 +239,9 @@ def eval_shape_ensemble_nocnn(shape_ensemble,test_dl,plot_path=None,dev='cpu'):
                 entry = {'case':case,
                          'position':position}
                 for features,graph, lb in test_dl:
-                    feat_lb,graph_lb = lb.T
                     pred = softmax(shape_ensemble(features,graph))
                     
-                entry['label']=feat_lb.item()
+                entry['label']=lb.item()
                 entry['pred']=pred[0,1].item()
                 test_res.append(entry)
             
@@ -346,7 +265,6 @@ def eval_shape_ensemble_nocnn(shape_ensemble,test_dl,plot_path=None,dev='cpu'):
         boundary98 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens98spec])/len(ens_ROC)
         boundary100 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens100spec])/len(ens_ROC)
 
-                
         final_results.append({'dataset_loc':df_name,
                 'AUC':AUC,
                 'Highest Cancer Sens @ 100% Cancer Spec':sens100spec,
@@ -358,8 +276,6 @@ def eval_shape_ensemble_nocnn(shape_ensemble,test_dl,plot_path=None,dev='cpu'):
                 'Boundary 98':boundary98,
                 'Boundary 100':boundary100})
 
-
-        
     results_df = pd.DataFrame(final_results).groupby(['dataset_loc']).mean()
     return results_df,test_df
 
@@ -439,83 +355,6 @@ def eval_shape_models(GNN,MLP,test_dl,plot_path=None,dev='cpu'):
 
     results_df = pd.DataFrame(final_results).groupby(['dataset_loc','model']).mean()
     return results_df,test_df
-
-def eval_complete_ensemble(complete_ensemble,complete_dl,plot_path=None,dev='cpu'):
-    complete_dl.dataset.is_train=True
-    train_res,test_res,final_results = [],[],[]
-    softmax = nn.Softmax(dim=-1)
-    with torch.no_grad():
-        for case in complete_dl.dataset.train_cases:
-            for position in complete_dl.dataset.case_data[complete_dl.dataset.case_data['case'] ==case].position.unique():
-                complete_dl.dataset.set_val_kidney(case,position)
-                entry = {'case':case,
-                         'position':position}
-                for sv_im,features,graph,tile_ims, lb in complete_dl:
-                    pred = softmax(complete_ensemble(features,sv_im,graph,tile_ims))
-
-                entry['label']=lb.item()
-                entry['pred']=pred[0,1].item()
-
-                train_res.append(entry)
-
-        complete_dl.dataset.is_train=False
-        for case in complete_dl.dataset.test_cases:
-            for position in complete_dl.dataset.case_data[complete_dl.dataset.case_data['case'] ==case].position.unique():
-                complete_dl.dataset.set_val_kidney(case,position)
-                entry = {'case':case,
-                         'position':position}
-                for sv_im,features,graph,tile_ims, lb in complete_dl:
-                    pred = softmax(complete_ensemble(features,sv_im,graph,tile_ims))
-                    
-                entry['label']=lb[0].item()
-                entry['pred']=pred[0,1].item()
-                test_res.append(entry)
-            
-    train_df = pd.DataFrame(train_res)
-    test_df = pd.DataFrame(test_res)
-    
-    for df, df_name in zip([train_df,test_df],['train','test']):
-        pred = df.pred.values
-        label = df.label.values
-                
-        ens_ROC= ROC_func(pred,label,max_pred=1,intervals=1000)
-        AUC = np.trapz(ens_ROC[:,0],ens_ROC[:,1])
-        
-        if df_name=='test':
-            fig = plt.figure(figsize=(12,8))
-            plt.plot(ens_ROC[:,1],ens_ROC[:,0],'--b',label='ROC')
-            plt.xlabel('Specificity')
-            plt.ylabel('Sensitivity')
-            plt.legend()
-            plt.savefig(plot_path)
-            plt.close()
-        
-        sens98spec=ens_ROC[ens_ROC[:,1]>0.98][:,0].max()
-        sens95spec=ens_ROC[ens_ROC[:,1]>0.95][:,0].max()
-        sens90spec=ens_ROC[ens_ROC[:,1]>0.90][:,0].max()
-        sens100spec=ens_ROC[ens_ROC[:,1]==1.0][:,0].max()
-        
-        boundary90 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens90spec])/len(ens_ROC)
-        boundary95 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens95spec])/len(ens_ROC)
-        boundary98 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens98spec])/len(ens_ROC)
-        boundary100 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens100spec])/len(ens_ROC)
-
-                
-        final_results.append({'dataset_loc':df_name,
-                'AUC':AUC,
-                'Highest Cancer Sens @ 100% Cancer Spec':sens100spec,
-                'Highest Cancer Sens @ 98% Cancer Spec':sens98spec,
-                'Highest Cancer Sens @ 95% Cancer Spec':sens95spec,
-                'Highest Cancer Sens @ 90% Cancer Spec':sens90spec,
-                'Boundary 90':boundary90,
-                'Boundary 95':boundary95,
-                'Boundary 98':boundary98,
-                'Boundary 100':boundary100})
-
-
-        
-    results_df = pd.DataFrame(final_results).groupby(['dataset_loc']).mean()
-    return results_df
 
 def eval_kwcnn(kwcnn,tilestack_dl,dev='cpu'):
     tilestack_dl.dataset.is_train=True

@@ -25,10 +25,11 @@ def convert_to_binary(df, column_name, substring):
 class ObjectData_labelled(Dataset):
     def __init__(self, home,data_name='coreg_ncct',
                  graph_thresh=1000, mlp_thresh=20000,
-                 voxel_spacing_mm=1, thresh_r_mm=10,dev='cpu'):
+                 voxel_spacing_mm=1, thresh_r_mm=10,dev='cpu',ensemble=False):
         
         self.graph_thresh = graph_thresh
         self.mlp_thresh = mlp_thresh
+        self.ensemble=ensemble
         
         self.homepath = os.path.join(home,'objects')
         print(self.homepath)
@@ -167,6 +168,8 @@ class ObjectData_labelled(Dataset):
             obj_is_cystic = int(case_df.largest_cyst>thresh) 
             obj_label = max(obj_is_cystic,obj_is_cancerous,0)
             label_list.append(obj_label)
+            
+        if self.ensemble: label_list = [label_list[0]]
             
         features = self._get_features(case_df.copy())
         graph = self._get_graph(case_df.copy())
