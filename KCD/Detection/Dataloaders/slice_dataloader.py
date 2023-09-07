@@ -26,7 +26,7 @@ class SW_Data_labelled(Dataset):
         folder = os.path.join(folder,"CancerThreshold-"+str(cancthresh)+'mm-KidneyThreshold'+str(kidthresh)+'mm')        
         if depth_z>1:home = os.path.join(folder,"3D-Depth"+str(depth_z)+'mm-Boundary'+str(boundary_z)+'mm','labelled_data')
         else:home = os.path.join(folder,"2D-Boundary"+str(boundary_z)+'mm','labelled_data')
-
+        
         assert(os.path.exists(home))
         assert([folder in os.listdir(home)for folder in ["tumour","kidney","none"]])
 
@@ -42,11 +42,11 @@ class SW_Data_labelled(Dataset):
                                     columns = ['filepath','class'])
         
         self.data_df['class'] = self.data_df['class'].astype(int)
-        self.data_df['case'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[1]).astype(int)
+        self.data_df['case'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[0:2]).str.join("_")
         self.data_df['side'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[2])
         self.data_df['window'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[3])
         self.data_df['slice'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:int(x[-1].split('index')[1].split('.')[0]))
-        self.cases = self.data_df.case.unique()
+        self.cases = self.data_df.case
             
         self.data_dict = {0:self.none,1:self.benign,2:self.malign}
         self.dir_dict = {0:os.path.join(self.home_path,"none"),

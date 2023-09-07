@@ -3,7 +3,7 @@ import numpy as np
 
 data_name = 'coreg_ncct'
 path = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/images".format(data_name)
-save_dir = '/Users/mcgoug01/Downloads/CNN_dataset'
+save_dir = '/Users/mcgoug01/Downloads/Data'
 segpath = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/labels".format(data_name)
 
 overlap_mm = 40 ## this dictates the minimum distance apart between each slice! not the overlap.
@@ -27,6 +27,17 @@ for thresh in thresholds_r_mm:
         # overlap_mm = spacing*patch2d/10
         print("Voxel Spacing {}mm".format(spacing))
         generator.create_dataset(path,save_dir,segpath,target_spacing,overlap,
-                       patch_size,thresh,kidney_r_mm,spacing,save_limit_percase_perlabel,
+                        patch_size,thresh,kidney_r_mm,spacing,save_limit_percase_perlabel,
+                        bbox_boundary_mm,data_name=data_name,boundary_z=boundary_z,
+                        depth_z=depth_z,has_seg_label = has_seg_label)
+        
+for thresh in thresholds_r_mm:
+    for spacing in voxel_spacings: 
+        target_spacing = np.array([spacing]*3)
+        overlap = overlap_mm/(patch_size*spacing)
+        # overlap_mm = spacing*patch2d/10
+        print("Voxel Spacing {}mm".format(spacing))
+        generator.create_dataset(path,save_dir,segpath,target_spacing,overlap,
+                       patch_size,0,0,spacing,save_limit_percase_perlabel,
                        bbox_boundary_mm,data_name=data_name,boundary_z=boundary_z,
                        depth_z=depth_z,has_seg_label = has_seg_label)

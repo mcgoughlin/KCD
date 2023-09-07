@@ -20,10 +20,10 @@ def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname
     dev = tu.initialize_device()
     
     if params==None:params = tu.init_shape_params()
-    else:tu.check_params(params)
+    else:tu.check_params(params,tu.init_shape_params())
     
     save_dir = tu.init_paths(os.path.join(home,'training_info'), dataname)
-    shapedataset, test_shapedataset = tu.get_shape_data(home, dataname, params['graph_thresh'], params['mlp_thresh'],ensemble=False)
+    shapedataset, test_shapedataset = tu.get_shape_data(home, dataname, params['graph_thresh'], params['mlp_thresh'],ensemble=False,dev=dev)
     cases, is_ncct = tu.get_cases(shapedataset)
 
     # More Initialization
@@ -60,7 +60,7 @@ def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname
             GNNopt = torch.optim.Adam(GNN.parameters(),lr=params['gnn_lr'])
             MLPopt = torch.optim.Adam(MLP.parameters(),lr=params['mlp_lr'])
     
-            dl,test_dl = tu.generate_dataloaders(shapedataset,test_shapedataset,train_index,cases,params['object_batchsize'],tu.shape_collate)
+            dl,test_dl = tu.generate_dataloaders(shapedataset,test_shapedataset,cases[train_index],params['object_batchsize'],tu.shape_collate)
             MLP,GNN = tu.train_shape_models(dl,dev,params['s1_objepochs'],loss_fnc,MLPopt,GNNopt,MLP,GNN)
             
             MLP_name = '{}_{}_{}_{}'.format(params['s1_objepochs'],params['mlp_thresh'],params['mlp_lr'],params['object_batchsize'])
@@ -107,7 +107,7 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
     # Initialization
     dev = tu.initialize_device()
     if params==None:params = tu.init_shape_params()
-    else:tu.check_params(params)
+    else:tu.check_params(params,tu.init_shape_params())
     save_dir = tu.init_paths(os.path.join(home,'training_info'), dataname)
     shapedataset, test_shapedataset = tu.get_shape_data(home, dataname, params['combined_threshold'], params['combined_threshold'],ensemble=True)
     cases, is_ncct = tu.get_cases(shapedataset)
@@ -136,7 +136,7 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
             ensemble_path = os.path.join(fold_path,'shape_ensemble')
             MLP_path = os.path.join(fold_path,'MLP')
             GNN_path = os.path.join(fold_path,'GNN')
-            dl,test_dl = tu.generate_dataloaders(shapedataset,test_shapedataset,train_index,cases,params['object_batchsize'],tu.shape_collate)
+            dl,test_dl = tu.generate_dataloaders(shapedataset,test_shapedataset,cases[train_index],params['object_batchsize'],tu.shape_collate)
 
             if not os.path.exists(ensemble_path): os.mkdir(ensemble_path)
                 
@@ -161,11 +161,11 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
                                               list(ShapeEnsemble.MLP.skip2.parameters())+
                                               list(ShapeEnsemble.GNN.classify2.parameters()),lr=params['shape_freeze_lr'])
     
-                ShapeEnsemble = tu.train_model(dl,dev,params['shape_freeze_epochs'],loss_fnc,SEopt,ShapeEnsemble)
+                ShapeEnsemble = tu.train_shape_ensemble(dl,dev,params['shape_freeze_epochs'],loss_fnc,SEopt,ShapeEnsemble)
             if params['shape_unfreeze_epochs']>0:
                 print('Unfrozen model training')
                 SEopt = torch.optim.Adam(ShapeEnsemble.parameters(),lr=params['shape_unfreeze_lr'])
-                ShapeEnsemble = tu.train_model(dl,dev,params['shape_unfreeze_epochs'],loss_fnc,SEopt,ShapeEnsemble)
+                ShapeEnsemble = tu.train_shape_ensemble(dl,dev,params['shape_unfreeze_epochs'],loss_fnc,SEopt,ShapeEnsemble)
 
             ShapeEnsemble.eval()
 

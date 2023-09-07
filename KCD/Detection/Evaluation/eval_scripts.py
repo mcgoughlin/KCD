@@ -28,7 +28,7 @@ def ROC_func(pred_var,lab,max_pred,intervals=20):
     
     return np.array(sens_spec,dtype=float)
 
-def eval_twcnn(twCNN,test_tw_dl,plot_path=None,dev='cpu'):
+def eval_cnn(CNN,test_tw_dl,plot_path=None,dev='cpu'):
     
     train_res,test_res,final_results = [],[],[]
     softmax = nn.Softmax(dim=-1)
@@ -43,7 +43,7 @@ def eval_twcnn(twCNN,test_tw_dl,plot_path=None,dev='cpu'):
                 case_store = []
                 for x,lb in test_tw_dl:
                     if any(lb==2): label = 1
-                    pred = softmax(twCNN(x.to(dev)))
+                    pred = softmax(CNN(x.to(dev)))
                     case_store.extend(pred[:,2].cpu().numpy().tolist())
 
                 case_store.sort(reverse=True)
@@ -67,7 +67,7 @@ def eval_twcnn(twCNN,test_tw_dl,plot_path=None,dev='cpu'):
                 case_store = []
                 for x,lb in test_tw_dl:
                     if any(lb==2): label = 1
-                    pred = softmax(twCNN(x.to(dev)))
+                    pred = softmax(CNN(x.to(dev)))
                     case_store.extend(pred[:,2].cpu().numpy().tolist())
                     
                 case_store.sort(reverse=True)
@@ -93,14 +93,6 @@ def eval_twcnn(twCNN,test_tw_dl,plot_path=None,dev='cpu'):
             ens_ROC= ROC_func(pred,label,max_pred=max_pred,intervals=1000)
             AUC = np.trapz(ens_ROC[:,0],ens_ROC[:,1])
             
-            # if df_name=='test':
-            #     fig = plt.figure(figsize=(12,8))
-            #     plt.plot(ens_ROC[:,1],ens_ROC[:,0],'--b',label='ROC')
-            #     plt.xlabel('Specificity')
-            #     plt.ylabel('Sensitivity')
-            #     plt.legend()
-            #     plt.savefig(plot_path)
-            #     plt.close()
             
             sens98spec=ens_ROC[ens_ROC[:,1]>0.98][:,0].max()
             sens95spec=ens_ROC[ens_ROC[:,1]>0.95][:,0].max()
