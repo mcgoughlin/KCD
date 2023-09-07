@@ -47,7 +47,7 @@ class SW_Data_labelled(Dataset):
         self.data_df['window'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[3])
         self.data_df['slice'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:int(x[-1].split('index')[1].split('.')[0]))
         self.cases = self.data_df.case
-            
+                    
         self.data_dict = {0:self.none,1:self.benign,2:self.malign}
         self.dir_dict = {0:os.path.join(self.home_path,"none"),
                          1:os.path.join(self.home_path,"kidney"),
@@ -176,11 +176,11 @@ class SW_Data_unlabelled(Dataset):
                                     [*[0]*len(self.bg),*[1]*len(self.fg)]]).T,
                                     columns = ['filepath','class'])
         self.data_df['class'] = self.data_df['class'].astype(int)
-        self.data_df['case'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[1]).astype(int)
+        self.data_df['case'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[0:2]).str.join("_")
         self.data_df['side'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[2])
         self.data_df['window'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[3])
         self.data_df['slice'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:int(x[-1].split('index')[1].split('.')[0]))
-        self.cases = self.data_df.case.unique()
+        self.cases = self.data_df.case
             
         self.data_dict = {0:self.bg,1:self.fg}
         self.dir_dict = {0:os.path.join(self.home_path,"background"),
