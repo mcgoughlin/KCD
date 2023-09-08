@@ -42,7 +42,7 @@ def init_slice2D_params():
               "batch_size":16,
               "dilated":40,
               "lr":  5e-4,
-              "epochs":1,
+              "epochs":5,
               "depth_z":1,
               "boundary_z":1,
               'pred_window':10}

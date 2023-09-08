@@ -59,8 +59,8 @@ def eval_individual_shape_models(home='/Users/mcgoug01/Downloads/Data',trainname
         GNN = torch.load(os.path.join(fold_path,'GNN','model',GNN_name),map_location=dev)
 
         MLP.eval(),GNN.eval()
-        s2_shape_res = iu.eval_shape_individual_models(MLP,GNN,test_dl,MLP_boundary=MLP_b,GNN_boundary=GNN_b,dev=dev)
-        foldwise_results.append(s2_shape_res)
+        shape_res = iu.eval_shape_individual_models(MLP,GNN,test_dl,MLP_boundary=MLP_b,GNN_boundary=GNN_b,dev=dev)
+        foldwise_results.append(shape_res)
         
     all_results = pd.concat(foldwise_results)
     all_results = all_results.groupby(['case','position']).sum().reset_index(level=['case','position'])[['case','position','MLPpred-hard','GNNpred-hard']]
