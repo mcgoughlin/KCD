@@ -7,7 +7,8 @@ import os
 import torch
 import dgl
 import matplotlib.pyplot as plt
-
+import torch.nn as nn
+import pandas as pd
 
 def init_shape_params():
     params = {
@@ -108,6 +109,10 @@ def get_shape_data(home, dataname, graph_thresh, mlp_thresh,ensemble=False,dev='
     return shapedataset, test_shapedataset
 
 
+def get_shape_data_inference(home, dataname,dev='cpu'):
+    return dl_shape.ObjectData_unlabelled(home, data_name=dataname, graph_thresh=0, mlp_thresh=0,dev=dev)
+
+
 def get_slice_data(home, dataname, voxel_size, cancthresh,kidthresh,depth_z,
                    boundary_z,dilated,device='cpu'):
     slicedataset = dl_slice.SW_Data_labelled(home, dataname, voxel_size_mm=voxel_size, cancthresh=cancthresh,kidthresh=kidthresh,depth_z=depth_z,boundary_z=boundary_z,dilated=dilated,device=device)
@@ -177,3 +182,78 @@ def plot_roc(name,model_name,ROC):
     plt.plot(100 - spec, sens, linewidth=2, label=name + ' AUC {:.3f}'.format(AUC))
     plt.ylabel('Sensivity / %')
     plt.xlabel('100 - Specificity / %')
+    
+def generate_ROC(pred_var,lab,max_pred,intervals=20):
+    boundaries = np.arange(-0.01,max_pred+0.01,1/intervals)
+    # pred [malig,non-malig]
+    sens_spec = []
+    is_truely_malig = lab==1
+    for boundary in boundaries:
+        # pred is zero if benign, 1 if malig
+        new_pred = pred_var> boundary
+        correct = new_pred == is_truely_malig
+
+        sens = (correct & new_pred).sum()/(is_truely_malig).sum()
+        spec = (correct & ~new_pred).sum()/(~is_truely_malig).sum()
+
+        sens_spec.append([sens,spec])
+    
+    return np.array(sens_spec,dtype=float)
+
+def eval_twcnn(twCNN,test_tw_dl,ps_boundary=0.98,dev='cpu',boundary_size=10):
+    boundary =ps_boundary*boundary_size
+    twCNN.eval()
+    test_res = []
+    softmax = nn.Softmax(dim=-1)
+    with torch.no_grad():
+        test_tw_dl.dataset.is_train=True
+        for case in test_tw_dl.dataset.cases:
+            for position in test_tw_dl.dataset.data_df[test_tw_dl.dataset.data_df['case'] ==case].side.unique():
+                if position == 'random': continue
+                test_tw_dl.dataset.set_val_kidney(case,position)
+                entry = {'case':case,
+                         'position':position}
+                case_store = []
+                for x,lb in test_tw_dl:
+                    pred = softmax(twCNN(x.to(dev)))
+                    case_store.extend(pred[:,2].cpu().numpy().tolist())
+
+                case_store.sort(reverse=True)
+                print(case, position,sum(case_store[:boundary_size]),boundary)
+                entry['Top-{}'.format(boundary_size)]=sum(case_store[:boundary_size])
+                entry['prediction'] = int(entry['Top-{}'.format(boundary_size)]>=boundary)
+                entry['boundary']=boundary
+                test_res.append(entry)
+            
+    test_df = pd.DataFrame(test_res)
+    
+    return test_df.drop_duplicates()
+
+
+def eval_shape_ensemble(shape_ensemble,test_dl,boundary=0.98,dev='cpu'):
+    shape_ensemble.eval()
+    shape_ensemble.MLP.eval(), shape_ensemble.GNN.eval()
+    test_res = []
+    softmax = nn.Softmax(dim=-1)
+    with torch.no_grad():
+        test_dl.dataset.is_train=True
+        cases = np.unique(test_dl.dataset.cases)
+        for case in cases:
+            for position in test_dl.dataset.case_data[test_dl.dataset.case_data['case'] ==case].position.unique():
+                test_dl.dataset.set_val_kidney(case,position)
+                entry = {'case':case,
+                         'position':position}
+                print(entry)
+                for features,graph, lb in test_dl:
+                    feat_lb,graph_lb = lb.T
+                    pred = softmax(shape_ensemble(features,graph))
+                    
+                entry['pred-cont']=pred[0,1].item()
+                print(pred[0,1].item())
+                entry['pred-hard'] = int(entry['pred-cont']>=boundary)
+                entry['boundary']=boundary
+                test_res.append(entry)
+            
+    test_df = pd.DataFrame(test_res)
+    
+    return test_df.drop_duplicates()

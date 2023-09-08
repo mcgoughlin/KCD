@@ -22,7 +22,7 @@ def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname
     if params==None:params = tu.init_shape_params()
     else:tu.check_params(params,tu.init_shape_params())
     
-    save_dir = tu.init_paths(os.path.join(home,'training_info'), dataname)
+    save_dir = tu.init_training_home(home, dataname)
     shapedataset, test_shapedataset = tu.get_shape_data(home, dataname, params['graph_thresh'], params['mlp_thresh'],ensemble=False,dev=dev)
     cases, is_ncct = tu.get_cases(shapedataset)
 
@@ -65,7 +65,6 @@ def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname
             
             MLP_name = '{}_{}_{}_{}'.format(params['s1_objepochs'],params['mlp_thresh'],params['mlp_lr'],params['object_batchsize'])
             GNN_name = '{}_{}_{}_{}_{}_{}_{}'.format(params['s1_objepochs'],params['graph_thresh'],params['gnn_lr'],params['gnn_layers'],params['gnn_hiddendim'],params['gnn_neighbours'],params['object_batchsize'])
-            
             for modpath in [MLP_path,GNN_path]:
                 if not os.path.exists(os.path.join(modpath,'model')):os.mkdir(os.path.join(modpath,'model'))
                 if not os.path.exists(os.path.join(modpath,'csv')):os.mkdir(os.path.join(modpath,'csv'))
@@ -81,8 +80,8 @@ def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname
             GNN_res = shape_model_res[shape_model_res['model']=='GNN'].drop('model',axis=1)
             MLP_res = shape_model_res[shape_model_res['model']=='MLP'].drop('model',axis=1)
             
-            GNN_res.to_csv(os.path.join(GNN_path,'csv',MLP_name+'.csv'))
-            MLP_res.to_csv(os.path.join(MLP_path,'csv',GNN_name+'.csv'))
+            GNN_res.to_csv(os.path.join(GNN_path,'csv',GNN_name+'.csv'))
+            MLP_res.to_csv(os.path.join(MLP_path,'csv',MLP_name+'.csv'))
             
         CV_results = pd.concat(cv_results, axis=0, ignore_index=True)
         GNN_ROC = eval_.ROC_func(CV_results['GNNpred'],CV_results['label'],max_pred=1,intervals=1000)
@@ -108,7 +107,7 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
     dev = tu.initialize_device()
     if params==None:params = tu.init_shape_params()
     else:tu.check_params(params,tu.init_shape_params())
-    save_dir = tu.init_paths(os.path.join(home,'training_info'), dataname)
+    save_dir = tu.init_training_home(home, dataname)
     shapedataset, test_shapedataset = tu.get_shape_data(home, dataname, params['combined_threshold'], params['combined_threshold'],ensemble=True)
     cases, is_ncct = tu.get_cases(shapedataset)
 
@@ -190,6 +189,6 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
         plt.close()
         
 if __name__ == '__main__':
-    dataset = 'coreg_ncct'
+    dataset = 'merged_training_set'
     train_cv_individual_models(dataname=dataset)
     train_cv_shape_ensemble(dataname=dataset)
