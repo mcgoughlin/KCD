@@ -49,7 +49,6 @@ class GNN_classifier(nn.Module):
         
     def forward(self, g):
         g = g.to(torch.device(self.device))
-        
         input_x = g.ndata['feat']
         # Perform graph convolution and activation function.
         h = F.relu(self.conv1(g, input_x))

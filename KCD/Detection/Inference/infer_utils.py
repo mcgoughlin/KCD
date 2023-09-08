@@ -82,6 +82,14 @@ def init_training_home(home, dataname):
     save_dir = os.path.join(training_home, dataname)
     create_directory(home),create_directory(home),create_directory(save_dir)
     return save_dir
+
+def init_inference_home(home, infername,trname,split):
+    
+    datahome = os.path.join(home,'{}_split_{}'.format(trname,split))
+    split_home = os.path.join(datahome, infername)
+    create_directory(home),create_directory(datahome),create_directory(split_home)
+
+    return split_home
         
 
 def shape_collate(samples, dev=initialize_device()):
@@ -89,6 +97,11 @@ def shape_collate(samples, dev=initialize_device()):
     batched_graph = dgl.batch(graphs)
     return torch.stack(features).to(dev), batched_graph.to(dev), torch.stack(labels).squeeze(dim=0).to(dev)
 
+
+def shape_collate_unlabelled(samples, dev=initialize_device()):
+    features, graphs = map(list, zip(*samples))
+    batched_graph = dgl.batch(graphs)
+    return torch.stack(features).to(dev), batched_graph.to(dev)
 
 
 def check_params(params,template_params):
@@ -200,7 +213,7 @@ def generate_ROC(pred_var,lab,max_pred,intervals=20):
     
     return np.array(sens_spec,dtype=float)
 
-def eval_twcnn(twCNN,test_tw_dl,ps_boundary=0.98,dev='cpu',boundary_size=10):
+def eval_cnn(twCNN,test_tw_dl,ps_boundary=0.98,dev='cpu',boundary_size=10):
     boundary =ps_boundary*boundary_size
     twCNN.eval()
     test_res = []
@@ -244,15 +257,41 @@ def eval_shape_ensemble(shape_ensemble,test_dl,boundary=0.98,dev='cpu'):
                 entry = {'case':case,
                          'position':position}
                 print(entry)
-                for features,graph, lb in test_dl:
-                    feat_lb,graph_lb = lb.T
+                for features,graph in test_dl:
                     pred = softmax(shape_ensemble(features,graph))
                     
                 entry['pred-cont']=pred[0,1].item()
-                print(pred[0,1].item())
-                entry['pred-hard'] = int(entry['pred-cont']>=boundary)
+                entry['Ensemblepred-hard'] = int(entry['pred-cont']>=boundary)
                 entry['boundary']=boundary
                 test_res.append(entry)
+            
+    test_df = pd.DataFrame(test_res)
+    
+    return test_df.drop_duplicates()
+
+def eval_shape_individual_models(MLP,GNN,test_dl,MLP_boundary=0.98,GNN_boundary=0.98,dev='cpu'):
+    MLP.eval(), GNN.eval()
+    test_res = []
+    softmax = nn.Softmax(dim=-1)
+    with torch.no_grad():
+        test_dl.dataset.is_train=True
+        cases = np.unique(test_dl.dataset.cases)
+        for case in cases:
+            for position in test_dl.dataset.case_data[test_dl.dataset.case_data['case'] ==case].position.unique():
+                test_dl.dataset.set_val_kidney(case,position)
+                entry = {'case':case,
+                         'position':position}
+                print(entry)
+                for features,graph in test_dl:
+                    MLP_pred = softmax(MLP(features))
+                    GNN_pred = softmax(GNN(graph))
+                    entry['MLPpred']=MLP_pred[:,1].item()
+                    entry['GNNpred']=GNN_pred[:,1].item()
+                    entry['MLPpred-hard'] = int(entry['MLPpred']>=MLP_boundary)
+                    entry['GNNpred-hard'] = int(entry['GNNpred']>=GNN_boundary)
+                    entry['GNN_boundary']=GNN_boundary
+                    entry['MLP_boundary']=MLP_boundary
+                    test_res.append(entry)
             
     test_df = pd.DataFrame(test_res)
     

@@ -151,7 +151,7 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
             ShapeEnsemble = model_generator.return_shapeensemble(MLP,GNN,n1=params['ensemble_n1'],n2=params['ensemble_n2'],num_labels=2,dev=dev)
             ShapeEnsemble.train()
             
-            name = '{}_{}_{}_{}_{}_{}_{}_{}_{}_{}'.format(params['ensemble_n1'],params['ensemble_n2'],fold,params['shape_freeze_epochs'],params['shape_unfreeze_epochs'],params['graph_thresh'],params['mlp_thresh'],params['s1_objepochs'],params['shape_freeze_lr'],params['shape_unfreeze_lr'])
+            name = '{}_{}_{}_{}_{}_{}_{}_{}_{}'.format(params['ensemble_n1'],params['ensemble_n2'],params['shape_freeze_epochs'],params['shape_unfreeze_epochs'],params['graph_thresh'],params['mlp_thresh'],params['s1_objepochs'],params['shape_freeze_lr'],params['shape_unfreeze_lr'])
             if params['shape_freeze_epochs']>0:
                 print('Frozen model training')
                 SEopt = torch.optim.Adam(list(ShapeEnsemble.process1.parameters())+

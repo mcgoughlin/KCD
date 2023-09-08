@@ -139,8 +139,7 @@ class ObjectData_labelled(Dataset):
         return mygraph
     
     def _get_features(self,case_df):
-        case_df['pos_binary'] = int(case_df['position'] =='right')
-        features = case_df.drop(['label','case','position','largest_cyst',
+        features = case_df.drop(['label','case','largest_cyst',
                                  'obj_fp','filename','largest_cancer',
                                  'case']).values
         
@@ -198,15 +197,15 @@ class ObjectData_unlabelled(Dataset):
         self.vertices = os.path.join(self.homepath,data_name,'vertices')
         
         ########## DATA PREPROCESSING ###########
-        self.case_data = pd.read_csv(os.path.join(self.homepath,data_name,'features_unlabelled.csv'))
+        self.case_data = pd.read_csv(os.path.join(self.homepath,data_name,'features_unlabelled.csv'),index_col=False)
         # filter out central kidneys
         central_kids = (self.case_data.position=='centre') | (self.case_data.position=='central')
         self.case_data = self.case_data[~central_kids]
         
-        self.params = pd.read_csv(os.path.join(self.homepath,norm_param_dataname,'normalisation_params.csv'))
+        self.params = pd.read_csv(os.path.join(self.homepath,norm_param_dataname,'normalisation_params.csv'),index_col=False)
         
         for col in [column for column in self.case_data.columns if (is_numeric_dtype(self.case_data[column]))]:
-            if (col.endswith('_vol')): self.case_data= self.case_data.drop(col,axis=1)
+            if (col.endswith('_vol')) or ('Unnamed' in col): self.case_data= self.case_data.drop(col,axis=1)
             elif not (col in self.params.col.values):continue
             else:
                 mean,std = self.params[self.params['col'] == col]['mean'].values[0],self.params[self.params['col'] == col]['std'].values[0]
@@ -228,7 +227,6 @@ class ObjectData_unlabelled(Dataset):
         self.is_casespecific = False
         
     def __len__(self):
-        assert(self.is_foldsplit)
         if self.is_casespecific:
             return len(self.case_specific_data)
         else: 
@@ -268,7 +266,6 @@ class ObjectData_unlabelled(Dataset):
         return mygraph
     
     def _get_features(self,case_df):
-        case_df['pos_binary'] = int(case_df['position'] =='right')
         features = case_df.drop(['obj_fp','filename','case']).values
         
         return torch.Tensor(features.astype(float))
