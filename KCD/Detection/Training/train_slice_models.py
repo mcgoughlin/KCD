@@ -17,7 +17,7 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
 
     # Initialization
     dev = tu.initialize_device()
-    
+
     if is_3D:
         if params==None:params = tu.init_slice3D_params()
         else:tu.check_params(params,tu.init_shape3D_params())
@@ -25,7 +25,7 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
         if params==None:params = tu.init_slice2D_params()
         else:tu.check_params(params,tu.init_shape2D_params())
     
-    save_dir = tu.init_paths(os.path.join(home,'training_info'), dataname)
+    save_dir = tu.init_training_home(home, dataname)
 
     slicedataset, test_slicedataset = tu.get_slice_data(home, dataname, params['voxel_size'], params['cancthresh_r_mm'],params['kidthresh_r_mm'],params['depth_z'],params['boundary_z'],params['dilated'],device=dev)
     cases, is_ncct = tu.get_cases(slicedataset)

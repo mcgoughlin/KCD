@@ -126,6 +126,10 @@ def get_shape_data_inference(home, dataname,dev='cpu'):
     return dl_shape.ObjectData_unlabelled(home, data_name=dataname, graph_thresh=0, mlp_thresh=0,dev=dev)
 
 
+def get_slice_data_inference(home, dataname,dev='cpu'):
+    return dl_slice.SW_Data_unlabelled(home, data_name=dataname, foreground_thresh=10,dev=dev)
+
+
 def get_slice_data(home, dataname, voxel_size, cancthresh,kidthresh,depth_z,
                    boundary_z,dilated,device='cpu'):
     slicedataset = dl_slice.SW_Data_labelled(home, dataname, voxel_size_mm=voxel_size, cancthresh=cancthresh,kidthresh=kidthresh,depth_z=depth_z,boundary_z=boundary_z,dilated=dilated,device=device)

@@ -143,8 +143,9 @@ class SW_Data_labelled(Dataset):
 
         return image,label
 
+
 class SW_Data_unlabelled(Dataset):
-    def __init__(self, path, name,voxel_size_mm=1,cancthresh=10,kidthresh=20,
+    def __init__(self, path, name,voxel_size_mm=1,foreground_thresh=10,
                  depth_z=20,boundary_z=5,dilated=40,device=None):
         
         assert(os.path.exists(path))
@@ -152,9 +153,9 @@ class SW_Data_unlabelled(Dataset):
         assert(os.path.exists(raw_data_path))
         
         folder = os.path.join(raw_data_path,"Voxel-"+str(voxel_size_mm)+"mm-Dilation"+str(dilated)+"mm")        
-        folder = os.path.join(folder,"CancerThreshold-"+str(cancthresh)+'mm-KidneyThreshold'+str(kidthresh)+'mm')        
+        folder = os.path.join(folder,"ForegroundThresh-"+str(foreground_thresh)+'mm')        
         if depth_z>1:home = os.path.join(folder,"3D-Depth"+str(depth_z)+'mm-Boundary'+str(boundary_z)+'mm','unseen_test_data')
-        else:home = os.path.join(folder,"2D-Boundary"+str(boundary_z)+'mm','unseen_test_data')
+        else:home = os.path.join(folder,"2D-Boundary"+str(boundary_z)+'mm','unlabelled_data')
         
         print(home)
         assert(os.path.exists(home))
@@ -210,46 +211,6 @@ class SW_Data_unlabelled(Dataset):
         image = np.load(os.path.join(directory,class_df.iloc[idx]['filepath']))
         image = torch.clip(torch.Tensor(image).to(self.device),-200,200)/100
         return torch.unsqueeze(image,0)
-    
-def get_dataloader(path, name,is_labelled=True,voxel_size_mm=1,cancthresh=10,kidthresh=20,
-             depth_z=20,boundary_z=5,dilated=40,device=None, batch_size = 16):
-    dataset = get_dataset(path,name,is_labelled,voxel_size_mm,cancthresh,kidthresh,
-                            depth_z,boundary_z,dilated,device)     
-    return DataLoader(dataset,batch_size=batch_size,shuffle=True)
-
-def get_dataset(path, name,is_labelled=True,voxel_size_mm=1,cancthresh=10,kidthresh=20,
-             depth_z=20,boundary_z=5,dilated=40,device=None):
-    
-    if is_labelled:
-        return SW_Data_labelled(path,name,voxel_size_mm,cancthresh,kidthresh,
-                                depth_z,boundary_z,dilated,device)  
-    else:
-        return SW_Data_unlabelled(path,name,voxel_size_mm,cancthresh,kidthresh,
-                                depth_z,boundary_z,dilated,device)  
         
-
-if __name__ == '__main__':
-    data_name = 'add_ncct_unseen'
-    home = '/Users/mcgoug01/Downloads/CNN_dataset'
-
-    overlap_mm = 40 ## this dictates the minimum distance apart between each slice! not the overlap.
-    patch2d = 224 ## in plane slice spacing
-    save_limit_percase_perlabel = 100 ## maximum number of saved shifted window slices per kidney
-    voxel_spacings = [1] ## isotropic voxel size in mm
-    thresholds_r_mm = [10] ## threshold used to calculate cancer label
-    kidney_r_mm = 10 ## threshold used to calculate kidney label
-    depth_z = 20 ## size of slice depth in axial dimension in mm - if 1mm, then 2D
-    bbox_boundary_mm = 40 ## dilation of segmentation label
-    boundary_z= 5 ## axial spacing between slice sampling
-    has_seg_label = False ## if we don't have seg label, we only generated foreground/background slices
-    
-    ds = get_dataset(home,data_name,has_seg_label,voxel_spacings[0],thresholds_r_mm[0],kidney_r_mm,depth_z,boundary_z,bbox_boundary_mm,'cpu')
-    ds.set_val_kidney(5)
-
-    index = np.random.randint(0,20,1)[0]
-    a = ds[index]
-    a_ = a[0,10]
-    import matplotlib.pyplot as plt
-    plt.imshow(a_)
 
     

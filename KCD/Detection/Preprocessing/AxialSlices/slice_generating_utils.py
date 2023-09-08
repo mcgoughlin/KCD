@@ -225,7 +225,7 @@ def get_kid_str(kidney_data,reshaped_im,reshaped_seg,spacing,axes):
     return kid_str
 
 
-def save_windows(windowed_im,windowed_seg,canc_thresh,
+def save_windows_labelled(windowed_im,windowed_seg,canc_thresh,
                  kid_thresh,target_spacing,save_path,voxel_size_mm,
                  thresh_r_mm,case_name,kidney_side='random',
                  shuffle=True,save_limit=100,centralised=False,depth_z=1,
@@ -234,40 +234,57 @@ def save_windows(windowed_im,windowed_seg,canc_thresh,
     if centralised: string = 'centralised'
     else: string = 'shifted'
     
-    sw_maligs,sw_normals,sw_none= am.filter_shifted_windows(windowed_im,windowed_seg,canc_thresh,kid_thresh,target_spacing[0],shuffle=shuffle,has_seg_label=has_seg_label)
+    sw_maligs,sw_normals,sw_none= am.filter_shifted_windows(windowed_im,windowed_seg,canc_thresh,kid_thresh,target_spacing[0],shuffle=shuffle,has_seg_label=True)
+    sw_subtypes = [sw_maligs,sw_normals,sw_none]
+    names = ["tumour","kidney","none"]
+    print("Creating {} tumour, and {} kidney {} windows.".format(min(len(sw_maligs),save_limit),
+                                                                      min(len(sw_normals),save_limit),
+                                                                      string))
 
-    if has_seg_label:
-        sw_subtypes = [sw_maligs,sw_normals,sw_none]
-        names = ["tumour","kidney","none"]
-        print("Creating {} tumour, and {} kidney {} windows.".format(min(len(sw_maligs),save_limit),
-                                                                          min(len(sw_normals),save_limit),
-                                                                          string))
-    else:
-        sw_subtypes = [sw_normals,sw_none]
-        names = ["foreground","background"]
-        print("Creating {} foreground, and {} background {} windows.".format(min(len(sw_normals),save_limit),
-                                                                          min(len(sw_none),save_limit),
-                                                                          string))
+    for subname, label_group in zip(names,sw_subtypes):
+        fold = fu.filename_structure_labelled(save_path,subname,voxel_size_mm,thresh_r_mm,kidthresh,
+                                     depth_z,boundary_z,dilate)
+        for i,sw in enumerate(label_group):
+            if i >= save_limit: break
+            sw = np.squeeze(sw)
+            np.save(os.path.join(fold,"{}_{}_{}_index{}".format(case_name[:-7].replace('-','_'),kidney_side,string,i)),sw)
+            
+            
+def save_windows_unlabelled(windowed_im,windowed_seg,fg_thresh,target_spacing,
+                            save_path,voxel_size_mm,
+                             thresh_r_mm,case_name,kidney_side='random',
+                             shuffle=True,save_limit=100,centralised=False,depth_z=1,
+                             has_seg_label = True,boundary_z=1,kidthresh=20,dilate=40,patch_dims=(1,224,224)):
+    
+    if centralised: string = 'centralised'
+    else: string = 'shifted'
+    
+    _,sw_normals,sw_none= am.filter_shifted_windows(windowed_im,windowed_seg,1e6,fg_thresh,target_spacing[0],shuffle=shuffle,has_seg_label=False)
+    sw_subtypes = [sw_normals,sw_none]
+    names = ["foreground","background"]
+    print("Creating {} foreground, and {} background {} windows.".format(min(len(sw_normals),save_limit),
+                                                                      min(len(sw_none),save_limit),
+                                                                      string))
         
 
 
     for subname, label_group in zip(names,sw_subtypes):
-        fold = fu.filename_structure(save_path,subname,voxel_size_mm,thresh_r_mm,kidthresh,
-                                     depth_z,boundary_z,dilate,has_seg_label=has_seg_label)
+        fold = fu.filename_structure_unlabelled(save_path,subname,voxel_size_mm,thresh_r_mm,
+                                     depth_z,boundary_z,dilate)
         for i,sw in enumerate(label_group):
             if i >= save_limit: break
             sw = np.squeeze(sw)
             np.save(os.path.join(fold,"{}_{}_{}_index{}".format(case_name[:-7].replace('-','_'),kidney_side,string,i)),sw)
             
 
-
-def create_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
-                   patch_dims,cancer_thresh_rmm,kidney_thresh_rmm,
+def create_labelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
+                   patch_dims,cancer_thresh_rmm,
                    voxel_size_mm, save_limit,bbox_boundary_mm=50,
                    data_name='coreg_ncct',boundary_z=1,depth_z=1,
-                   has_seg_label = True):
+                   kidney_thresh_rmm=20):
     
-    save_path = fu.create_save_path_structure(im_path,data_name=data_name,save_dir=save_dir,thresh=cancer_thresh_rmm)    
+    
+    save_path = fu.create_save_path_structure(im_path,data_name=data_name,save_dir=save_dir)    
     int_list = [file for file in os.listdir(im_path)]
     
     bbox_boundary = int(np.round(bbox_boundary_mm/target_spacing[0]))
@@ -324,25 +341,111 @@ def create_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
             ct += np.where(final_mask==0,-200,0)
             
 
-            if has_seg_label:
-                sw_im, sw_seg = get_shifted_windows(ct,seg,overlap=overlap,patch_size=patch_size,axes=axes,boundary_z=boundary_z)  
-                assert(sw_im.shape[-3:]==tuple(patch_dims))
-                assert(sw_seg.shape[-3:]==tuple(patch_dims))
-                           
-                save_windows(sw_im,sw_seg,canc_thresh,kid_thresh,
-                             target_spacing,save_path,
-                             voxel_size_mm,cancer_thresh_rmm,get_int,
-                             shuffle=True,save_limit=save_limit,centralised=False,
-                             depth_z=depth_z,has_seg_label=has_seg_label,boundary_z=boundary_z,
-                             kidthresh=kidney_thresh_rmm,dilate=bbox_boundary_mm,patch_dims=patch_dims)
+        
+            sw_im, sw_seg = get_shifted_windows(ct,seg,overlap=overlap,patch_size=patch_size,axes=axes,boundary_z=boundary_z)  
+            assert(sw_im.shape[-3:]==tuple(patch_dims))
+            assert(sw_seg.shape[-3:]==tuple(patch_dims))
+                       
+            save_windows_labelled(sw_im,sw_seg,canc_thresh,kid_thresh,
+                         target_spacing,save_path,
+                         voxel_size_mm,cancer_thresh_rmm,get_int,
+                         shuffle=True,save_limit=save_limit,centralised=False,
+                         depth_z=depth_z,boundary_z=boundary_z,
+                         kidthresh=kidney_thresh_rmm,dilate=bbox_boundary_mm,patch_dims=patch_dims)
 
             cent_im, cent_seg = get_centralised_windows(ct,seg,centroid,patch_size=patch_size,axes=axes,boundary_z=boundary_z) 
             assert(cent_im.shape[-3:]==tuple(patch_dims))
             assert(cent_seg.shape[-2:]==tuple(patch_dims[-2:]))
             
-            save_windows(cent_im,cent_seg,canc_thresh,kid_thresh,
+            save_windows_labelled(cent_im,cent_seg,canc_thresh,kid_thresh,
                          target_spacing,save_path,
                          voxel_size_mm,cancer_thresh_rmm,get_int,kidney_side=name,
                          shuffle=False,save_limit=1e4,centralised=True,
-                         depth_z=depth_z,has_seg_label=has_seg_label,boundary_z=boundary_z,
+                         depth_z=depth_z,boundary_z=boundary_z,
+                         kidthresh=kidney_thresh_rmm,dilate=bbox_boundary_mm,patch_dims=patch_dims)
+            
+            
+def create_unlabelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
+                   patch_dims,foreground_thresh,
+                   voxel_size_mm, save_limit,bbox_boundary_mm=50,
+                   data_name='coreg_ncct',boundary_z=1,depth_z=1,
+                   kidney_thresh_rmm=20):
+    
+    save_path = fu.create_save_path_structure(im_path,data_name=data_name,save_dir=save_dir)    
+    int_list = [file for file in os.listdir(im_path)]
+    
+    bbox_boundary = int(np.round(bbox_boundary_mm/target_spacing[0]))
+    vol_thresh_vox = 1000 / float(np.prod(target_spacing)) # ignore 'kidney' segmentations with a vol less than 100mm cubed
+    kernel = spim.generate_binary_structure(3, 2).astype(np.uint8)
+    fg_thresh = ((foreground_thresh/target_spacing[0])**2) * 3.1416
+    
+    for get_int in int_list:
+        if get_int=='KiTS-00151.nii.gz': continue #skip this case - strange label artefact
+        if get_int=='.DS_Store': continue
+        ct,seg = am.get(get_int,im_path,seg_path)
+        ct_im,seg_im = am.nifti_2_correctarr(ct), am.nifti_2_correctarr(seg)
+        patch_size= patch_dims.copy()
+        spacing=am.get_spacing(ct)  
+        spacing_axes = am.find_orientation(spacing,is_axes=False)
+        if spacing_axes == (0,0,0):continue
+        z_spac,inplane_spac = spacing[spacing_axes[0]], spacing[spacing_axes[1]]
+        correct_spacing = np.array((z_spac,inplane_spac,inplane_spac))
+        axes = am.find_orientation(ct_im.shape,is_axes=True,im=ct_im)
+        if axes == (0,0,0):continue
+        axial,lr,ud = axes
+        axes = np.array(axes)
+
+        
+        reshaped_im = am.rescale_array(ct_im,correct_spacing,axes,target_spacing = target_spacing)
+        reshaped_seg = am.rescale_array(seg_im,correct_spacing,axes,target_spacing = target_spacing,is_seg=True)
+
+        kidney_data = np.asarray([[mass,centroid] for mass, centroid in get_masses(reshaped_seg>0,vol_thresh_vox)],dtype=object)        
+
+        kid_str = get_kid_str(kidney_data,reshaped_im,reshaped_seg,spacing,axes)
+        if kid_str == ['_failure']:continue
+                
+        for kidney_datum, name in zip(kidney_data,kid_str):
+            print("\nGenerating from {} {}-side.".format(get_int,name))
+            #  this data is for training only - testing will ignore generic 
+            coords = np.array(kidney_datum[0].bbox)
+
+            centroid = kidney_datum[1]
+            
+            ### final mask should be generated from a 3 dilation of the masked segmentation.
+            first_mask = np.zeros_like(reshaped_seg)
+            first_mask[coords[0]:coords[3],
+                       coords[1]:coords[4],
+                       coords[2]:coords[5]] = np.ones((coords[3]-coords[0],
+                                                       coords[4]-coords[1],
+                                                       coords[5]-coords[2]))
+            first_mask = first_mask*(reshaped_seg>0).astype(np.uint8)
+            final_mask = spim.binary_dilation(first_mask, kernel, iterations=bbox_boundary)
+            
+            seg = first_mask*reshaped_seg
+            ct = final_mask*reshaped_im
+            # get rid of zero'd background that confounds training - make bg -200HU, the min possible val in image.
+            ct += np.where(final_mask==0,-200,0)
+            
+
+        
+            sw_im, sw_seg = get_shifted_windows(ct,seg,overlap=overlap,patch_size=patch_size,axes=axes,boundary_z=boundary_z)  
+            assert(sw_im.shape[-3:]==tuple(patch_dims))
+            assert(sw_seg.shape[-3:]==tuple(patch_dims))
+                       
+            save_windows_unlabelled(sw_im,sw_seg,fg_thresh,
+                         target_spacing,save_path,
+                         voxel_size_mm,foreground_thresh,get_int,
+                         shuffle=True,save_limit=save_limit,centralised=False,
+                         depth_z=depth_z,boundary_z=boundary_z,
+                         kidthresh=kidney_thresh_rmm,dilate=bbox_boundary_mm,patch_dims=patch_dims)
+
+            cent_im, cent_seg = get_centralised_windows(ct,seg,centroid,patch_size=patch_size,axes=axes,boundary_z=boundary_z) 
+            assert(cent_im.shape[-3:]==tuple(patch_dims))
+            assert(cent_seg.shape[-2:]==tuple(patch_dims[-2:]))
+            
+            save_windows_unlabelled(cent_im,cent_seg,fg_thresh,
+                         target_spacing,save_path,
+                         voxel_size_mm,foreground_thresh,get_int,kidney_side=name,
+                         shuffle=False,save_limit=1e4,centralised=True,
+                         depth_z=depth_z,boundary_z=boundary_z,
                          kidthresh=kidney_thresh_rmm,dilate=bbox_boundary_mm,patch_dims=patch_dims)
