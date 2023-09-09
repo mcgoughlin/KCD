@@ -210,9 +210,8 @@ def get_kid_str(kidney_data,reshaped_im,reshaped_seg,spacing,axes):
             kid_str = ['right']
             
         print("sole kidney is {}".format(kid_str))
-    elif len(kidney_data) == 0: assert(1==2)
-    elif len(kidney_data)>2: 
-        kid_str=['_failure']
+    elif len(kidney_data) == 0: kid_str=['_failure']
+    elif len(kidney_data)>2: kid_str=['_failure']
     else:
         first_kidney = kidney_data[0]
         second_kidney = kidney_data[1]

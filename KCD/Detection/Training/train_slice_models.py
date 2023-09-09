@@ -89,5 +89,6 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
         plt.close()
         
 if __name__ == '__main__':
-    dataset = 'coreg_ncct'
-    train_cv_slice_model(dataname=dataset,is_3D=False)
+    dataset = 'kits23sncct'
+    home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
+    train_cv_slice_model(home=home,dataname=dataset,is_3D=False)

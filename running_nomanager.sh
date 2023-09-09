@@ -24,4 +24,4 @@ conda activate "${CONDA_ENV_PATH}"
 
 
 # Run jobs
-python KCD/Detection/Preprocessing/AxialSlices/create2D_CD.py
+python KCD/Detection/Preprocessing/AxialSlices/create2D_internal.py
