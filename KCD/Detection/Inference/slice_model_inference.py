@@ -38,7 +38,7 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
     dev = iu.initialize_device()
 
     #### init dataset
-    inference_dataset = iu.get_slice_data_inference(home,infername,dev=dev)
+    inference_dataset = iu.get_slice_data_inference(home,infername,params['voxel_size'],params['fg_thresh'],params['depth_z'],params['boundary_z'],params['dilated'],dev=dev)
     
     model_name = '{}_{}_{}_{}_{}'.format(model_type,params['model_size'],params['epochs'],params['epochs'],params['lr'])
     load_split_path = os.path.join(load_dir,'split_{}'.format(tr_split))    
@@ -48,7 +48,7 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
         fold_path = os.path.join(load_split_path,'fold_{}'.format(fold))
         CNN_path = os.path.join(fold_path,model_type)
         CNN_results = pd.read_csv(os.path.join(CNN_path,'csv',model_name+'.csv'))
-        CNN_results = CNN_results[(CNN_results['dataset_loc']=='test')&(CNN_results['Voting Size']==params['voting_size'])]
+        CNN_results = CNN_results[(CNN_results['dataset_loc']=='test')&(CNN_results['Voting Size']==params['pred_window'])]
         boundary.append(CNN_results['Boundary {}'.format(spec_boundary)].values[0])
         print(boundary)
                 
@@ -66,7 +66,7 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
         
         CNN = torch.load(os.path.join(CNN_path,'model',model_name),map_location=dev)
         CNN.eval()
-        slice_res = iu.eval_cnn(CNN,test_dl,ps_boundary=CNN_b,dev=dev,boundary_size=params['voting_size'])
+        slice_res = iu.eval_cnn(CNN,test_dl,ps_boundary=CNN_b,dev=dev,boundary_size=params['pred_window'])
         foldwise_results.append(slice_res)
         
     all_results = pd.concat(foldwise_results)
@@ -75,3 +75,10 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
     all_results['prediction'] = all_results['prediction'].apply(lambda x:1 if x>=(tr_folds/2) else 0)
 
     all_results.to_csv(os.path.join(inference_path,'{}_'.format(model_type)+model_name+'.csv'))
+    
+if __name__ == '__main__':
+    home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
+    trainname = 'kits23sncct'
+    infername='kits23sncct'
+    eval_individual_slice_models(home=home,trainname=trainname,infername=infername)
+    

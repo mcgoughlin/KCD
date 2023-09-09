@@ -154,7 +154,7 @@ class SW_Data_unlabelled(Dataset):
         
         folder = os.path.join(raw_data_path,"Voxel-"+str(voxel_size_mm)+"mm-Dilation"+str(dilated)+"mm")        
         folder = os.path.join(folder,"ForegroundThresh-"+str(foreground_thresh)+'mm')        
-        if depth_z>1:home = os.path.join(folder,"3D-Depth"+str(depth_z)+'mm-Boundary'+str(boundary_z)+'mm','unseen_test_data')
+        if depth_z>1:home = os.path.join(folder,"3D-Depth"+str(depth_z)+'mm-Boundary'+str(boundary_z)+'mm','unlabelled_data')
         else:home = os.path.join(folder,"2D-Boundary"+str(boundary_z)+'mm','unlabelled_data')
         
         print(home)
@@ -186,8 +186,6 @@ class SW_Data_unlabelled(Dataset):
         self.test_case = None
 
     def __len__(self):
-        assert(self.is_foldsplit)
-
         if type(self.test_case) == type(None):
             assert(1==2)
         else:

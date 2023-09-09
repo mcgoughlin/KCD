@@ -40,6 +40,7 @@ def init_slice2D_params():
               "model_size":"large",
               "cancthresh_r_mm":10,
               "kidthresh_r_mm":20,
+              "fg_thresh":10,
               "batch_size":16,
               "dilated":40,
               "lr":  5e-4,
@@ -55,6 +56,7 @@ def init_slice3D_params():
               "model_size":"small",
               "cancthresh_r_mm":10,
               "kidthresh_r_mm":20,
+              "fg_thresh":10,
               "batch_size":16,
               "dilated":40,
               "lr":  5e-4,
@@ -126,8 +128,9 @@ def get_shape_data_inference(home, dataname,dev='cpu'):
     return dl_shape.ObjectData_unlabelled(home, data_name=dataname, graph_thresh=0, mlp_thresh=0,dev=dev)
 
 
-def get_slice_data_inference(home, dataname,dev='cpu'):
-    return dl_slice.SW_Data_unlabelled(home, data_name=dataname, foreground_thresh=10,dev=dev)
+def get_slice_data_inference(home, dataname,voxel_size,fg_thresh,depth_z,
+                             boundary_z,dilated,dev='cpu'):
+    return dl_slice.SW_Data_unlabelled(home, dataname, voxel_size,fg_thresh,depth_z,boundary_z,dilated,device=dev)
 
 
 def get_slice_data(home, dataname, voxel_size, cancthresh,kidthresh,depth_z,
@@ -231,7 +234,7 @@ def eval_cnn(twCNN,test_tw_dl,ps_boundary=0.98,dev='cpu',boundary_size=10):
                 entry = {'case':case,
                          'position':position}
                 case_store = []
-                for x,lb in test_tw_dl:
+                for x in test_tw_dl:
                     pred = softmax(twCNN(x.to(dev)))
                     case_store.extend(pred[:,2].cpu().numpy().tolist())
 
