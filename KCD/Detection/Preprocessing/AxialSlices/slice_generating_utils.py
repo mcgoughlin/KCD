@@ -259,10 +259,9 @@ def save_windows_unlabelled(windowed_im,windowed_seg,fg_thresh,target_spacing,
     else: string = 'shifted'
     
     _,sw_normals,sw_none= am.filter_shifted_windows(windowed_im,windowed_seg,1e6,fg_thresh,target_spacing[0],shuffle=shuffle,has_seg_label=False)
-    sw_subtypes = [sw_normals,sw_none]
-    names = ["foreground","background"]
-    print("Creating {} foreground, and {} background {} windows.".format(min(len(sw_normals),save_limit),
-                                                                      min(len(sw_none),save_limit),
+    sw_subtypes = [sw_normals]
+    names = ["foreground"]
+    print("Creating {} foreground {} windows.".format(min(len(sw_normals),save_limit),
                                                                       string))
         
 
@@ -283,7 +282,7 @@ def create_labelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
                    kidney_thresh_rmm=20):
     
     
-    save_path = fu.create_save_path_structure(im_path,data_name=data_name,save_dir=save_dir)    
+    save_path = fu.create_save_path_structure(im_path,data_name=data_name,save_dir=save_dir) 
     int_list = [file for file in os.listdir(im_path)]
     
     bbox_boundary = int(np.round(bbox_boundary_mm/target_spacing[0]))
@@ -362,7 +361,7 @@ def create_labelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
                          shuffle=False,save_limit=1e4,centralised=True,
                          depth_z=depth_z,boundary_z=boundary_z,
                          kidthresh=kidney_thresh_rmm,dilate=bbox_boundary_mm,patch_dims=patch_dims)
-            
+                        
             
 def create_unlabelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
                    patch_dims,foreground_thresh,
@@ -425,18 +424,6 @@ def create_unlabelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
             # get rid of zero'd background that confounds training - make bg -200HU, the min possible val in image.
             ct += np.where(final_mask==0,-200,0)
             
-
-        
-            sw_im, sw_seg = get_shifted_windows(ct,seg,overlap=overlap,patch_size=patch_size,axes=axes,boundary_z=boundary_z)  
-            assert(sw_im.shape[-3:]==tuple(patch_dims))
-            assert(sw_seg.shape[-3:]==tuple(patch_dims))
-                       
-            save_windows_unlabelled(sw_im,sw_seg,fg_thresh,
-                         target_spacing,save_path,
-                         voxel_size_mm,foreground_thresh,get_int,
-                         shuffle=True,save_limit=save_limit,centralised=False,
-                         depth_z=depth_z,boundary_z=boundary_z,
-                         kidthresh=kidney_thresh_rmm,dilate=bbox_boundary_mm,patch_dims=patch_dims)
 
             cent_im, cent_seg = get_centralised_windows(ct,seg,centroid,patch_size=patch_size,axes=axes,boundary_z=boundary_z) 
             assert(cent_im.shape[-3:]==tuple(patch_dims))

@@ -71,14 +71,14 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
         
     all_results = pd.concat(foldwise_results)
     all_results = all_results.groupby(['case','position']).sum().reset_index(level=['case','position'])[['case','position','prediction']]
-    all_results['position'] = all_results['position'].apply(lambda x:'right' if x==1 else'left')
+    print(all_results)
+    print(all_results['position'])
     all_results['prediction'] = all_results['prediction'].apply(lambda x:1 if x>=(tr_folds/2) else 0)
-
     all_results.to_csv(os.path.join(inference_path,'{}_'.format(model_type)+model_name+'.csv'))
     
 if __name__ == '__main__':
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
     trainname = 'kits23sncct'
     infername='kits23sncct'
-    eval_individual_slice_models(home=home,trainname=trainname,infername=infername)
+    eval_individual_slice_models(home=home,trainname=trainname,infername=infername,is_3D=False)
     

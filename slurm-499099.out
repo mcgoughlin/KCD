@@ -189,8 +189,8 @@ No action taken.
 ++++ '[' '!' -x /usr/bin/basename ']'
 ++++ unset Nm confPath execNm
 ++++ unset -f findExec
-++++ '[' -f /proc/3690987/exe ']'
-+++++ /usr/bin/readlink /proc/3690987/exe
+++++ '[' -f /proc/2656774/exe ']'
++++++ /usr/bin/readlink /proc/2656774/exe
 ++++ my_shell=/usr/bin/bash
 +++++ /usr/bin/expr /usr/bin/bash : '-*\(.*\)'
 ++++ my_shell=/usr/bin/bash
@@ -228,7 +228,7 @@ Shell debugging restarted
 +++ '[' '' ']'
 +++ . /etc/profile.d/which2.sh
 ++++ case "$(basename $(readlink /proc/$$/exe))" in
-++++++ readlink /proc/3690987/exe
+++++++ readlink /proc/2656774/exe
 +++++ basename /usr/bin/bash
 ++++ which_declare='declare -f'
 ++++ which_opt=-f
@@ -593,5 +593,39 @@ export CONDA_PREFIX_1='\''/bask/apps/test/EL8-ice/software/Miniconda3/4.10.3'\''
 + '[' -n '' ']'
 + '[' -n '' ']'
 + hash -r
-+ python KCD/Detection/Preprocessing/AxialSlice/creating2D_internal.py
-python: can't open file '/bask/homes/r/ropj6012/KCD/KCD/Detection/Preprocessing/AxialSlice/creating2D_internal.py': [Errno 2] No such file or directory
++ python KCD/Detection/Inference/slice_model_inference.py
+/bask/projects/p/phwq4930-renal-canc/KCD_data/Data/slices/kits23sncct/Voxel-1mm-Dilation40mm/ForegroundThresh-10mm/2D-Boundary1mm/unlabelled_data
+Training data contains 104035 background slices and 123632 foreground slices.
+[0.9988023952095808]
+[0.9988023952095808, 0.9989021956087824]
+[0.9988023952095808, 0.9989021956087824, 0.9989021956087824]
+[0.9988023952095808, 0.9989021956087824, 0.9989021956087824, 0.9971057884231536]
+[0.9988023952095808, 0.9989021956087824, 0.9989021956087824, 0.9971057884231536, 0.999001996007984]
+boundary is 0.9989021956087824.
+Traceback (most recent call last):
+  File "/bask/projects/p/phwq4930-renal-canc/conda_env/ovseg_env/lib/python3.10/site-packages/numpy/lib/npyio.py", line 441, in load
+    return pickle.load(fid, **pickle_kwargs)
+EOFError: Ran out of input
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/bask/homes/r/ropj6012/KCD/KCD/Detection/Inference/slice_model_inference.py", line 83, in <module>
+    eval_individual_slice_models(home=home,trainname=trainname,infername=infername,is_3D=False)
+  File "/bask/homes/r/ropj6012/KCD/KCD/Detection/Inference/slice_model_inference.py", line 69, in eval_individual_slice_models
+    slice_res = iu.eval_cnn(CNN,test_dl,ps_boundary=CNN_b,dev=dev,boundary_size=params['pred_window'])
+  File "/bask/homes/r/ropj6012/KCD/KCD/Detection/Inference/infer_utils.py", line 237, in eval_cnn
+    for x in test_tw_dl:
+  File "/bask/projects/p/phwq4930-renal-canc/conda_env/ovseg_env/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 633, in __next__
+    data = self._next_data()
+  File "/bask/projects/p/phwq4930-renal-canc/conda_env/ovseg_env/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 677, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/bask/projects/p/phwq4930-renal-canc/conda_env/ovseg_env/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 51, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/bask/projects/p/phwq4930-renal-canc/conda_env/ovseg_env/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 51, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/bask/homes/r/ropj6012/KCD/KCD/Detection/Dataloaders/slice_dataloader.py", line 209, in __getitem__
+    image = np.load(os.path.join(directory,class_df.iloc[idx]['filepath']),allow_pickle=True)
+  File "/bask/projects/p/phwq4930-renal-canc/conda_env/ovseg_env/lib/python3.10/site-packages/numpy/lib/npyio.py", line 443, in load
+    raise pickle.UnpicklingError(
+_pickle.UnpicklingError: Failed to interpret file '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data/slices/kits23sncct/Voxel-1mm-Dilation40mm/ForegroundThresh-10mm/2D-Boundary1mm/unlabelled_data/background/case_00432_left_centralised_index30.npy' as a pickle

@@ -189,8 +189,8 @@ No action taken.
 ++++ '[' '!' -x /usr/bin/basename ']'
 ++++ unset Nm confPath execNm
 ++++ unset -f findExec
-++++ '[' -f /proc/3675159/exe ']'
-+++++ /usr/bin/readlink /proc/3675159/exe
+++++ '[' -f /proc/2652454/exe ']'
++++++ /usr/bin/readlink /proc/2652454/exe
 ++++ my_shell=/usr/bin/bash
 +++++ /usr/bin/expr /usr/bin/bash : '-*\(.*\)'
 ++++ my_shell=/usr/bin/bash
@@ -228,7 +228,7 @@ Shell debugging restarted
 +++ '[' '' ']'
 +++ . /etc/profile.d/which2.sh
 ++++ case "$(basename $(readlink /proc/$$/exe))" in
-++++++ readlink /proc/3675159/exe
+++++++ readlink /proc/2652454/exe
 +++++ basename /usr/bin/bash
 ++++ which_declare='declare -f'
 ++++ which_opt=-f
@@ -593,226 +593,32 @@ export CONDA_PREFIX_1='\''/bask/apps/test/EL8-ice/software/Miniconda3/4.10.3'\''
 + '[' -n '' ']'
 + '[' -n '' ']'
 + hash -r
-+ python KCD/Detection/Preprocessing/AxialSlices/create2D_internal.py
-Voxel Spacing 1mm
-
-Generating from case_00558.nii.gz right-side.
-Creating 60 foreground, and 100 background shifted windows.
-Creating 120 foreground, and 80 background centralised windows.
-
-Generating from case_00558.nii.gz left-side.
-Creating 39 foreground, and 80 background shifted windows.
-Creating 117 foreground, and 80 background centralised windows.
-
-Generating from case_00252.nii.gz right-side.
-Creating 48 foreground, and 89 background shifted windows.
-Creating 95 foreground, and 64 background centralised windows.
-
-Generating from case_00252.nii.gz left-side.
-Creating 44 foreground, and 76 background shifted windows.
-Creating 100 foreground, and 54 background centralised windows.
-
-Generating from case_00551.nii.gz right-side.
-Creating 24 foreground, and 21 background shifted windows.
-Creating 135 foreground, and 54 background centralised windows.
-
-Generating from case_00551.nii.gz left-side.
-Creating 18 foreground, and 27 background shifted windows.
-Creating 125 foreground, and 74 background centralised windows.
-
-Generating from case_00432.nii.gz right-side.
-Creating 44 foreground, and 80 background shifted windows.
-Creating 105 foreground, and 80 background centralised windows.
-
-Generating from case_00432.nii.gz left-side.
-Creating 42 foreground, and 82 background shifted windows.
-Creating 138 foreground, and 83 background centralised windows.
-
-Generating from case_00447.nii.gz left-side.
-Creating 44 foreground, and 94 background shifted windows.
-Creating 100 foreground, and 80 background centralised windows.
-
-Generating from case_00447.nii.gz right-side.
-Creating 61 foreground, and 83 background shifted windows.
-Creating 95 foreground, and 80 background centralised windows.
-
-Generating from case_00207.nii.gz right-side.
-Creating 60 foreground, and 65 background shifted windows.
-Creating 110 foreground, and 80 background centralised windows.
-
-Generating from case_00207.nii.gz left-side.
-Creating 53 foreground, and 72 background shifted windows.
-Creating 120 foreground, and 80 background centralised windows.
-
-Generating from case_00575.nii.gz right-side.
-Creating 73 foreground, and 92 background shifted windows.
-Creating 124 foreground, and 80 background centralised windows.
-
-Generating from case_00575.nii.gz left-side.
-Creating 67 foreground, and 100 background shifted windows.
-Creating 128 foreground, and 82 background centralised windows.
-
-Generating from case_00271.nii.gz left-side.
-Creating 15 foreground, and 12 background shifted windows.
-Creating 94 foreground, and 81 background centralised windows.
-
-Generating from case_00271.nii.gz right-side.
-Creating 15 foreground, and 21 background shifted windows.
-Creating 97 foreground, and 83 background centralised windows.
-
-Generating from case_00427.nii.gz right-side.
-Creating 39 foreground, and 25 background shifted windows.
-Creating 125 foreground, and 80 background centralised windows.
-
-Generating from case_00427.nii.gz left-side.
-Creating 33 foreground, and 31 background shifted windows.
-Creating 110 foreground, and 80 background centralised windows.
-
-Generating from case_00499.nii.gz right-side.
-Creating 100 foreground, and 100 background shifted windows.
-Creating 150 foreground, and 74 background centralised windows.
-
-Generating from case_00499.nii.gz left-side.
-Creating 68 foreground, and 100 background shifted windows.
-Creating 140 foreground, and 80 background centralised windows.
-
-Generating from case_00559.nii.gz left-side.
-Creating 58 foreground, and 61 background shifted windows.
-Creating 116 foreground, and 41 background centralised windows.
-
-Generating from case_00559.nii.gz right-side.
-Creating 48 foreground, and 100 background shifted windows.
-Creating 114 foreground, and 58 background centralised windows.
-
-Generating from case_00097.nii.gz right-side.
-Creating 24 foreground, and 40 background shifted windows.
-Creating 100 foreground, and 80 background centralised windows.
-
-Generating from case_00097.nii.gz left-side.
-Creating 24 foreground, and 40 background shifted windows.
-Creating 110 foreground, and 80 background centralised windows.
-
-Generating from case_00224.nii.gz left-side.
-Creating 68 foreground, and 100 background shifted windows.
-Creating 135 foreground, and 80 background centralised windows.
-
-Generating from case_00224.nii.gz right-side.
-Creating 52 foreground, and 100 background shifted windows.
-Creating 115 foreground, and 80 background centralised windows.
-
-Generating from case_00290.nii.gz right-side.
-Creating 44 foreground, and 94 background shifted windows.
-Creating 85 foreground, and 81 background centralised windows.
-
-Generating from case_00290.nii.gz left-side.
-Creating 52 foreground, and 96 background shifted windows.
-Creating 103 foreground, and 80 background centralised windows.
-
-Generating from case_00245.nii.gz left-side.
-Creating 100 foreground, and 100 background shifted windows.
-Creating 132 foreground, and 80 background centralised windows.
-
-Generating from case_00245.nii.gz right-side.
-Creating 55 foreground, and 100 background shifted windows.
-Creating 102 foreground, and 80 background centralised windows.
-
-Generating from case_00177.nii.gz left-side.
-Creating 24 foreground, and 40 background shifted windows.
-Creating 95 foreground, and 80 background centralised windows.
-
-Generating from case_00177.nii.gz right-side.
-Creating 28 foreground, and 20 background shifted windows.
-Creating 90 foreground, and 80 background centralised windows.
-sole kidney is ['right']
-
-Generating from case_00213.nii.gz right-side.
-Creating 40 foreground, and 78 background shifted windows.
-Creating 122 foreground, and 82 background centralised windows.
-
-Generating from case_00417.nii.gz right-side.
-Creating 65 foreground, and 100 background shifted windows.
-Creating 108 foreground, and 83 background centralised windows.
-
-Generating from case_00417.nii.gz left-side.
-Creating 55 foreground, and 100 background shifted windows.
-Creating 105 foreground, and 83 background centralised windows.
-
-Generating from case_00120.nii.gz right-side.
-Creating 44 foreground, and 99 background shifted windows.
-Creating 64 foreground, and 82 background centralised windows.
-
-Generating from case_00120.nii.gz left-side.
-Creating 44 foreground, and 76 background shifted windows.
-Creating 91 foreground, and 82 background centralised windows.
-
-Generating from case_00070.nii.gz right-side.
-Creating 43 foreground, and 37 background shifted windows.
-Creating 115 foreground, and 80 background centralised windows.
-
-Generating from case_00070.nii.gz left-side.
-Creating 32 foreground, and 44 background shifted windows.
-Creating 110 foreground, and 80 background centralised windows.
-
-Generating from case_00460.nii.gz right-side.
-Creating 33 foreground, and 47 background shifted windows.
-Creating 115 foreground, and 85 background centralised windows.
-
-Generating from case_00460.nii.gz left-side.
-Creating 43 foreground, and 37 background shifted windows.
-Creating 125 foreground, and 80 background centralised windows.
-
-Generating from case_00475.nii.gz right-side.
-Creating 72 foreground, and 100 background shifted windows.
-Creating 105 foreground, and 69 background centralised windows.
-
-Generating from case_00475.nii.gz left-side.
-Creating 66 foreground, and 83 background shifted windows.
-Creating 114 foreground, and 83 background centralised windows.
-
-Generating from case_00013.nii.gz left-side.
-Creating 27 foreground, and 37 background shifted windows.
-Creating 99 foreground, and 80 background centralised windows.
-
-Generating from case_00013.nii.gz right-side.
-Creating 30 foreground, and 34 background shifted windows.
-Creating 96 foreground, and 83 background centralised windows.
-
-Generating from case_00193.nii.gz right-side.
-Creating 32 foreground, and 32 background shifted windows.
-Creating 84 foreground, and 82 background centralised windows.
-
-Generating from case_00193.nii.gz left-side.
-Creating 24 foreground, and 40 background shifted windows.
-Creating 90 foreground, and 82 background centralised windows.
-
-Generating from case_00557.nii.gz right-side.
-Creating 64 foreground, and 100 background shifted windows.
-Creating 114 foreground, and 80 background centralised windows.
-
-Generating from case_00557.nii.gz left-side.
-Creating 56 foreground, and 89 background shifted windows.
-Creating 123 foreground, and 80 background centralised windows.
-
-Generating from case_00069.nii.gz left-side.
-Creating 36 foreground, and 44 background shifted windows.
-Creating 105 foreground, and 80 background centralised windows.
-
-Generating from case_00069.nii.gz right-side.
-Creating 48 foreground, and 32 background shifted windows.
-Creating 115 foreground, and 85 background centralised windows.
-
-Generating from case_00426.nii.gz left-side.
-Creating 100 foreground, and 100 background shifted windows.
-Creating 150 foreground, and 85 background centralised windows.
-
-Generating from case_00426.nii.gz right-side.
-Creating 61 foreground, and 89 background shifted windows.
-Creating 105 foreground, and 80 background centralised windows.
++ python KCD/Detection/Inference/slice_model_inference.py
+/bask/projects/p/phwq4930-renal-canc/KCD_data/Data/slices/kits23sncct/Voxel-1mm-Dilation40mm/ForegroundThresh-10mm/2D-Boundary1mm/unlabelled_data
+Training data contains 104035 background slices and 123632 foreground slices.
+[0.9988023952095808]
+[0.9988023952095808, 0.9989021956087824]
+[0.9988023952095808, 0.9989021956087824, 0.9989021956087824]
+[0.9988023952095808, 0.9989021956087824, 0.9989021956087824, 0.9971057884231536]
+[0.9988023952095808, 0.9989021956087824, 0.9989021956087824, 0.9971057884231536, 0.999001996007984]
+boundary is 0.9989021956087824.
 Traceback (most recent call last):
-  File "/bask/homes/r/ropj6012/KCD/KCD/Detection/Preprocessing/AxialSlices/create2D_internal.py", line 26, in <module>
-    generator.create_unlabelled_dataset(path,save_dir,segpath,target_spacing,overlap,
-  File "/bask/homes/r/ropj6012/KCD/KCD/Detection/Preprocessing/AxialSlices/slice_generating_utils.py", line 404, in create_unlabelled_dataset
-    kid_str = get_kid_str(kidney_data,reshaped_im,reshaped_seg,spacing,axes)
-  File "/bask/homes/r/ropj6012/KCD/KCD/Detection/Preprocessing/AxialSlices/slice_generating_utils.py", line 213, in get_kid_str
-    elif len(kidney_data) == 0: assert(1==2)
-AssertionError
+  File "/bask/homes/r/ropj6012/KCD/KCD/Detection/Inference/slice_model_inference.py", line 83, in <module>
+    eval_individual_slice_models(home=home,trainname=trainname,infername=infername,is_3D=False)
+  File "/bask/homes/r/ropj6012/KCD/KCD/Detection/Inference/slice_model_inference.py", line 69, in eval_individual_slice_models
+    slice_res = iu.eval_cnn(CNN,test_dl,ps_boundary=CNN_b,dev=dev,boundary_size=params['pred_window'])
+  File "/bask/homes/r/ropj6012/KCD/KCD/Detection/Inference/infer_utils.py", line 237, in eval_cnn
+    for x in test_tw_dl:
+  File "/bask/projects/p/phwq4930-renal-canc/conda_env/ovseg_env/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 633, in __next__
+    data = self._next_data()
+  File "/bask/projects/p/phwq4930-renal-canc/conda_env/ovseg_env/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 677, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/bask/projects/p/phwq4930-renal-canc/conda_env/ovseg_env/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 51, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/bask/projects/p/phwq4930-renal-canc/conda_env/ovseg_env/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 51, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/bask/homes/r/ropj6012/KCD/KCD/Detection/Dataloaders/slice_dataloader.py", line 209, in __getitem__
+    image = np.load(os.path.join(directory,class_df.iloc[idx]['filepath']))
+  File "/bask/projects/p/phwq4930-renal-canc/conda_env/ovseg_env/lib/python3.10/site-packages/numpy/lib/npyio.py", line 438, in load
+    raise ValueError("Cannot load file containing pickled data "
+ValueError: Cannot load file containing pickled data when allow_pickle=False

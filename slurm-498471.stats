@@ -1,7 +1,7 @@
 +--------------------------------------------------------------------------+
 | Job on the Baskerville cluster:
-| Starting at Sat Sep  9 12:18:31 2023 for ropj6012(102269)
-| Identity jobid 498434 jobname running_nomanager.sh
+| Starting at Sat Sep  9 14:21:14 2023 for ropj6012(102269)
+| Identity jobid 498471 jobname running_nomanager.sh
 | Running against project phwq4930-renal-canc and in partition baskerville-a100_40
 | Requested cpu=2,mem=80G,node=1,billing=2,gres/gpu=1 - 1-23:59:00 walltime
 | Assigned to nodes bask-pg0308u32a
@@ -9,8 +9,8 @@
 | WorkDir /bask/homes/r/ropj6012/KCD
 +--------------------------------------------------------------------------+
 +--------------------------------------------------------------------------+
-| Finished at Sat Sep  9 12:18:38 2023 for ropj6012(102269) on the Baskerville Cluster
-| Required (00:02.623 cputime, 4112K memory used) - 00:00:07 walltime
+| Finished at Sat Sep  9 15:40:57 2023 for ropj6012(102269) on the Baskerville Cluster
+| Required (01:22:05 cputime, 12140296K memory used) - 01:19:43 walltime
 | JobState COMPLETING - Reason NonZeroExitCode
-| Exitcode 2:0
+| Exitcode 1:0
 +--------------------------------------------------------------------------+

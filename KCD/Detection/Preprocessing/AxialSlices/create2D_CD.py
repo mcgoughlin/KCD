@@ -27,9 +27,9 @@ for thresh in thresholds_r_mm:
         # overlap_mm = spacing*patch2d/10
         print("Voxel Spacing {}mm".format(spacing))
         generator.create_labelled_dataset(path,save_dir,segpath,target_spacing,overlap,
-                       patch_size,thresh,spacing,save_limit_percase_perlabel,
-                       bbox_boundary_mm,data_name=data_name,boundary_z=boundary_z,
-                       depth_z=depth_z,kidney_thresh_rmm=kidney_r_mm)
+                        patch_size,thresh,spacing,save_limit_percase_perlabel,
+                        bbox_boundary_mm,data_name=data_name,boundary_z=boundary_z,
+                        depth_z=depth_z,kidney_thresh_rmm=kidney_r_mm)
         
 for thresh in thresholds_r_mm:
     for spacing in voxel_spacings: 

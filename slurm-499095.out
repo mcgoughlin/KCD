@@ -189,8 +189,8 @@ No action taken.
 ++++ '[' '!' -x /usr/bin/basename ']'
 ++++ unset Nm confPath execNm
 ++++ unset -f findExec
-++++ '[' -f /proc/3694441/exe ']'
-+++++ /usr/bin/readlink /proc/3694441/exe
+++++ '[' -f /proc/2650830/exe ']'
++++++ /usr/bin/readlink /proc/2650830/exe
 ++++ my_shell=/usr/bin/bash
 +++++ /usr/bin/expr /usr/bin/bash : '-*\(.*\)'
 ++++ my_shell=/usr/bin/bash
@@ -228,7 +228,7 @@ Shell debugging restarted
 +++ '[' '' ']'
 +++ . /etc/profile.d/which2.sh
 ++++ case "$(basename $(readlink /proc/$$/exe))" in
-++++++ readlink /proc/3694441/exe
+++++++ readlink /proc/2650830/exe
 +++++ basename /usr/bin/bash
 ++++ which_declare='declare -f'
 ++++ which_opt=-f
@@ -593,4 +593,5 @@ export CONDA_PREFIX_1='\''/bask/apps/test/EL8-ice/software/Miniconda3/4.10.3'\''
 + '[' -n '' ']'
 + '[' -n '' ']'
 + hash -r
-+ python KCD/Detection/Preprocessing/AxialSlices/create2D_internal.py
++ python KCD/Detection/Inference/slice_model_inference.py
+slurmstepd: error: *** JOB 499095 ON bask-pg0308u10a CANCELLED AT 2023-09-11T10:06:48 ***

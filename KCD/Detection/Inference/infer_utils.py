@@ -239,7 +239,6 @@ def eval_cnn(twCNN,test_tw_dl,ps_boundary=0.98,dev='cpu',boundary_size=10):
                     case_store.extend(pred[:,2].cpu().numpy().tolist())
 
                 case_store.sort(reverse=True)
-                print(case, position,sum(case_store[:boundary_size]),boundary)
                 entry['Top-{}'.format(boundary_size)]=sum(case_store[:boundary_size])
                 entry['prediction'] = int(entry['Top-{}'.format(boundary_size)]>=boundary)
                 entry['boundary']=boundary

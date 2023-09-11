@@ -131,7 +131,7 @@ class SW_Data_labelled(Dataset):
             label = class_df.iloc[idx]['class']
             
         directory = self.dir_dict[label]
-        image = np.load(os.path.join(directory,class_df.iloc[idx]['filepath']))
+        image = np.load(os.path.join(directory,class_df.iloc[idx]['filepath']),allow_pickle=True)
 
         image = torch.clip(torch.Tensor(image).to(self.device),-200,200)/100
         image = torch.unsqueeze(image,0)
@@ -165,10 +165,9 @@ class SW_Data_unlabelled(Dataset):
         self.device = device
         
         self.fg = os.listdir(os.path.join(self.home_path,"foreground"))
-        self.bg = os.listdir(os.path.join(self.home_path,"background"))
 
-        self.data_df = pd.DataFrame(data=np.array([[*self.bg,*self.fg],
-                                    [*[0]*len(self.bg),*[1]*len(self.fg)]]).T,
+        self.data_df = pd.DataFrame(data=np.array([[*self.fg],
+                                    [*[1]*len(self.fg)]]).T,
                                     columns = ['filepath','class'])
         self.data_df['class'] = self.data_df['class'].astype(int)
         self.data_df['case'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[0:2]).str.join("_")
@@ -177,19 +176,16 @@ class SW_Data_unlabelled(Dataset):
         self.data_df['slice'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:int(x[-1].split('index')[1].split('.')[0]))
         self.cases = self.data_df.case
             
-        self.data_dict = {0:self.bg,1:self.fg}
-        self.dir_dict = {0:os.path.join(self.home_path,"background"),
-                         1:os.path.join(self.home_path,"foreground")}        
-        bg,fg = len(self.bg),len(self.fg)
-        print("Training data contains {} background slices and {} foreground slices.".format(bg,fg))
+        self.data_dict = {1:self.fg}
+        self.dir_dict = {1:os.path.join(self.home_path,"foreground")}        
+        fg = len(self.fg)
+        print("Inference data contains {} foreground slices.".format(fg))
                         
         self.test_case = None
 
     def __len__(self):
-        if type(self.test_case) == type(None):
-            assert(1==2)
-        else:
-            return len(self.case_specific_data)
+        if type(self.test_case) == type(None):assert(1==2)
+        else:return len(self.case_specific_data)
         
     def set_val_kidney(self,case:str,side='left'):
         self.test_case = case
@@ -206,7 +202,7 @@ class SW_Data_unlabelled(Dataset):
             label = class_df.iloc[idx]['class']
             
         directory = self.dir_dict[label]
-        image = np.load(os.path.join(directory,class_df.iloc[idx]['filepath']))
+        image = np.load(os.path.join(directory,class_df.iloc[idx]['filepath']),allow_pickle=True)
         image = torch.clip(torch.Tensor(image).to(self.device),-200,200)/100
         return torch.unsqueeze(image,0)
         

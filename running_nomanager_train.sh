@@ -24,4 +24,4 @@ conda activate "${CONDA_ENV_PATH}"
 
 
 # Run jobs
-python KCD/Detection/Inference/slice_model_inference.py
+python KCD/Detection/Training/train_slice_models.py
