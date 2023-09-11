@@ -8,3 +8,9 @@
 | Command /bask/homes/r/ropj6012/KCD/running_nomanager.sh
 | WorkDir /bask/homes/r/ropj6012/KCD
 +--------------------------------------------------------------------------+
++--------------------------------------------------------------------------+
+| Finished at Mon Sep 11 16:07:52 2023 for ropj6012(102269) on the Baskerville Cluster
+| Required (04:28:55 cputime, 3624600K memory used) - 06:00:58 walltime
+| JobState COMPLETING - Reason None
+| Exitcode 0:0
++--------------------------------------------------------------------------+
