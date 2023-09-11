@@ -3,19 +3,27 @@ import numpy as np
 from pandas.api.types import is_numeric_dtype
 from stl import mesh
 from pymeshfix._meshfix import PyTMesh
-# import open3d as o3d
 import pandas as pd
-import bpy
 
 def create_folder(folder):
     if not os.path.exists(folder):os.mkdir(folder)
     
 def convert_stl_obj(stl_loc,obj_loc):
-        # Clear all data (OPTIONAL)
-    bpy.ops.wm.read_factory_settings(use_empty=True)
-    # Load the STL file into the current Blender scene
-    bpy.ops.import_mesh.stl(filepath=stl_loc)
-    save_obj(bpy.data.objects[0],obj_loc)
+
+    your_mesh = mesh.Mesh.from_file(stl_loc)
+
+    with open(obj_loc, 'w') as f:
+        # Write the OBJ file header
+        f.write("o Mesh\n")
+        
+        # Write vertices
+        for v in your_mesh.vectors:
+            for vert in v:
+                f.write(f"v {vert[0]} {vert[1]} {vert[2]}\n")
+        
+        # Write faces
+        for i in range(len(your_mesh.vectors)):
+            f.write(f"f {3*i+1} {3*i+2} {3*i+3}\n")
     os.remove(stl_loc)
     
 def setup_save_folders(save_dir):
@@ -72,13 +80,7 @@ def create_and_save_raw_object(raw_v_path,raw_obj_path,
         for j in range(3):
             cube.vectors[i][j] = vert[f[j],:]
     cube.save(filename)
-    
     convert_stl_obj(filename,filename[:-4]+".obj")
-    # cube = o3d.io.read_triangle_mesh(filename)
-    # o3d.io.write_triangle_mesh(filename[:-4]+".obj", cube)
-    # os.remove(filename)
-    
-    # smoothed_object = gmu.smooth_object(filename[:-4]+".obj",raw_obj_path)
     
     return verts
 

@@ -2,15 +2,16 @@ torch
 dgl
 matplotlib
 nibabel
+bpy
 numpy
 opencv-python
 pandas
 pydicom
+stl
 scikit-image
 scikit-learn
 scipy
+numpy-stl
 simpleitk
 torchvision
-
-[:python_version < "3.8"]
-bpy
+pymeshfix

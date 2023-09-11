@@ -12,9 +12,9 @@ infnpy_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute
 infnii_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/predictions_nii/{}/[4 4 4]mm/'.format(dataset_CD)
 lb_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/labels/'.format(dataset_CD)
 is_testing_code=False
-overwrite=False
-# ocu.create_labelled_dataset(home,dataset_CD,im_p,infnpy_p,infnii_p,lb_p,
-#                         is_testing=is_testing_code,overwrite=overwrite)
+overwrite=True
+ocu.create_labelled_dataset(home,dataset_CD,im_p,infnpy_p,infnii_p,lb_p,
+                        is_testing=is_testing_code,overwrite=overwrite)
 save_dir_CD=os.path.join(home,'objects',dataset_CD)
 fu.save_normalisation_params(save_dir_CD)
 
@@ -25,7 +25,7 @@ infnpy_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute
 infnii_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/predictions_nii/{}/'.format(dataset_k23)
 lb_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/labels/'.format(dataset_k23)
 is_testing_code=False
-overwrite=False
+overwrite=True
 ocu.create_labelled_dataset(home,dataset_k23,im_p,infnpy_p,infnii_p,lb_p,
                         is_testing=is_testing_code,overwrite=overwrite)
 save_dir_k23=os.path.join(home,'objects',dataset_k23)
