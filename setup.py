@@ -9,8 +9,8 @@ setup(
     #           'simpleitk==2.2.1','torchvision==0.15.2'],
     install_requires=['torch','dgl','matplotlib','nibabel','bpy',
               'numpy','opencv-python','pandas','pydicom','stl'
-              'scikit-image','scikit-learn','scipy',
-              'simpleitk','torchvision'],
+              'scikit-image','scikit-learn','scipy','numpy-stl',
+              'simpleitk','torchvision','pymeshfix','open3d'],
     python_requires='>=3.6, <=3.8',
     description='Python Package for the early detection of renal cancer',
     version='0.1',
