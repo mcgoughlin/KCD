@@ -6,11 +6,11 @@ import shutil
 
 # COREG CREATION
 dataset_CD = 'coreg_ncct'
-home = '/Users/mcgoug01/Downloads/Data'
-im_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/images/'.format(dataset_CD)
-infnpy_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/predictions_npy/{}/[4 4 4]mm/'.format(dataset_CD)
-infnii_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/predictions_nii/{}/[4 4 4]mm/'.format(dataset_CD)
-lb_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/labels/'.format(dataset_CD)
+home = '/home/wcm23/rds/hpc-work/KCD_Data'
+im_p = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/{}/images/'.format(dataset_CD)
+infnpy_p = '/home/wcm23/rds/hpc-work/FineTuningKITS23/predictions_npy/{}/[4 4 4]mm/'.format(dataset_CD)
+infnii_p = '/home/wcm23/rds/hpc-work/FineTuningKITS23/predictions_nii/{}/[4 4 4]mm/'.format(dataset_CD)
+lb_p = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/{}/labels/'.format(dataset_CD)
 is_testing_code=False
 overwrite=True
 ocu.create_labelled_dataset(home,dataset_CD,im_p,infnpy_p,infnii_p,lb_p,
@@ -20,10 +20,10 @@ fu.save_normalisation_params(save_dir_CD)
 
 # KITS23 CREATION
 dataset_k23 = 'kits23sncct'
-im_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/images/'.format(dataset_k23)
-infnpy_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/predictions_npy/{}/[4 4 4]mm/'.format(dataset_k23)
-infnii_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/predictions_nii/{}/'.format(dataset_k23)
-lb_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/labels/'.format(dataset_k23)
+im_p = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/{}/images/'.format(dataset_k23)
+infnpy_p = '/home/wcm23/rds/hpc-work/FineTuningKITS23/predictions_npy/{}/[4 4 4]mm/'.format(dataset_k23)
+infnii_p = '/home/wcm23/rds/hpc-work/FineTuningKITS23/predictions_nii/{}/[4 4 4]mm/'.format(dataset_k23)
+lb_p = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/{}/labels/'.format(dataset_k23)
 is_testing_code=False
 overwrite=True
 ocu.create_labelled_dataset(home,dataset_k23,im_p,infnpy_p,infnii_p,lb_p,
