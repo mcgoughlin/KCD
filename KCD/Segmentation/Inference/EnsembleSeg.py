@@ -285,35 +285,23 @@ class Ensemble_Seg(nn.Module):
 
         params_low = self.segmodel_parameters_low['data'].copy()
         params_low['n_folds']=len(self.Segment)
-        self.segpp_data = SegmentationData(None,False,
-                                           len(self.Segment)-1,preprocessed_path=split(self.preprocess_path)[0],
-                                           **params_low)
 
-        ppscans = [self.segpp_data.val_ds[i]['scan'] for i in range(len(self.segpp_data.val_ds))]
+        for i in range(len(self.Segment)):
+            seg_ppdata = SegmentationData(None, False, i, preprocessed_path=split(self.preprocess_path)[0], **params_low)
+            for j in range(len(seg_ppdata.val_ds)):
+                data_tpl = seg_ppdata.val_ds[j]
+                filename = data_tpl['scan'] + '.nii.gz'
+                print("Segmenting {}...".format(data_tpl['scan']))
 
-        for i in range(len(self.segpp_data.val_ds)):
+                # predict from this datapoint
+                pred, pred_lowres = self.seg_pred(data_tpl)
 
-            # get the data
-            data_tpl = self.segpp_data.val_ds[i]
-            filename = data_tpl['scan'] + '.nii.gz'
-            print("Segmenting {}...".format(data_tpl['scan']))
+                if torch.is_tensor(pred):
+                    pred = pred.cpu().numpy()
 
-            # first let's try to find the name
-            if 'scan' in data_tpl.keys():
-                scan = data_tpl['scan']
-            else:
-                d = str(int(np.ceil(np.log10(len(self.segpp_data)))))
-                scan = 'case_%0' + d + 'd'
-                scan = scan % i
-            # predict from this datapoint
-            pred, pred_lowres = self.seg_pred(data_tpl)
+                data_tpl['pred_orig_shape'] = pred
+                data_tpl['pred_lowres'] = pred_lowres
+                self.save_prediction(data_tpl, filename=data_tpl['scan'])
+                print("")
 
-            if torch.is_tensor(pred):
-                pred = pred.cpu().numpy()
-
-            data_tpl['pred_orig_shape'] = pred
-            data_tpl['pred_lowres'] = pred_lowres
-            self.save_prediction(data_tpl, filename=scan)
-            print("")
-
-        print("Segmentations complete!\n")
+            print("Segmentations complete!\n")
