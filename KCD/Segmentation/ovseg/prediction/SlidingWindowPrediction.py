@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 from scipy.ndimage.filters import gaussian_filter
-from ovseg.utils.torch_np_utils import check_type, maybe_add_channel_dim
+from KCD.Segmentation.ovseg.utils.torch_np_utils import check_type, maybe_add_channel_dim
 
 
 class SlidingWindowPrediction(object):

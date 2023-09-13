@@ -2,8 +2,8 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import numpy as np
-from ovseg.training.loss_functions import cross_entropy, dice_loss
-from ovseg.training.loss_functions import __dict__ as loss_functions_dict
+from KCD.Segmentation.ovseg.training.loss_functions import cross_entropy, dice_loss
+from KCD.Segmentation.ovseg.training.loss_functions import __dict__ as loss_functions_dict
 
 def to_one_hot_encoding(yb, n_ch):
 

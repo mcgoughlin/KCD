@@ -1,9 +1,9 @@
-from ovseg.augmentation.SpatialAugmentation import SpatialAugmentation
-from ovseg.augmentation.GrayValueAugmentation import GrayValueAugmentation
-from ovseg.augmentation.myRandAugment import torch_myRandAugment
-from ovseg.augmentation.MaskAugmentation import MaskAugmentation
-from ovseg.augmentation.GridAugmentation import torch_inplane_grid_augmentations
-from ovseg.augmentation.GrayValueAugmentation import torch_gray_value_augmentation
+from KCD.Segmentation.ovseg.augmentation.SpatialAugmentation import SpatialAugmentation
+from KCD.Segmentation.ovseg.augmentation.GrayValueAugmentation import GrayValueAugmentation
+from KCD.Segmentation.ovseg.augmentation.myRandAugment import torch_myRandAugment
+from KCD.Segmentation.ovseg.augmentation.MaskAugmentation import MaskAugmentation
+from KCD.Segmentation.ovseg.augmentation.GridAugmentation import torch_inplane_grid_augmentations
+from KCD.Segmentation.ovseg.augmentation.GrayValueAugmentation import torch_gray_value_augmentation
 import torch.nn as nn
 
 

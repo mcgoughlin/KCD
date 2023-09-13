@@ -1,10 +1,10 @@
-from ovseg.model.SegmentationModel import SegmentationModel
-from ovseg.preprocessing.SegmentationPreprocessingV2 import SegmentationPreprocessingV2
-from ovseg.data.SegmentationDataV2 import SegmentationDataV2
-from ovseg.data.Dataset import raw_Dataset
-from ovseg.utils.io import save_nii_from_data_tpl, save_npy_from_data_tpl, load_pkl, read_nii, save_dcmrt_from_data_tpl, is_dcm_path
-from ovseg.utils.torch_np_utils import maybe_add_channel_dim
-from ovseg.utils.dict_equal import dict_equal, print_dict_diff
+from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
+from KCD.Segmentation.ovseg.preprocessing.SegmentationPreprocessingV2 import SegmentationPreprocessingV2
+from KCD.Segmentation.ovseg.data.SegmentationDataV2 import SegmentationDataV2
+from KCD.Segmentation.ovseg.data.Dataset import raw_Dataset
+from KCD.Segmentation.ovseg.utils.io import save_nii_from_data_tpl, save_npy_from_data_tpl, load_pkl, read_nii, save_dcmrt_from_data_tpl, is_dcm_path
+from KCD.Segmentation.ovseg.utils.torch_np_utils import maybe_add_channel_dim
+from KCD.Segmentation.ovseg.utils.dict_equal import dict_equal, print_dict_diff
 from os.path import join, exists
 from os import environ, makedirs
 from tqdm import tqdm

@@ -1,6 +1,6 @@
-from ovseg.data.DataBase import DataBase
-from ovseg.data.SegmentationDataloader import SegmentationDataloader
-from ovseg.data.SegmentationDoubleBiasDataloader import SegmentationDoubleBiasDataloader
+from KCD.Segmentation.ovseg.data.DataBase import DataBase
+from KCD.Segmentation.ovseg.data.SegmentationDataloader import SegmentationDataloader
+from KCD.Segmentation.ovseg.data.SegmentationDoubleBiasDataloader import SegmentationDoubleBiasDataloader
 from os import listdir
 from os.path import join
 

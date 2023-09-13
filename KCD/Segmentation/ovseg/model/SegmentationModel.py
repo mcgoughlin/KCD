@@ -11,29 +11,21 @@ except ModuleNotFoundError:
     tqdm = lambda x: x
 from time import sleep
 from skimage.measure import label
-from ovseg import OV_PREPROCESSED
-from ovseg.model.ModelBase import ModelBase
-from ovseg.preprocessing.SegmentationPreprocessing import SegmentationPreprocessing
-from ovseg.preprocessing.ClassEnsemblePreprocessing import ClassEnsemblePreprocessing
-from ovseg.augmentation.SegmentationAugmentation import SegmentationAugmentation
-from ovseg.data.SegmentationData import SegmentationData
-from ovseg.data.Dataset import raw_Dataset
-from ovseg.networks.UNet import UNet
-from ovseg.networks.nfUNet import nfUNet
-from ovseg.networks.iUNet import iUNet
-from ovseg.networks.resUNet import UNetResEncoder, UNetResDecoder, UResNet, UNetResStemEncoder, UNetResShuffleEncoder
-from ovseg.networks.UNetTransformer import UNetTransformer
-from ovseg.networks.refine_res_networks import RefineResNet
-from ovseg.training.SegmentationTraining import SegmentationTraining, SegmentationTrainingV2
-from ovseg.training.ClassEnsemblingTraining import ClassEnsemblingTraining
-from ovseg.prediction.SlidingWindowPrediction import SlidingWindowPrediction
-from ovseg.postprocessing.SegmentationPostprocessing import SegmentationPostprocessing
-from ovseg.postprocessing.ClassEnsemblingPostprocessing import ClassEnsemblingPostprocessing
-from ovseg.utils.io import save_nii_from_data_tpl, save_npy_from_data_tpl, load_pkl, read_nii, save_dcmrt_from_data_tpl, is_dcm_path
-from ovseg.utils.torch_np_utils import maybe_add_channel_dim
-from ovseg.utils.dict_equal import dict_equal, print_dict_diff
-from ovseg.utils.label_utils import reduce_classes
-from ovseg.utils.torch_np_utils import check_type
+from KCD.Segmentation.ovseg.model.ModelBase import ModelBase
+from KCD.Segmentation.ovseg.preprocessing.SegmentationPreprocessing import SegmentationPreprocessing
+from KCD.Segmentation.ovseg.augmentation.SegmentationAugmentation import SegmentationAugmentation
+from KCD.Segmentation.ovseg.data.SegmentationData import SegmentationData
+from KCD.Segmentation.ovseg.data.Dataset import raw_Dataset
+from KCD.Segmentation.ovseg.networks.UNet import UNet
+from KCD.Segmentation.ovseg.networks.nfUNet import nfUNet
+from KCD.Segmentation.ovseg.training.SegmentationTraining import SegmentationTraining, SegmentationTrainingV2
+from KCD.Segmentation.ovseg.prediction.SlidingWindowPrediction import SlidingWindowPrediction
+from KCD.Segmentation.ovseg.postprocessing.SegmentationPostprocessing import SegmentationPostprocessing
+from KCD.Segmentation.ovseg.utils.io import save_nii_from_data_tpl, save_npy_from_data_tpl, load_pkl, read_nii, save_dcmrt_from_data_tpl, is_dcm_path
+from KCD.Segmentation.ovseg.utils.torch_np_utils import maybe_add_channel_dim
+from KCD.Segmentation.ovseg.utils.dict_equal import dict_equal, print_dict_diff
+from KCD.Segmentation.ovseg.utils.label_utils import reduce_classes
+from KCD.Segmentation.ovseg.utils.torch_np_utils import check_type
 from typing import Dict, Union, Optional, Sequence, Set
 import SimpleITK as sitk
 import copy
@@ -175,24 +167,8 @@ class SegmentationModel(ModelBase):
         params = self.model_parameters['network'].copy()
         if self.model_parameters['architecture'].lower() in ['unet', 'u-net']:
             self.network = UNet(**params).to(self.dev)
-        elif self.model_parameters['architecture'].lower() in ['iunet', 'i-unet']:
-            self.network = iUNet(**params).to(self.dev)
         elif self.model_parameters['architecture'].lower() in ['nfunet', 'nf-unet']:
             self.network = nfUNet(**params).to(self.dev)
-        elif self.model_parameters['architecture'].lower() == 'unetresencoder':
-            self.network = UNetResEncoder(**params).to(self.dev)
-        elif self.model_parameters['architecture'].lower() == 'unetresdecoder':
-            self.network = UNetResDecoder(**params).to(self.dev)
-        elif self.model_parameters['architecture'].lower() == 'refineresnet':
-            self.network = RefineResNet(**params).to(self.dev)
-        elif self.model_parameters['architecture'].lower() == 'uresnet':
-            self.network = UResNet(**params).to(self.dev)
-        elif self.model_parameters['architecture'].lower() == 'unetresstemencoder':
-            self.network = UNetResStemEncoder(**params).to(self.dev)
-        elif self.model_parameters['architecture'].lower() == 'unetresshuffleencoder':
-            self.network = UNetResShuffleEncoder(**params).to(self.dev)
-        elif self.model_parameters['architecture'].lower() == 'unettransformer':
-            self.network = UNetTransformer(**params).to(self.dev)
         else:
             raise ValueError('Got unkown architecture '+self.model_parameters['architecture'])
 

@@ -1,4 +1,4 @@
-from ovseg.augmentation.ConcatenatedAugmentation import torch_concatenated_augmentation, \
+from KCD.Segmentation.ovseg.augmentation.ConcatenatedAugmentation import torch_concatenated_augmentation, \
     np_concatenated_augmentation
 
 

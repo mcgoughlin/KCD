@@ -1,8 +1,8 @@
 from os.path import join, exists
-from ovseg.utils import io, path_utils
-from ovseg.utils.dict_equal import dict_equal, print_dict_diff
-from ovseg.data.Dataset import raw_Dataset
-from ovseg import OV_PREPROCESSED
+from KCD.Segmentation.ovseg.utils import io, path_utils
+from KCD.Segmentation.ovseg.utils.dict_equal import dict_equal, print_dict_diff
+from KCD.Segmentation.ovseg.data.Dataset import raw_Dataset
+from KCD.Segmentation.ovseg import OV_PREPROCESSED
 import os
 import torch
 from time import sleep, asctime

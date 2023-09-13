@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from ovseg.utils.torch_np_utils import stack, check_type
+from KCD.Segmentation.ovseg.utils.torch_np_utils import stack, check_type
 
 # just a collection of functions that create and manipulate 2d and 3d grids
 # current implementation handels resizing, scaling and rotations

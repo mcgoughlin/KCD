@@ -1,16 +1,16 @@
 import numpy as np
 import torch
 from torch.nn.functional import interpolate
-from ovseg.utils.label_utils import remove_small_connected_components_from_batch, reduce_classes, \
+from KCD.Segmentation.ovseg.utils.label_utils import remove_small_connected_components_from_batch, reduce_classes, \
     remove_small_connected_components
-from ovseg.utils.label_utils import remove_connected_components_by_volume_from_batch, \
+from KCD.Segmentation.ovseg.utils.label_utils import remove_connected_components_by_volume_from_batch, \
     remove_connected_components_by_volume
-from ovseg.utils.dict_equal import dict_equal, print_dict_diff
-from ovseg.utils.io import load_pkl, save_pkl, save_txt
-from ovseg.utils.path_utils import maybe_create_path
-from ovseg.data.Dataset import raw_Dataset
-from ovseg.utils.torch_np_utils import maybe_add_channel_dim
-from ovseg import OV_PREPROCESSED
+from KCD.Segmentation.ovseg.utils.dict_equal import dict_equal, print_dict_diff
+from KCD.Segmentation.ovseg.utils.io import load_pkl, save_pkl, save_txt
+from KCD.Segmentation.ovseg.utils.path_utils import maybe_create_path
+from KCD.Segmentation.ovseg.data.Dataset import raw_Dataset
+from KCD.Segmentation.ovseg.utils.torch_np_utils import maybe_add_channel_dim
+from KCD.Segmentation.ovseg import OV_PREPROCESSED
 from os.path import join, exists
 from os import environ
 import matplotlib.pyplot as plt

@@ -4,7 +4,7 @@ from os.path import join, exists
 import time
 import pickle
 import sys
-from ovseg.utils.path_utils import maybe_create_path
+from KCD.Segmentation.ovseg.utils.path_utils import maybe_create_path
 
 
 class TrainingBase():

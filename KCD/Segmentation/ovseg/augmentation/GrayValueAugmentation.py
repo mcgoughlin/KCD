@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from ovseg.utils.torch_np_utils import check_type, stack
+from KCD.Segmentation.ovseg.utils.torch_np_utils import check_type, stack
 from torch.nn.functional import interpolate
 from skimage.transform import resize, rescale
 from scipy.ndimage import gaussian_filter

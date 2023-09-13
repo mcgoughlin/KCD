@@ -6,8 +6,8 @@ try:
 except ImportError:
     print('Caught Import Error while importing some function from scipy or skimage (scikit-image). '
           'Please use a newer version of gcc.')
-from ovseg.utils.grid_utils import get_resize_np_grid, get_resize_torch_grid
-from ovseg.utils.torch_np_utils import stack, check_type
+from KCD.Segmentation.ovseg.utils.grid_utils import get_resize_np_grid, get_resize_torch_grid
+from KCD.Segmentation.ovseg.utils.torch_np_utils import stack, check_type
 
 # conventions and definitions:
 # a batch is a collection of samples

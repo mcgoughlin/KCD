@@ -1,11 +1,11 @@
 import numpy as np
 import torch
-from ovseg.utils.torch_np_utils import check_type, maybe_add_channel_dim
+from KCD.Segmentation.ovseg.utils.torch_np_utils import check_type, maybe_add_channel_dim
 from skimage.measure import label
 from skimage.transform import resize
 from torch.nn.functional import interpolate
 from scipy.ndimage.morphology import binary_fill_holes
-from ovseg.utils.torch_morph import morph_cleaning
+from KCD.Segmentation.ovseg.utils.torch_morph import morph_cleaning
 
 
 class SegmentationPostprocessing(object):

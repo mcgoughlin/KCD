@@ -1,9 +1,9 @@
 import numpy as np
 import torch
-from ovseg.utils.torch_np_utils import check_type, stack
-from ovseg.utils.grid_utils import rotate_grid_2d, rotate_grid_3d, \
+from KCD.Segmentation.ovseg.utils.torch_np_utils import check_type, stack
+from KCD.Segmentation.ovseg.utils.grid_utils import rotate_grid_2d, rotate_grid_3d, \
     get_centred_np_grid, get_centred_torch_grid, scale_grid, grid_to_indices
-from ovseg.utils.interp_utils import interp_sample
+from KCD.Segmentation.ovseg.utils.interp_utils import interp_sample
 
 
 class SpatialAugmentation(object):

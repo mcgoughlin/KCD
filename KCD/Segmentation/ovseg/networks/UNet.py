@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from ovseg.networks.nfUNet import concat_attention, concat
+from KCD.Segmentation.ovseg.networks.nfUNet import concat_attention, concat
 
 
 def get_padding(kernel_size):

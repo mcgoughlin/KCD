@@ -1,5 +1,5 @@
-from ovseg.training.NetworkTraining import NetworkTraining
-from ovseg.training.loss_functions_combined import CE_dice_pyramid_loss, to_one_hot_encoding, \
+from KCD.Segmentation.ovseg.training.NetworkTraining import NetworkTraining
+from KCD.Segmentation.ovseg.training.loss_functions_combined import CE_dice_pyramid_loss, to_one_hot_encoding, \
     weighted_combined_pyramid_loss
 import torch
 import torch.nn as nn

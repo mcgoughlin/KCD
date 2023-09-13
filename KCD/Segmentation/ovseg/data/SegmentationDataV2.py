@@ -1,5 +1,5 @@
-from ovseg.data.DataBase import DataBase
-from ovseg.data.SegmentationDataloaderV2 import SegmentationDataloaderV2
+from KCD.Segmentation.ovseg.data.DataBase import DataBase
+from KCD.Segmentation.ovseg.data.SegmentationDataloaderV2 import SegmentationDataloaderV2
 
 
 class SegmentationDataV2(DataBase):

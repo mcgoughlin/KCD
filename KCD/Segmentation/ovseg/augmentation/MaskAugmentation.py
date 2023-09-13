@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from ovseg.utils.torch_np_utils import check_type, stack
+from KCD.Segmentation.ovseg.utils.torch_np_utils import check_type, stack
 try:
     from scipy.ndimage import morphology
     from skimage.measure import label

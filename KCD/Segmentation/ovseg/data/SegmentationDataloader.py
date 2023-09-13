@@ -1,7 +1,7 @@
 import torch
 import numpy as np
-from ovseg.data.utils import crop_and_pad_image
-from ovseg.utils.torch_np_utils import maybe_add_channel_dim
+from KCD.Segmentation.ovseg.data.utils import crop_and_pad_image
+from KCD.Segmentation.ovseg.utils.torch_np_utils import maybe_add_channel_dim
 import os
 from time import sleep
 try:

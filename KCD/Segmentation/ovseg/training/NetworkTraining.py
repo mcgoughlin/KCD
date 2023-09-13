@@ -1,4 +1,4 @@
-from ovseg.training.TrainingBase import TrainingBase
+from KCD.Segmentation.ovseg.training.TrainingBase import TrainingBase
 import torch
 import matplotlib.pyplot as plt
 import numpy as np

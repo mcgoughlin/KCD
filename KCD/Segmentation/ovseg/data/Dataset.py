@@ -1,7 +1,7 @@
 import numpy as np
 from os.path import basename, join, exists, isdir, split
 from os import listdir, environ, walk
-from ovseg.utils.io import read_data_tpl_from_nii, read_dcms, read_nii
+from KCD.Segmentation.ovseg.utils.io import read_data_tpl_from_nii, read_dcms, read_nii
 import nibabel as nib
 import torch
 
