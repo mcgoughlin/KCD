@@ -19,48 +19,47 @@ def init_shape_params():
         'object_batchsize': 8,
         'graph_thresh': 500,
         'mlp_thresh': 20000,
-        'combined_threshold':500,
         'mlp_lr': 0.01,
         'gnn_lr': 0.001,
         's1_objepochs': 100,
         'shape_unfreeze_epochs': 2,
         'shape_freeze_epochs': 25,
-        'shape_freeze_lr':1e-3,
+        'shape_freeze_lr': 1e-3,
         'shape_unfreeze_lr': 1e-3,
-        'combined_threshold':500,
-        'ensemble_n1':128,
-        'ensemble_n2':32
+        'combined_threshold': 500,
+        'ensemble_n1': 128,
+        'ensemble_n2': 32
     }
     return params
 
 
 def init_slice2D_params():
     params = {"voxel_size": 1,
-              "model_size":"large",
-              "cancthresh_r_mm":10,
-              "kidthresh_r_mm":20,
-              "batch_size":16,
-              "dilated":40,
-              "lr":  5e-4,
-              "epochs":5,
-              "depth_z":1,
-              "boundary_z":1,
-              'pred_window':10}
+              "model_size": "large",
+              "cancthresh_r_mm": 10,
+              "kidthresh_r_mm": 20,
+              "batch_size": 16,
+              "dilated": 40,
+              "lr": 5e-4,
+              "epochs": 5,
+              "depth_z": 1,
+              "boundary_z": 1,
+              'pred_window': 10}
     return params
 
 
 def init_slice3D_params():
     params = {"voxel_size": 1,
-              "model_size":"small",
-              "cancthresh_r_mm":10,
-              "kidthresh_r_mm":20,
-              "batch_size":16,
-              "dilated":40,
-              "lr":  1e-3,
-              "epochs":5,
-              "depth_z":20,
-              "boundary_z":5,
-              'pred_window':1}
+              "model_size": "small",
+              "cancthresh_r_mm": 10,
+              "kidthresh_r_mm": 20,
+              "batch_size": 16,
+              "dilated": 40,
+              "lr": 1e-3,
+              "epochs": 5,
+              "depth_z": 20,
+              "boundary_z": 5,
+              'pred_window': 1}
     return params
 
 
@@ -77,9 +76,9 @@ def create_directory(path):
         
         
 def init_training_home(home, dataname):
-    training_home = os.path.join(home,'training_info')
+    training_home = os.path.join(home, 'training_info')
     save_dir = os.path.join(training_home, dataname)
-    create_directory(home),create_directory(home),create_directory(save_dir)
+    create_directory(home), create_directory(home), create_directory(save_dir)
     return save_dir
         
 
@@ -87,7 +86,6 @@ def shape_collate(samples, dev=initialize_device()):
     features, graphs, labels = map(list, zip(*samples))
     batched_graph = dgl.batch(graphs)
     return torch.stack(features).to(dev), batched_graph.to(dev), torch.stack(labels).squeeze(dim=0).to(dev)
-
 
 
 def check_params(params,template_params):
@@ -175,5 +173,5 @@ def plot_roc(name,model_name,ROC):
     sens, spec = ROC[:, 0] * 100, ROC[:, 1] * 100
     AUC = np.trapz(sens, spec) / 1e4
     plt.plot(100 - spec, sens, linewidth=2, label=name + ' AUC {:.3f}'.format(AUC))
-    plt.ylabel('Sensivity / %')
+    plt.ylabel('Sensitivity / %')
     plt.xlabel('100 - Specificity / %')
