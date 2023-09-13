@@ -1,9 +1,9 @@
 import os
 os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/ovseg_all_data"
 
-from ovseg.model.SegmentationModel import SegmentationModel
-from ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
-from ovseg.preprocessing.SegmentationPreprocessing import SegmentationPreprocessing
+from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
+from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
+from KCD.Segmentation.ovseg.preprocessing.SegmentationPreprocessing import SegmentationPreprocessing
 
 import gc
 import torch
