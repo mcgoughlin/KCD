@@ -92,4 +92,4 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
 if __name__ == '__main__':
     dataset = 'coreg_ncct'
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
-    train_cv_slice_model(home=home,dataname=dataset,is_3D=False)
+    train_cv_slice_model(home=home,dataname=dataset,is_3D=True)
