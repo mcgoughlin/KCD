@@ -56,7 +56,7 @@ def init_slice3D_params():
               "batch_size": 16,
               "dilated": 40,
               "lr": 1e-3,
-              "epochs": 5,
+              "epochs": 30,
               "depth_z": 20,
               "boundary_z": 5,
               'pred_window': 1}
