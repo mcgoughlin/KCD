@@ -78,7 +78,7 @@ def create_directory(path):
 def init_training_home(home, dataname):
     training_home = os.path.join(home, 'training_info')
     save_dir = os.path.join(training_home, dataname)
-    create_directory(home), create_directory(home), create_directory(save_dir)
+    create_directory(home), create_directory(training_home), create_directory(save_dir)
     return save_dir
         
 
