@@ -1,6 +1,5 @@
 from KCD.Segmentation.ovseg.data.DataBase import DataBase
 from KCD.Segmentation.ovseg.data.SegmentationDataloader import SegmentationDataloader
-from KCD.Segmentation.ovseg.data.SegmentationDoubleBiasDataloader import SegmentationDoubleBiasDataloader
 from os import listdir
 from os.path import join
 
@@ -17,10 +16,7 @@ class SegmentationData(DataBase):
             print('Initialise training dataloader')
             
             if self.use_double_bias:
-                
-                self.trn_dl = SegmentationDoubleBiasDataloader(self.trn_ds,
-                                                               augmentation=self.augmentation,
-                                                               **self.trn_dl_params)
+                raise NotImplementedError
             else:
                 self.trn_dl = SegmentationDataloader(self.trn_ds,
                                                      augmentation=self.augmentation,
@@ -29,9 +25,7 @@ class SegmentationData(DataBase):
             print('Initialise validation dataloader')
             try:
                 if self.use_double_bias:
-                    self.val_dl = SegmentationDoubleBiasDataloader(self.val_ds,
-                                                                   augmentation=self.augmentation,
-                                                                   **self.val_dl_params)
+                    raise NotImplementedError
                 else:
                     self.val_dl = SegmentationDataloader(self.val_ds,
                                                          augmentation=self.augmentation,
