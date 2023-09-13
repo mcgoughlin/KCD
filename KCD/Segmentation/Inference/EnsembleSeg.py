@@ -22,30 +22,27 @@ from skimage.measure import label
 from time import sleep
 import sys
 import gc
-
-try:
-    from tqdm import tqdm
-except ModuleNotFoundError:
-    print('No tqdm found, using no pretty progressing bars')
-    tqdm = lambda x: x
-
 from scipy.ndimage import binary_fill_holes, binary_dilation, binary_erosion
 import SimpleITK as sitk
 from KCD.Segmentation.Inference import infer_network
 from KCD.Segmentation.ovseg.preprocessing.SegmentationPreprocessing import SegmentationPreprocessing
 from KCD.Segmentation.ovseg.postprocessing.SegmentationPostprocessing import SegmentationPostprocessing
 from KCD.Segmentation.ovseg.prediction.SlidingWindowPrediction import SlidingWindowPrediction
-
 from KCD.Segmentation.ovseg.data.SegmentationData import SegmentationData
 from KCD.Segmentation.ovseg.utils.io import load_pkl, read_nii, _has_z_first
 from KCD.Segmentation.ovseg.utils.torch_np_utils import maybe_add_channel_dim
+try:
+    from tqdm import tqdm
+except ModuleNotFoundError:
+    print('No tqdm found, using no pretty progressing bars')
+    tqdm = lambda x: x
 
 SegLoader, Segment, SegProcess = infer_network.get_3d_UNet, SlidingWindowPrediction, SegmentationPostprocessing
 
 class Ensemble_Seg(nn.Module):
-    def __init__(self, home:str, data_name: str = None,  ##seg preprocess args
+    def __init__(self, data_name: str = None,  ##seg preprocess args
                  seg_fp: str = None, spacing=np.array([3, 3, 3]),
-                 seg_dev: str = None, do_prep=False, do_infer=False):  ##seg args
+                 do_prep=False, do_infer=False):  ##seg args
         super().__init__()
 
         print("")
@@ -53,20 +50,18 @@ class Ensemble_Seg(nn.Module):
         print("")
         torch.cuda.empty_cache()
         gc.collect()
-        self.home = home
+        self.home = environ['OV_DATA_BASE']
         case_path = join(self.home, 'raw_data', data_name, 'images')
         self.cases = [file for file in listdir(case_path) if file.endswith('.nii.gz') or file.endswith('.nii')]
         self.data_name = data_name
 
         # ### SEG PREPROCESS ###
-        self.seg_dev = seg_dev
         self.preprocessed_name = str(spacing[0]) + ',' + str(spacing[1]) + ',' + str(spacing[2]) + "mm"
         self.spacing = spacing
 
+        self.seg_dev = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.seg_save_loc = join(self.home, "predictions_nii")
         self.seg_save_loc_lr = join(self.home, "predictions_npy")
-
-        # all predictions are stored in the designated 'predictions' folder in the OV_DATA_BASE
 
         # creating folders
         if not exists(self.seg_save_loc):
@@ -145,7 +140,7 @@ class Ensemble_Seg(nn.Module):
             self.SegModel.to(self.seg_dev)
             self.SegModel.eval()
 
-            self.Segment.append(Segment(self.SegModel, [b, b, b], batch_size=4, overlap=0.5, dev=self.seg_dev))
+            self.Segment.append(Segment(self.SegModel, [b, b, b], batch_size=4, overlap=0.5))
 
     def seg_pred(self, data_tpl, do_postprocessing=True):
 
@@ -156,7 +151,6 @@ class Ensemble_Seg(nn.Module):
         # if torch.backends.mps.is_available:
         #     im.type(torch.MPSFloatType)
         im.to(self.seg_dev)
-        bin_pred = None
         # now the importat part: the sliding window evaluation (or derivatives of it)
         pred_holder = None
         pred_lowres = None
@@ -166,7 +160,7 @@ class Ensemble_Seg(nn.Module):
 
             # inside the postprocessing the result will be attached to the data_tpl
             if do_postprocessing:
-                self.SegProcess.postprocess_data_tpl(data_tpl, 'pred', bin_pred)
+                self.SegProcess.postprocess_data_tpl(data_tpl, 'pred')
 
             if type(pred_holder) == type(None):
                 pred_holder = data_tpl['pred_orig_shape']
@@ -278,6 +272,7 @@ class Ensemble_Seg(nn.Module):
         # dataset. This requires that we provide: preprocessed data loc, scans, and 'keys' - I do not know what the keys are (in Dataset)
         self.Segment = []
         self._load_UNet(self.seg_mp_low, self.seg_dev)
+
         # self._load_UNet(self.seg_mp_high,self.seg_dev,res='high')
 
         self.preprocess_path = join(self.home, "preprocessed", self.data_name, self.preprocessed_name, "images")
@@ -289,11 +284,9 @@ class Ensemble_Seg(nn.Module):
         self.segmodel_parameters_low = np.load(join(self.seg_mp_low, "model_parameters.pkl"), allow_pickle=True)
 
         params_low = self.segmodel_parameters_low['data'].copy()
-        params_low['folders'] = ['images']
-        params_low['keys'] = ['image']
-
-        self.segpp_data = SegmentationData(preprocessed_path=split(self.preprocess_path)[0],
-                                           augmentation=None,
+        params_low['n_folds']=len(self.Segment)
+        self.segpp_data = SegmentationData(None,False,
+                                           len(self.Segment)-1,preprocessed_path=split(self.preprocess_path)[0],
                                            **params_low)
 
         ppscans = [self.segpp_data.val_ds[i]['scan'] for i in range(len(self.segpp_data.val_ds))]

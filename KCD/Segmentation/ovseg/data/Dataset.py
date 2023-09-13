@@ -178,12 +178,6 @@ class raw_Dataset(object):
                 else:
                     self.scans = [scan[:-7] for scan in listdir(join(self.raw_path,
                                                                      self.image_folder))]
-                    # check if we have medical decathlon style data
-                    end_with_0000 = [scan for scan in scans if scan.endswith('_0000')]
-                    if len(end_with_0000) > 0:
-                        print('Found medical decathlon style data at '
-                              + join(self.raw_path, self.image_folder))
-                        self.scans = np.unique([scan[:-5] for scan in self.scans]).tolist()
             else:
                 self.scans = scans
             print('Using scans: ', self.scans)

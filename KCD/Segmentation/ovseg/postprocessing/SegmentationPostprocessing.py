@@ -205,7 +205,7 @@ class SegmentationPostprocessing(object):
             raise ValueError('Volume must be 3d array')
 
         if self.remove_comps_by_volume:
-            if not isinstance(np.ndarray, spacing):
+            if not isinstance(spacing,np.ndarray):
                 raise ValueError('Spacing must be a list of length 3 to represent the spatial length '
                                  'of the voxel')
 

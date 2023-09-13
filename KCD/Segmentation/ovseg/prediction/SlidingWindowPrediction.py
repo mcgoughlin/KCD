@@ -4,7 +4,6 @@ from torch.nn import functional as F
 from scipy.ndimage.filters import gaussian_filter
 from KCD.Segmentation.ovseg.utils.torch_np_utils import check_type, maybe_add_channel_dim
 
-
 class SlidingWindowPrediction(object):
 
     def __init__(self, network, patch_size, batch_size=1, overlap=0.5, fp32=False,
@@ -166,11 +165,7 @@ class SlidingWindowPrediction(object):
                 # remove z axis if we have 2d prediction
                 batch = batch[:, :, 0] if self.is_2d else batch
                 # remember that the network is outputting a list of predictions for each scale
-                if not self.fp32 and torch.cuda.is_available():
-                    with torch.cuda.amp.autocast():
-                        out = self.network(batch)[0]
-                else:
-                    out = self.network(batch)[0]
+                out = self.network(batch.to(self.dev))[0]
 
                 # add z axis again maybe
                 out = out.unsqueeze(2) if self.is_2d else out
