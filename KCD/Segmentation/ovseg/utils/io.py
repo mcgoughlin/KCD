@@ -57,6 +57,7 @@ def _write_dict_to_txt(dict_name, data, file, n_tabs):
 
 
 def _has_z_first(spacing, dims, filename):
+    spacing = np.around(spacing,decimals=2)
     global _isotropic_volume_loaded_warning_printed, _ananisotropic_volume_loaded_warning_printed
     # first check if the z axis is last or first
     if spacing[0] == spacing[1]:
