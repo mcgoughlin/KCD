@@ -1,5 +1,5 @@
 import os
-os.environ['OV_DATA_BASE'] = 'bask/projects/p/phwq4930-renal-canc/data/seg_data'
+os.environ['OV_DATA_BASE'] = '/bask/projects/p/phwq4930-renal-canc/data/seg_data'
 
 from KCD.Segmentation.Inference.EnsembleSeg import Ensemble_Seg
 import numpy as np
