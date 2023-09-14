@@ -7,7 +7,6 @@ numpy
 opencv-python
 pandas
 pydicom
-stl
 scikit-image
 scikit-learn
 scipy

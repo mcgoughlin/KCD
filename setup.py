@@ -8,7 +8,7 @@ setup(
     #           'scikit-image==0.19.3','scikit-learn==1.2.2','scipy==1.10.1',
     #           'simpleitk==2.2.1','torchvision==0.15.2'],
     install_requires=['torch','dgl','matplotlib','nibabel','bpy',
-              'numpy','opencv-python','pandas','pydicom','stl',
+              'numpy','opencv-python','pandas','pydicom',
               'scikit-image','scikit-learn','scipy','numpy-stl',
               'simpleitk','torchvision','pymeshfix'],
     python_requires='>=3.10',
