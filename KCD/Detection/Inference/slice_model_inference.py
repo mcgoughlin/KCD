@@ -78,7 +78,7 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
     
 if __name__ == '__main__':
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
-    trainname = 'kits23sncct'
-    infername='kits23sncct'
-    eval_individual_slice_models(home=home,trainname=trainname,infername=infername,is_3D=False)
+    trainname = 'coreg_ncct'
+    infername='add_ncct_unseen'
+    eval_individual_slice_models(home=home,trainname=trainname,infername=infername,is_3D=True)
     

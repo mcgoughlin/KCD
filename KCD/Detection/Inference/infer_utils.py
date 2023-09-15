@@ -59,8 +59,8 @@ def init_slice3D_params():
               "fg_thresh":10,
               "batch_size":16,
               "dilated":40,
-              "lr":  5e-4,
-              "epochs":5,
+              "lr":  1e-3,
+              "epochs":30,
               "depth_z":20,
               "boundary_z":5,
               'pred_window':1}
@@ -230,6 +230,7 @@ def eval_cnn(twCNN,test_tw_dl,ps_boundary=0.98,dev='cpu',boundary_size=10):
         for case in test_tw_dl.dataset.cases:
             for position in test_tw_dl.dataset.data_df[test_tw_dl.dataset.data_df['case'] ==case].side.unique():
                 if position == 'random': continue
+                print(case,position)
                 test_tw_dl.dataset.set_val_kidney(case,position)
                 entry = {'case':case,
                          'position':position}

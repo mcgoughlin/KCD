@@ -169,12 +169,12 @@ class SW_Data_unlabelled(Dataset):
                                     [*[1]*len(self.fg)]]).T,
                                     columns = ['filepath','class'])
         self.data_df['class'] = self.data_df['class'].astype(int)
-        self.data_df['case'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[0:2]).str.join("_")
-        self.data_df['side'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[2])
-        self.data_df['window'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[3])
-        self.data_df['slice'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:int(x[-1].split('index')[1].split('.')[0]))
+        self.data_df['case'] = self.data_df.filepath.str.split('_').apply(lambda x:x[0])
+        self.data_df['side'] = self.data_df.filepath.str.split('_').apply(lambda x:x[1])
+        self.data_df['window'] = self.data_df.filepath.str.split('_').apply(lambda x:x[2])
+        self.data_df['slice'] = self.data_df.filepath.str.split('_').apply(lambda x:int(x[-1].split('index')[1].split('.')[0]))
         self.cases = self.data_df.case
-            
+
         self.data_dict = {1:self.fg}
         self.dir_dict = {1:os.path.join(self.home_path,"foreground")}        
         fg = len(self.fg)
