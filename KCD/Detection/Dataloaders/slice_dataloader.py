@@ -188,6 +188,7 @@ class SW_Data_unlabelled(Dataset):
         
     def set_val_kidney(self,case:str,side='left'):
         self.test_case = case
+        print(self.data_df[(self.data_df['case'] == self.test_case)])
         self.case_specific_data = self.data_df[(self.data_df['case'] == self.test_case) & (self.data_df['side']==side) & (self.data_df['window']=='centralised')]
         self.case_specific_data = self.case_specific_data.sort_values('slice')
         if len(self.case_specific_data)==0:
