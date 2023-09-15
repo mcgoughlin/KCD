@@ -329,11 +329,16 @@ def create_unseen_dataset(path,dataset,im_p,infnpy_p,infnii_p,
                 else:kidneys = ['right']
                 print("Sole kidney is in location {}.".format(kidneys[0]))
             else:
-                if (len(inference_centroids)==0) or (len(inference_centroids)>2):continue
-                # assert(len(inference_centroids)==2)
-                single_kidney_flag=  False
-                if inference_centroids[0][lr] < inference_centroids[1][lr]: kidneys = ['right','left']
-                else: kidneys = ['left','right']
+                if (len(inference_centroids) == 0): continue
+
+                single_kidney_flag = False
+                if (len(inference_centroids) > 2):
+                    kidneys = np.arange(1, len(kidney_data) + 1).astype(str).tolist()
+                else:
+                    if inference_centroids[0][lr] < inference_centroids[1][lr]:
+                        kidneys = ['right', 'left']
+                    else:
+                        kidneys = ['left', 'right']
                 
             centroids,statistics = [*inference_centroids], [*inference_statistics]
             segmentations = [*inference_segmentations]

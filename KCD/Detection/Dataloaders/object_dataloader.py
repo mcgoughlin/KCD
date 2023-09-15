@@ -18,8 +18,9 @@ def assign_rowwise_max(df, columns,new_column_name):
     df[new_column_name] = df[columns].max(axis=1)
     return df
 
-def convert_to_binary(df, column_name, substring):
-    df[column_name] = df[column_name].str.contains(substring).astype(int)
+def convert_to_binary(df, column_name, substring1,substring2):
+    df = df[df[column_name]==substring1 | df[column_name]==substring2]
+    df[column_name] = df[column_name].str.contains(substring1).astype(int)
     return df
 
 class ObjectData_labelled(Dataset):
@@ -68,7 +69,7 @@ class ObjectData_labelled(Dataset):
         self.cases = self.case_data.case
         
         # convert position string to binary feature
-        self.case_data = convert_to_binary(self.case_data,'position','right')
+        self.case_data = convert_to_binary(self.case_data,'position','right','left')
         self.case_data['label'] = (self.case_data['largest_cyst']>self.graph_thresh) | (self.case_data['largest_cancer']>self.graph_thresh)
 
         ########## DATASET PROPERTIES ###########
@@ -218,7 +219,7 @@ class ObjectData_unlabelled(Dataset):
         self.cases = self.case_data.case
         
         # convert position string to binary feature
-        self.case_data = convert_to_binary(self.case_data,'position','right')
+        self.case_data = convert_to_binary(self.case_data,'position','right','left')
 
         ########## DATASET PROPERTIES ###########
 
