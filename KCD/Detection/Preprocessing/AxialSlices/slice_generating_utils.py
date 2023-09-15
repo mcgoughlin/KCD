@@ -196,7 +196,7 @@ def get_centralised_windows(reshaped_im,reshaped_seg,centroid,axes=None,patch_si
 
     return central_window_im, central_window_seg
 
-def get_kid_str(kidney_data,reshaped_im,reshaped_seg,spacing,axes):
+def get_kid_str(kidney_data,reshaped_im,reshaped_seg,spacing,axes,labelled=True):
     axial,lr_index,ud = axes
     
     if len(kidney_data)==1:
@@ -211,7 +211,11 @@ def get_kid_str(kidney_data,reshaped_im,reshaped_seg,spacing,axes):
             
         print("sole kidney is {}".format(kid_str))
     elif len(kidney_data) == 0: kid_str=['_failure']
-    elif len(kidney_data)>2: kid_str=['_failure']
+    elif len(kidney_data)>2:
+        if labelled:
+            kid_str = ['_failure']
+        else:
+            kid_str = np.arange(1,len(kidney_data)+1).astype(str).tolist()
     else:
         first_kidney = kidney_data[0]
         second_kidney = kidney_data[1]
@@ -263,8 +267,6 @@ def save_windows_unlabelled(windowed_im,windowed_seg,fg_thresh,target_spacing,
     names = ["foreground"]
     print("Creating {} foreground {} windows.".format(min(len(sw_normals),save_limit),
                                                                       string))
-        
-
 
     for subname, label_group in zip(names,sw_subtypes):
         fold = fu.filename_structure_unlabelled(save_path,subname,voxel_size_mm,thresh_r_mm,
@@ -308,13 +310,13 @@ def create_labelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
         axes = np.array(axes)
 
         
-        reshaped_im = am.rescale_array(ct_im,correct_spacing,axes,target_spacing = target_spacing)
-        reshaped_seg = am.rescale_array(seg_im,correct_spacing,axes,target_spacing = target_spacing,is_seg=True)
+        reshaped_im = am.rescale_array(ct_im, correct_spacing, axes, target_spacing = target_spacing)
+        reshaped_seg = am.rescale_array(seg_im, correct_spacing, axes, target_spacing = target_spacing, is_seg = True)
 
         kidney_data = np.asarray([[mass,centroid] for mass, centroid in get_masses(reshaped_seg>0,vol_thresh_vox)],dtype=object)        
 
-        kid_str = get_kid_str(kidney_data,reshaped_im,reshaped_seg,spacing,axes)
-        if kid_str == ['_failure']:continue
+        kid_str = get_kid_str(kidney_data,reshaped_im,reshaped_seg,spacing,axes,labelled=True)
+        if kid_str == ['_failure']: continue
                 
         for kidney_datum, name in zip(kidney_data,kid_str):
             print("\nGenerating from {} {}-side.".format(get_int,name))
@@ -378,7 +380,6 @@ def create_unlabelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
     fg_thresh = ((foreground_thresh/target_spacing[0])**2) * 3.1416
     
     for get_int in int_list:
-        if get_int=='KiTS-00151.nii.gz': continue #skip this case - strange label artefact
         if get_int=='.DS_Store': continue
         ct,seg = am.get(get_int,im_path,seg_path)
         ct_im,seg_im = am.nifti_2_correctarr(ct), am.nifti_2_correctarr(seg)
@@ -397,9 +398,9 @@ def create_unlabelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
         reshaped_im = am.rescale_array(ct_im,correct_spacing,axes,target_spacing = target_spacing)
         reshaped_seg = am.rescale_array(seg_im,correct_spacing,axes,target_spacing = target_spacing,is_seg=True)
 
-        kidney_data = np.asarray([[mass,centroid] for mass, centroid in get_masses(reshaped_seg>0,vol_thresh_vox)],dtype=object)        
+        kidney_data = np.asarray([[mass,centroid] for mass, centroid in get_masses(reshaped_seg>0,vol_thresh_vox)],dtype=object)
 
-        kid_str = get_kid_str(kidney_data,reshaped_im,reshaped_seg,spacing,axes)
+        kid_str = get_kid_str(kidney_data,reshaped_im,reshaped_seg,spacing,axes,labelled=False)
         if kid_str == ['_failure']:continue
                 
         for kidney_datum, name in zip(kidney_data,kid_str):
@@ -423,7 +424,6 @@ def create_unlabelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
             ct = final_mask*reshaped_im
             # get rid of zero'd background that confounds training - make bg -200HU, the min possible val in image.
             ct += np.where(final_mask==0,-200,0)
-            
 
             cent_im, cent_seg = get_centralised_windows(ct,seg,centroid,patch_size=patch_size,axes=axes,boundary_z=boundary_z) 
             assert(cent_im.shape[-3:]==tuple(patch_dims))
