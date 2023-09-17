@@ -343,26 +343,24 @@ def create_labelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
 
         
             sw_im, sw_seg = get_shifted_windows(ct,seg,overlap=overlap,patch_size=patch_size,axes=axes,boundary_z=boundary_z)  
-            assert(sw_im.shape[-3:]==tuple(patch_dims))
-            assert(sw_seg.shape[-3:]==tuple(patch_dims))
-                       
-            save_windows_labelled(sw_im,sw_seg,canc_thresh,kid_thresh,
-                         target_spacing,save_path,
-                         voxel_size_mm,cancer_thresh_rmm,get_int,
-                         shuffle=True,save_limit=save_limit,centralised=False,
-                         depth_z=depth_z,boundary_z=boundary_z,
-                         kidthresh=kidney_thresh_rmm,dilate=bbox_boundary_mm,patch_dims=patch_dims)
 
-            cent_im, cent_seg = get_centralised_windows(ct,seg,centroid,patch_size=patch_size,axes=axes,boundary_z=boundary_z) 
-            assert(cent_im.shape[-3:]==tuple(patch_dims))
-            assert(cent_seg.shape[-2:]==tuple(patch_dims[-2:]))
-            
-            save_windows_labelled(cent_im,cent_seg,canc_thresh,kid_thresh,
-                         target_spacing,save_path,
-                         voxel_size_mm,cancer_thresh_rmm,get_int,kidney_side=name,
-                         shuffle=False,save_limit=1e4,centralised=True,
-                         depth_z=depth_z,boundary_z=boundary_z,
-                         kidthresh=kidney_thresh_rmm,dilate=bbox_boundary_mm,patch_dims=patch_dims)
+            if (sw_seg.shape[-3:]==tuple(patch_dims)) and (sw_im.shape[-3:]==tuple(patch_dims)):
+                save_windows_labelled(sw_im,sw_seg,canc_thresh,kid_thresh,
+                             target_spacing,save_path,
+                             voxel_size_mm,cancer_thresh_rmm,get_int,
+                             shuffle=True,save_limit=save_limit,centralised=False,
+                             depth_z=depth_z,boundary_z=boundary_z,
+                             kidthresh=kidney_thresh_rmm,dilate=bbox_boundary_mm,patch_dims=patch_dims)
+
+            cent_im, cent_seg = get_centralised_windows(ct,seg,centroid,patch_size=patch_size,axes=axes,boundary_z=boundary_z)
+
+            if (cent_im.shape[-3:]==tuple(patch_dims)) and (cent_seg.shape[-2:]==tuple(patch_dims[-2:])):
+                save_windows_labelled(cent_im,cent_seg,canc_thresh,kid_thresh,
+                             target_spacing,save_path,
+                             voxel_size_mm,cancer_thresh_rmm,get_int,kidney_side=name,
+                             shuffle=False,save_limit=1e4,centralised=True,
+                             depth_z=depth_z,boundary_z=boundary_z,
+                             kidthresh=kidney_thresh_rmm,dilate=bbox_boundary_mm,patch_dims=patch_dims)
                         
             
 def create_unlabelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,

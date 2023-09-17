@@ -73,20 +73,22 @@ def _has_z_first(spacing, dims, filename):
                 print('Found at least one file {} with isotropic voxel and equal volume dimensions.'
                       'could not infere if the z axis is first or last, guessing last. '
                       'Please make sure it is!'.format(filename))
-                has_z_first = False
-                _isotropic_volume_loaded_warning_printed = True
+            has_z_first = False
+            _isotropic_volume_loaded_warning_printed = True
     else:
         # spacing[0] != spacing[1]
         if spacing[1] == spacing[2]:
             has_z_first = True
+        elif spacing[0] == spacing[2]:
+            has_z_first = False
         else:
             if not _ananisotropic_volume_loaded_warning_printed:
                 print('Found at least one file {} with voxelspacing {}. '
                       'Need at least two equal numbers in the spacing to find out if the z '
                       'axis is first or last, guessing last. Please make sure it is!'
                       ''.format(filename, spacing))
-                has_z_first = False
-                _ananisotropic_volume_loaded_warning_printed = True
+            has_z_first = False
+            _ananisotropic_volume_loaded_warning_printed = True
     return has_z_first
 
 def read_nii(nii_file,additional_channels=0):
@@ -178,9 +180,7 @@ def read_data_tpl_from_nii(folder, case,additional_channels = 0):
 
     image_files = []
     for image_folder in image_folders_ex:
-        matching_files = [join(folder, image_folder, file) for file in
-                          listdir(join(folder, image_folder))
-                          if file.startswith(case[:-7])]
+        matching_files = [join(folder, image_folder, file) for file in listdir(join(folder, image_folder)) if file[:-7]==case[:-7]]
         if len(matching_files) > 0 and len(image_files) > 0:
             raise FileExistsError('Found images for in multiple image folders at path {} for '
                                   'case {}.'.format(folder, case))
@@ -192,14 +192,16 @@ def read_data_tpl_from_nii(folder, case,additional_channels = 0):
         raw_image_file = image_files[0]
         im, spacing, had_z_first = read_nii(raw_image_file,additional_channels=additional_channels)
     else:
+        print(image_files)
+        assert(1==2)
         raw_image_file = image_files
         im_data = [read_nii(file,additional_channels=additional_channels) for file in raw_image_file]
         ims = [im for im, spacing, had_z_first in im_data]
         spacings = [spacing for im, spacing, had_z_first in im_data]
         hzf_list = [had_z_first for im, spacing, had_z_first in im_data]
 
-        # now check if everything matches
         if not np.all([np.all(spacings[0] == sp) for sp in spacings[1:]]):
+            print(spacings)
             raise ValueError('Found unequal spacings when reading the image files {}'
                              ''.format(image_files))
 
@@ -224,9 +226,7 @@ def read_data_tpl_from_nii(folder, case,additional_channels = 0):
 
     label_files = []
     for label_folder in label_folders_ex:
-        matching_files = [join(folder, label_folder, file) for file in
-                          listdir(join(folder, label_folder))
-                          if file.startswith(case[:-7])]
+        matching_files = [join(folder, label_folder, file) for file in listdir(join(folder, label_folder)) if file[:-7] == case[:-7]]
         if len(matching_files) > 0 and len(label_files) > 0:
             raise FileExistsError('Found labels for in multiple label folders at path {} for '
                                   'case {}.'.format(folder, case))

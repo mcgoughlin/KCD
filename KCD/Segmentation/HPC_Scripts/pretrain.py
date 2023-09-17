@@ -1,5 +1,5 @@
 import os
-os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/ovseg_all_data"
+os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
 
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
@@ -10,11 +10,11 @@ import torch
 import sys
 
 
-data_name = str(sys.argv[1])
-spacing = float(sys.argv[2])
-fold = int(sys.argv[3])
+data_name = 'all_sncct'
+spacing = 4
+fold = int(sys.argv[1])
 
-preprocessed_name = '{}mm_allbinary'.format(spacing)
+preprocessed_name = '{}mm_binary'.format(spacing)
 model_name = '6,3x3x3,32'
 
 vfs = [fold]
@@ -51,17 +51,17 @@ del model_params['network']['stochdepth_rate']
 lr=0.0001
 model_params['data']['folders'] = ['images', 'labels']
 model_params['data']['keys'] = ['image', 'label']
-model_params['training']['num_epochs'] = 300
+model_params['training']['num_epochs'] = 500
 model_params['training']['opt_name'] = 'ADAM'
 model_params['training']['opt_params'] = {'lr': lr,
                                             'betas': (0.95, 0.9),
                                             'eps': 1e-08}
-model_params['training']['lr_params'] = {'n_warmup_epochs': 5, 'lr_max': 0.004}
+model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.004}
 model_params['data']['trn_dl_params']['epoch_len']=250
 model_params['data']['trn_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['data']['val_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['training']['lr_schedule'] = 'lin_ascent_log_decay'
-model_params['training']['lr_exponent'] = 4
+model_params['training']['lr_exponent'] = 3
 model_params['data']['trn_dl_params']['batch_size']=16
 model_params['data']['val_dl_params']['epoch_len']=50
 # model_params['postprocessing'] = {'mask_with_reg': True}

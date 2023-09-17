@@ -1,6 +1,5 @@
 from KCD.Segmentation.ovseg.augmentation.SpatialAugmentation import SpatialAugmentation
 from KCD.Segmentation.ovseg.augmentation.GrayValueAugmentation import GrayValueAugmentation
-from KCD.Segmentation.ovseg.augmentation.myRandAugment import torch_myRandAugment
 from KCD.Segmentation.ovseg.augmentation.MaskAugmentation import MaskAugmentation
 from KCD.Segmentation.ovseg.augmentation.GridAugmentation import torch_inplane_grid_augmentations
 from KCD.Segmentation.ovseg.augmentation.GrayValueAugmentation import torch_gray_value_augmentation
@@ -99,9 +98,6 @@ class torch_concatenated_augmentation(nn.Module):
 
         if 'grayvalue' in torch_params:
             self.aug_list.append(torch_gray_value_augmentation(**torch_params['grayvalue']))
-
-        if 'myRandAugment' in torch_params:
-            self.aug_list.append(torch_myRandAugment(**torch_params['myRandAugment']))
 
         if len(self.aug_list) > 0:
             self.module = nn.Sequential(*self.aug_list)
