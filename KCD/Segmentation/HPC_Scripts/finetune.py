@@ -1,10 +1,8 @@
 import os
-os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/ovseg_all_data"
-
+os.environ['OV_DATA_BASE'] = "/home/wcm23/rd/hpc-work/FinetuningKITS23"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
 from KCD.Segmentation.ovseg.preprocessing.SegmentationPreprocessing import SegmentationPreprocessing
-
 import gc
 import torch
 import sys
@@ -14,7 +12,7 @@ data_name = str(sys.argv[1])
 spacing = float(sys.argv[2])
 fold = int(sys.argv[3])
 
-preprocessed_name = '4.0mm_allbinary'
+preprocessed_name = '4.0mm_binary'
 model_name = '6,3x3x3,32'
 
 vfs = [fold]
@@ -67,7 +65,7 @@ model_params['data']['val_dl_params']['epoch_len']=50
 
 
 for vf in vfs:
-    path_to_model = '{}/trained_models/kits23/{}0mm_allbinary/6,3x3x3,32/fold_{}/network_weights'.format(os.environ['OV_DATA_BASE'],
+    path_to_model = '{}/trained_models/all_sncct/{}mm_binary/6,3x3x3,32/fold_{}/network_weights'.format(os.environ['OV_DATA_BASE'],
                                                                                                  spacing,
                                                                                                  vf)
     model = SegmentationModel(val_fold=vf,

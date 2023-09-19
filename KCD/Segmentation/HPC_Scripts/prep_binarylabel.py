@@ -1,5 +1,5 @@
 import os
-os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
+os.environ['OV_DATA_BASE'] = "/home/wcm23/rd/hpc-work/FinetuningKITS23"
 
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
@@ -12,7 +12,7 @@ import torch
 import sys
 
 
-data_name = 'all_sncct'
+data_name = 'all_ncct'
 spacing = 4
 
 preprocessed_name = '{}mm_binary'.format(spacing)
