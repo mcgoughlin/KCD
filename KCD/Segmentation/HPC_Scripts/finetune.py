@@ -8,11 +8,12 @@ import torch
 import sys
 
 
-data_name = str(sys.argv[1])
-spacing = float(sys.argv[2])
-fold = int(sys.argv[3])
+data_name = 'all_ncct'
+spacing = 4
+fold = int(sys.argv[1])
 
-preprocessed_name = '4.0mm_binary'
+pretrain_name = 'all_sncct'
+preprocessed_name = '4mm_binary'
 model_name = '6,3x3x3,32'
 
 vfs = [fold]
@@ -65,9 +66,9 @@ model_params['data']['val_dl_params']['epoch_len']=50
 
 
 for vf in vfs:
-    path_to_model = '{}/trained_models/all_sncct/{}mm_binary/6,3x3x3,32/fold_{}/network_weights'.format(os.environ['OV_DATA_BASE'],
-                                                                                                 spacing,
-                                                                                                 vf)
+    path_to_model = '{}/trained_models/{}/{}/{}/fold_{}/network_weights'.format(os.environ['OV_DATA_BASE'],
+                                                                                         pretrain_name, preprocessed_name,
+                                                                                         model_name, vf)
     model = SegmentationModel(val_fold=vf,
                                 data_name=data_name,
                                 preprocessed_name=preprocessed_name, 

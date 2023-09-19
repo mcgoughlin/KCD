@@ -14,3 +14,4 @@ numpy-stl
 simpleitk
 torchvision
 pymeshfix
+rt_utils
