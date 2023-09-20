@@ -373,9 +373,6 @@ class SegmentationPreprocessing(object):
             for i in tqdm(range(len(raw_ds))):
                 # read files
                 data_tpl = raw_ds[i]
-                sys.stdout.write(data_tpl['scan'])
-                sys.stdout.write('#####################################')
-
                 im, spacing = data_tpl['image'], data_tpl['spacing']
 
                 orig_shape = im.shape[-3:]
