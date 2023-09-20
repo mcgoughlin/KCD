@@ -1,14 +1,24 @@
 import os
+<<<<<<< HEAD
 os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
+=======
+os.environ['OV_DATA_BASE'] = "/home/wcm23/rds/hpc-work/FineTuningKITS23"
+>>>>>>> df33eb1b12fd8fd1bd6c90a3fa5a755062145edd
 from KCD.Segmentation.ovseg.preprocessing.SegmentationPreprocessing import SegmentationPreprocessing
 
 data_name = 'all_cect'
 spacing = 4
+<<<<<<< HEAD
 
 preprocessed_name = '{}mm_binary'.format(spacing)
 
 lb_classes = [1,2,3]
 
+=======
+preprocessed_name = '{}mm_binary'.format(spacing)
+
+lb_classes = [1,2,3]
+>>>>>>> df33eb1b12fd8fd1bd6c90a3fa5a755062145edd
 target_spacing=[spacing]*3
 
 prep = SegmentationPreprocessing(apply_resizing=True, 
