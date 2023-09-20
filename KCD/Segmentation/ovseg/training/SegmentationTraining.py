@@ -49,14 +49,17 @@ class SegmentationTraining(NetworkTraining):
 
     def compute_batch_loss(self, batch):
 
-        batch = batch.cuda()
+        batch = batch.to(self.dev)
         batch = self.prg_trn_process_batch(batch)
 
         if self.augmentation is not None:
             with torch.no_grad():
                 # in theory we shouldn't need this context, but I had weird memory leaks and
                 # it doesn't hurt
-                batch = self.augmentation(batch)
+                if self.dev == torch.device('cpu'):
+                    batch = self.augmentation(batch.to(torch.float32))
+                else:
+                    batch = self.augmentation(batch)
 
         # now let's get the arrays from the batch
         # the easiest one:

@@ -34,7 +34,7 @@ class NetworkTraining(TrainingBase):
         self.network = network
         self.loss_params = loss_params
         self.val_dl = val_dl
-        self.dev = dev
+        self.dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         self.nu_ema_trn = nu_ema_trn
         self.network_name = network_name
         self.opt_params = opt_params

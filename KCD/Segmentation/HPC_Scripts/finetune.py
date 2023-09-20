@@ -15,7 +15,7 @@ fold = int(sys.argv[1])
 pretrain_name = 'all_sncct'
 preprocessed_name = '4mm_binary'
 model_name = '6,3x3x3,32_pretrained'
-
+dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 vfs = [fold]
 
 patch_size = [64,64,64]
@@ -74,7 +74,7 @@ for vf in vfs:
                                 preprocessed_name=preprocessed_name, 
                                 model_name=model_name,
                                 model_parameters=model_params)
-    model.network.load_state_dict(torch.load(path_to_model))
+    model.network.load_state_dict(torch.load(path_to_model,map_location=dev))
 
     torch.cuda.empty_cache()
     gc.collect()

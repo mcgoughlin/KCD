@@ -48,6 +48,7 @@ class SegmentationModel(ModelBase):
                          model_parameters=model_parameters, preprocessed_name=preprocessed_name,
                          network_name=network_name, is_inference_only=is_inference_only,
                          fmt_write=fmt_write, model_parameters_name=model_parameters_name)
+
         self.initialise_prediction()
         self.plot_n_random_slices = plot_n_random_slices
 

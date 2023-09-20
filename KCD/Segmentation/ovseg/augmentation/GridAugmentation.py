@@ -34,6 +34,7 @@ class torch_inplane_grid_augmentations(nn.Module):
         self.apply_flipping = apply_flipping
         self.n_im_channels = n_im_channels
         self.out_shape = out_shape
+        self.dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         if out_shape is not None:
             self.out_shape = np.array(self.out_shape)
 
@@ -117,7 +118,7 @@ class torch_inplane_grid_augmentations(nn.Module):
             for op in ops_list:
                 theta[i] = op(theta[i])
 
-        grid = F.affine_grid(theta, xb.size()).cuda().type(xb.dtype)
+        grid = F.affine_grid(theta, xb.size()).to(self.dev).type(xb.dtype)
         if self.out_shape is not None:
             # crop from the grid
             crp_l = (np.array(xb.shape[2:]) - self.out_shape) // 2
