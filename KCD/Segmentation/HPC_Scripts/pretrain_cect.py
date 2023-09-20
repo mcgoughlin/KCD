@@ -1,7 +1,10 @@
 import os
 os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
+
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
+from KCD.Segmentation.ovseg.preprocessing.SegmentationPreprocessing import SegmentationPreprocessing
+
 import gc
 import torch
 import sys
@@ -9,12 +12,11 @@ import sys
 
 data_name = 'all_cect'
 spacing = 4
-fold = sys.argv[1]
+fold = int(sys.argv[1])
 
-pretrain_name = 'all_cect'
-preprocessed_name = '4mm_binary'
-model_name = '6,3x3x3,32_pretrainedcect'
-dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+preprocessed_name = '{}mm_binary'.format(spacing)
+model_name = '6,3x3x3,32'
+
 vfs = [fold]
 
 patch_size = [64,64,64]
@@ -49,31 +51,34 @@ del model_params['network']['stochdepth_rate']
 lr=0.0001
 model_params['data']['folders'] = ['images', 'labels']
 model_params['data']['keys'] = ['image', 'label']
-model_params['training']['num_epochs'] = 150
+model_params['training']['num_epochs'] = 500
 model_params['training']['opt_name'] = 'ADAM'
 model_params['training']['opt_params'] = {'lr': lr,
                                             'betas': (0.95, 0.9),
                                             'eps': 1e-08}
-model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.0005}
+model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.004}
 model_params['data']['trn_dl_params']['epoch_len']=250
 model_params['data']['trn_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['data']['val_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['training']['lr_schedule'] = 'lin_ascent_log_decay'
-model_params['training']['lr_exponent'] = 4
+model_params['training']['lr_exponent'] = 3
 model_params['data']['trn_dl_params']['batch_size']=16
 model_params['data']['val_dl_params']['epoch_len']=50
-
+# model_params['postprocessing'] = {'mask_with_reg': True}
 
 for vf in vfs:
-    path_to_model = '{}/trained_models/{}/{}/{}/fold_{}/network_weights'.format(os.environ['OV_DATA_BASE'],
-                                                                                         pretrain_name, preprocessed_name,
-                                                                                         model_name.split('_')[0], vf)
     model = SegmentationModel(val_fold=vf,
                                 data_name=data_name,
                                 preprocessed_name=preprocessed_name, 
                                 model_name=model_name,
                                 model_parameters=model_params)
-    model.network.load_state_dict(torch.load(path_to_model,map_location=dev))
-
+    torch.cuda.empty_cache()
+    gc.collect()
     model.training.train()
+    
+    torch.cuda.empty_cache()
+    gc.collect()
+
     model.eval_validation_set()
+    torch.cuda.empty_cache()
+    gc.collect()

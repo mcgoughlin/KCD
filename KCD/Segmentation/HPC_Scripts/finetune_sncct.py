@@ -1,5 +1,5 @@
 import os
-os.environ['OV_DATA_BASE'] = "/media/mcgoug01/nvme/SecondYear/Segmentation/Transformer_Test/"
+os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
 import gc
@@ -9,11 +9,11 @@ import sys
 
 data_name = 'all_ncct'
 spacing = 4
-fold = 0 #sys.argv[1]
+fold = sys.argv[1]
 
 pretrain_name = 'all_sncct'
 preprocessed_name = '4mm_binary'
-model_name = '6,3x3x3,32_pretrained'
+model_name = '6,3x3x3,32_pretrainedsncct'
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 vfs = [fold]
 
