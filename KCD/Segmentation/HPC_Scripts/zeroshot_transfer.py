@@ -2,20 +2,17 @@ import os
 os.environ['OV_DATA_BASE'] = "/media/mcgoug01/nvme/SecondYear/Segmentation/Transformer_Test/"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
-import gc
 import torch
-import sys
 
 
 data_name = 'all_ncct'
 spacing = 4
-fold = 0
 
 pretrain_name = 'all_sncct'
 preprocessed_name = '4mm_binary'
-model_name = '6,3x3x3,32_pretrained'
+model_name = '6,3x3x3,32_zeroshot'
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-vfs = [fold]
+vfs = [0,1,2,3,4]
 
 patch_size = [64,64,64]
 #patch dimension must be divisible by respective (((kernel_dimension+1)//2)^depth)/2
@@ -46,7 +43,7 @@ del model_params['network']['z_to_xy_ratio']
 del model_params['network']['n_blocks_list']
 del model_params['network']['stochdepth_rate']
 
-lr=0.0001
+lr=0.000001
 model_params['data']['folders'] = ['images', 'labels']
 model_params['data']['keys'] = ['image', 'label']
 model_params['training']['num_epochs'] = 100
@@ -54,7 +51,7 @@ model_params['training']['opt_name'] = 'ADAM'
 model_params['training']['opt_params'] = {'lr': lr,
                                             'betas': (0.95, 0.9),
                                             'eps': 1e-08}
-model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.0005}
+model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.00005}
 model_params['data']['trn_dl_params']['epoch_len']=250
 model_params['data']['trn_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['data']['val_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
@@ -74,6 +71,4 @@ for vf in vfs:
                                 model_name=model_name,
                                 model_parameters=model_params)
     model.network.load_state_dict(torch.load(path_to_model,map_location=dev))
-
-    model.training.train()
     model.eval_validation_set()
