@@ -12,11 +12,13 @@ import numpy as np
 import nibabel as nib
 from skimage.morphology import binary_erosion, binary_dilation
 
-CECT_path = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/kits23/raw_data/kits23/images"
-seg_path = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/kits23/raw_data/kits23/labels"
+# CECT_path = "/Users/mcgoug01/Downloads/AbCT1k/all_images"
+# seg_path = "/Users/mcgoug01/Downloads/AbCT1k/all_labels"
+
+CECT_path = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/kits23/all_images"
+seg_path = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/kits23/all_labels"
 
 import torch.nn as nn
-import torch
 pool = nn.AvgPool3d(7,stride=1,padding=3).cuda()
 
 ### Philosophy:
@@ -29,7 +31,7 @@ def get_ims(integer):
     impath = join(CECT_path,case)
     segpath = join(seg_path,case)
     
-    return (nib.load(impath).get_fdata().astype(np.float16), (nib.load(segpath).get_fdata()).astype(int).astype(np.float16), nib.load(impath).affine)
+    return (nib.load(impath).get_fdata(), nib.load(segpath).get_fdata(), nib.load(impath).affine)
     
 def diff_shower(integer,slice= 60):
     #seg is segmentation of soft tissue
@@ -91,21 +93,25 @@ def create_label(im):
     # return np.where(dilate==1,lb,0)
     return lb_thresh
     
-save_path = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/kits23/raw_data/kits23sncct/"
+save_path = "/Users/mcgoug01/Downloads/all_sncct/"
 from os import *
 for case in listdir(CECT_path):
     im_sv = join(save_path,"images")
     lb_sv = join(save_path,"labels")
     if exists(join(lb_sv,case)):continue
 
-    int_case = int(case[5:10])
-        
+    int_case = int(case.split('.')[0][-5:])
+    if int_case<300:continue
+
     if exists(join(lb_sv,case)):continue
     print(case,int_case)
-    sNCCT,aff,seg = diff_shower(int_case)
-    
-    nib_im = nib.Nifti2Image(sNCCT.astype(np.int16),aff)
+    try:
+        sNCCT,aff,seg = diff_shower(int_case)
+    except: continue
+    seg = np.round(seg)
+
+    nib_im = nib.Nifti1Image(sNCCT.astype(np.int16),aff)
     nib.save(nib_im,join(im_sv,case))
     
-    nib_lb = nib.Nifti2Image(seg.astype(np.int16),aff)
+    nib_lb = nib.Nifti1Image(seg.astype(np.int16),aff)
     nib.save(nib_lb,join(lb_sv,case))
