@@ -14,7 +14,7 @@ fold = int(sys.argv[1])
 
 pretrain_name = 'all_sncct'
 preprocessed_name = '4mm_binary'
-model_name = '6,3x3x3,32'
+model_name = '6,3x3x3,32_pretrained'
 
 vfs = [fold]
 
@@ -68,7 +68,7 @@ model_params['data']['val_dl_params']['epoch_len']=50
 for vf in vfs:
     path_to_model = '{}/trained_models/{}/{}/{}/fold_{}/network_weights'.format(os.environ['OV_DATA_BASE'],
                                                                                          pretrain_name, preprocessed_name,
-                                                                                         model_name, vf)
+                                                                                         model_name.split('_')[0], vf)
     model = SegmentationModel(val_fold=vf,
                                 data_name=data_name,
                                 preprocessed_name=preprocessed_name, 
