@@ -1,5 +1,5 @@
 import os
-os.environ['OV_DATA_BASE'] = "/home/wcm23/rds/hpc-work/FineTuningKITS23"
+os.environ['OV_DATA_BASE'] = "/media/mcgoug01/nvme/SecondYear/Segmentation/Transformer_Test"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
 import gc
@@ -11,9 +11,9 @@ data_name = 'all_ncct'
 spacing = 4
 fold = 0 #sys.argv[1]
 
-pretrain_name = 'all_sncct'
+pretrain_name = 'kits23'
 preprocessed_name = '4mm_binary'
-model_name = '6,3x3x3,32_pretrained'
+model_name = '6,3x3x3,32_pretrainedk23'
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 vfs = [fold]
 
@@ -54,7 +54,7 @@ model_params['training']['opt_name'] = 'ADAM'
 model_params['training']['opt_params'] = {'lr': lr,
                                             'betas': (0.95, 0.9),
                                             'eps': 1e-08}
-model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.001}
+model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.0005}
 model_params['data']['trn_dl_params']['epoch_len']=250
 model_params['data']['trn_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['data']['val_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
