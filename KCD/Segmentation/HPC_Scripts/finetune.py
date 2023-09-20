@@ -11,9 +11,9 @@ data_name = 'all_ncct'
 spacing = 4
 fold = sys.argv[1]
 
-pretrain_name = 'kits23'
+pretrain_name = 'all_sncct'
 preprocessed_name = '4mm_binary'
-model_name = '6,3x3x3,32_pretrainedcect'
+model_name = '6,3x3x3,32_pretrainedncct'
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 vfs = [fold]
 
@@ -49,7 +49,7 @@ del model_params['network']['stochdepth_rate']
 lr=0.0001
 model_params['data']['folders'] = ['images', 'labels']
 model_params['data']['keys'] = ['image', 'label']
-model_params['training']['num_epochs'] = 150
+model_params['training']['num_epochs'] = 100
 model_params['training']['opt_name'] = 'ADAM'
 model_params['training']['opt_params'] = {'lr': lr,
                                             'betas': (0.95, 0.9),
