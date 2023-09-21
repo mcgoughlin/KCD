@@ -1,9 +1,5 @@
 import os
-<<<<<<< HEAD
 os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
-=======
-os.environ['OV_DATA_BASE'] = "/home/wcm23/rds/hpc-work/FineTuningKITS23"
->>>>>>> df33eb1b12fd8fd1bd6c90a3fa5a755062145edd
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
 import gc

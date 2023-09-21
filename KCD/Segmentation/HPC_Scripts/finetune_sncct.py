@@ -1,9 +1,5 @@
 import os
-<<<<<<< HEAD:KCD/Segmentation/HPC_Scripts/finetune_sncct.py
 os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
-=======
-os.environ['OV_DATA_BASE'] = "/home/wcm23/rds/hpc-work/FineTuningKITS23"
->>>>>>> df33eb1b12fd8fd1bd6c90a3fa5a755062145edd:KCD/Segmentation/HPC_Scripts/finetune_ncct.py
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
 import gc
@@ -17,11 +13,8 @@ fold = sys.argv[1]
 
 pretrain_name = 'all_sncct'
 preprocessed_name = '4mm_binary'
-<<<<<<< HEAD:KCD/Segmentation/HPC_Scripts/finetune_sncct.py
 model_name = '6,3x3x3,32_pretrainedsncct'
-=======
-model_name = '6,3x3x3,32_pretrainedncct'
->>>>>>> df33eb1b12fd8fd1bd6c90a3fa5a755062145edd:KCD/Segmentation/HPC_Scripts/finetune_ncct.py
+
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 vfs = [fold]
 
