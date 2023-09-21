@@ -15,11 +15,9 @@ prep = SegmentationPreprocessing(apply_resizing=True,
                                     apply_windowing=True,
                                     lb_classes=lb_classes,
                                     target_spacing=target_spacing,
-                                    scaling = [74.53293, 104.975365],
-                                    window = [-61.5,310],
                                     reduce_lb_to_single_class = True)
 
-prep.initialise_preprocessing()
+prep.plan_preprocessing_raw_data(raw_data=data_name)
 
 prep.preprocess_raw_data(raw_data=data_name,
                           preprocessed_name=preprocessed_name)
