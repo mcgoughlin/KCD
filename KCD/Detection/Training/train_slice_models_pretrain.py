@@ -19,8 +19,8 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
     dev = tu.initialize_device()
 
     if is_3D:
-        if params==None:params = tu.init_slice3D_params()
-        else:tu.check_params(params,tu.init_shape3D_params())
+        if params==None:params = tu.init_slice3D_params_pretrain()
+        else:tu.check_params(params,tu.init_slice3D_params_pretrain())
     else:
         if params==None:params = tu.init_slice2D_params()
         else:tu.check_params(params,tu.init_shape2D_params())

@@ -62,6 +62,20 @@ def init_slice3D_params():
               'pred_window': 1}
     return params
 
+def init_slice3D_params_pretrain():
+    params = {"voxel_size": 1,
+              "model_size": "small",
+              "cancthresh_r_mm": 10,
+              "kidthresh_r_mm": 20,
+              "batch_size": 16,
+              "dilated": 40,
+              "lr": 1e-3,
+              "epochs": 5,
+              "depth_z": 20,
+              "boundary_z": 5,
+              'pred_window': 1}
+    return params
+
 
 def initialize_device():
     if torch.cuda.is_available():
