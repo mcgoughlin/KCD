@@ -1,5 +1,5 @@
 import os
-os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
+os.environ['OV_DATA_BASE'] = "/home/wcm23/rds/hpc-work/FineTuningKIT23"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
 import gc
@@ -9,7 +9,7 @@ import sys
 
 data_name = 'all_ncct'
 spacing = 4
-fold = sys.argv[1]
+fold = int(sys.argv[1])
 
 pretrain_name = 'all_sncct'
 preprocessed_name = '4mm_binary'
