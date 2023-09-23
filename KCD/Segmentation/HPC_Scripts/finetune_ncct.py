@@ -1,5 +1,5 @@
 import os
-os.environ['OV_DATA_BASE'] = "/home/wcm23/rds/hpc-work/FineTuningKIT23"
+os.environ['OV_DATA_BASE'] = "/home/wcm23/rds/hpc-work/FineTuningKITS23"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
 import gc
@@ -7,12 +7,14 @@ import torch
 import sys
 
 
-data_name = 'all_ncct'
+data_name = 'coreg_ncct'
 spacing = 4
 fold = int(sys.argv[1])
 
 pretrain_name = 'all_sncct'
-preprocessed_name = '4mm_binary'
+# preprocessed_name = '4mm_binary'
+preprocessed_name = '4.0mm_alllabels'
+# preprocessed_name='4mm_binary_test'
 model_name = '6,3x3x3,32_pretrainedsncct'
 
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -66,9 +68,8 @@ model_params['data']['val_dl_params']['epoch_len']=50
 
 
 for vf in vfs:
-    path_to_model = '{}/trained_models/{}/{}/{}/fold_{}/network_weights'.format(os.environ['OV_DATA_BASE'],
-                                                                                         pretrain_name, preprocessed_name,
-                                                                                         model_name.split('_')[0], vf)
+    path_to_model = '{}/trained_models/{}/4mm_binary/{}/fold_{}/network_weights'.format(os.environ['OV_DATA_BASE'],
+                                                                                         pretrain_name, model_name.split('_')[0], vf)
     model = SegmentationModel(val_fold=vf,
                                 data_name=data_name,
                                 preprocessed_name=preprocessed_name, 
