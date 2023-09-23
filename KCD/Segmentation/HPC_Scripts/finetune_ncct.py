@@ -7,13 +7,13 @@ import torch
 import sys
 
 
-data_name = 'coreg_ncct'
+data_name = 'all_ncct'
 spacing = 4
 fold = int(sys.argv[1])
 
 pretrain_name = 'all_sncct'
 # preprocessed_name = '4mm_binary'
-preprocessed_name = '4.0mm_alllabels'
+preprocessed_name = '4mm_binary'
 # preprocessed_name='4mm_binary_test'
 model_name = '6,3x3x3,32_pretrainedsncct'
 
@@ -62,7 +62,7 @@ model_params['data']['trn_dl_params']['epoch_len']=250
 model_params['data']['trn_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['data']['val_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['training']['lr_schedule'] = 'lin_ascent_log_decay'
-model_params['training']['lr_exponent'] = 4
+model_params['training']['lr_exponent'] = 3
 model_params['data']['trn_dl_params']['batch_size']=16
 model_params['data']['val_dl_params']['epoch_len']=50
 

@@ -307,6 +307,7 @@ class SegmentationPreprocessing(object):
 
             assert len(lb.shape) == 3, 'label must be 3d'
             lb = lb[np.newaxis].astype(float)
+            print('get_xb_from_datatpl',lb.shape,lb.max())
             xb = np.concatenate([xb, lb])
         
         # finally add batch axis
@@ -363,6 +364,7 @@ class SegmentationPreprocessing(object):
             maybe_create_path(join(outfolder, 'prev_preds'))
         maybe_create_path(plot_folder)
 
+
         # Let's quickly store the parameters so we can check later
         # what we've done here.
         self.maybe_save_preprocessing_parameters(outfolder)
@@ -385,12 +387,13 @@ class SegmentationPreprocessing(object):
                 # get the preprocessed volumes from the data_tpl
                 xb = self.__call__(data_tpl, return_np=True)
                 im = xb[:self.n_im_channels].astype(im_dtype)
-                lb = xb[self.n_im_channels:].astype(np.uint8)
+                lb = np.rint(xb[self.n_im_channels:]).astype(np.uint8)
                 # print(im.shape)
                 # print(lb.shape)
                 if self.is_cascade():
                     prev_pred = lb[:-1]
                     lb = lb[-1:]
+
                 if lb.max() == 0 and self.save_only_fg_scans:
                     continue
                 spacing = self.target_spacing if self.apply_resizing else spacing
