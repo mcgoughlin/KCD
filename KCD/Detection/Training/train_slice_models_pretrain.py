@@ -22,9 +22,11 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
     if is_3D:
         if params==None:params = tu.init_slice3D_params_pretrain()
         else:tu.check_params(params,tu.init_slice3D_params_pretrain())
+        model_type = 'PatchModel'
     else:
         if params==None:params = tu.init_slice2D_params()
         else:tu.check_params(params,tu.init_shape2D_params())
+        model_type = 'TileModel'
 
     if epochs != None:
         params['epochs'] = epochs
@@ -57,8 +59,6 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
         for fold,train_index, test_index in fold_split:
             if not (fold in train_folds): continue
             fold_path = os.path.join(split_path,'fold_{}'.format(fold))
-            if is_3D:model_type = 'PatchModel'
-            else:model_type ='TileModel'
             slice_path = os.path.join(fold_path,model_type)
 
             if not os.path.exists(fold_path):os.mkdir(fold_path)
