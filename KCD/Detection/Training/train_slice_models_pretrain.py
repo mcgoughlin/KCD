@@ -11,7 +11,8 @@ import warnings
 import pandas as pd
 
 def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='coreg_ncct',
-                            splits:list=[0],folds=5,params:dict=None,is_3D=True,train_folds=[0]):
+                         splits:list=[0],folds=5,params:dict=None,is_3D=True,train_folds=[0],
+                         epochs = None):
     # Suppress warnings
     warnings.filterwarnings("ignore") #makes dgl stop complaining!
 
@@ -25,6 +26,9 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
         if params==None:params = tu.init_slice2D_params()
         else:tu.check_params(params,tu.init_shape2D_params())
 
+    if epochs != None:
+        params['epochs'] = epochs
+        
     save_dir = tu.init_training_home(home, dataname)
     print(save_dir)
 
@@ -92,7 +96,8 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
 
 if __name__ == '__main__':
     import sys
-    fold = int(sys.argv[1])
+    epochs = int(sys.argv[2])
+    fold = int(sys.argv[2])
     dataset = 'kits23sncct'
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
-    train_cv_slice_model(home=home,dataname=dataset,is_3D=True,splits=[0,1],train_folds=[fold])
+    train_cv_slice_model(home=home,dataname=dataset,is_3D=True,splits=[0,1],train_folds=[fold],epochs=epochs)
