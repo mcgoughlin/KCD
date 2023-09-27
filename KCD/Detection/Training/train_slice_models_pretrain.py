@@ -11,7 +11,7 @@ import warnings
 import pandas as pd
 
 def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='coreg_ncct',
-                            splits:list=[0],folds=5,params:dict=None,is_3D=True):
+                            splits:list=[0],folds=5,params:dict=None,is_3D=True,train_folds=[0]):
     # Suppress warnings
     warnings.filterwarnings("ignore") #makes dgl stop complaining!
 
@@ -50,6 +50,7 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
 
 
         for fold,train_index, test_index in fold_split:
+            if not (fold in train_folds): continue
             fold_path = os.path.join(split_path,'fold_{}'.format(fold))
             if is_3D:model_type = 'PatchModel'
             else:model_type ='TileModel'
@@ -90,6 +91,8 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
         plt.close()
 
 if __name__ == '__main__':
+    import sys
+    fold = int(sys.argv[1])
     dataset = 'kits23sncct'
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
-    train_cv_slice_model(home=home,dataname=dataset,is_3D=True,splits=[0,1])
+    train_cv_slice_model(home=home,dataname=dataset,is_3D=True,splits=[0,1],train_folds=[fold])
