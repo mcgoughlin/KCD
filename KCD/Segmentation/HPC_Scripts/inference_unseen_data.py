@@ -4,8 +4,9 @@ os.environ['OV_DATA_BASE'] = '/bask/projects/p/phwq4930-renal-canc/data/seg_data
 from KCD.Segmentation.Inference.EnsembleSeg import Ensemble_Seg
 import numpy as np
 
-seg_fp = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/coreg_ncct/4.0mm_allbinary_noR74K118/6,3x3x3,32_pretrained_noerrors'
-data_names = ['CTORG']
+# seg_fp = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/coreg_ncct/4.0mm_allbinary_noR74K118/6,3x3x3,32_pretrained_noerrors'
+seg_fp = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/kits23/4.0mm_binary/6,3x3x3,32_longhigherlr'
+data_names = ['CTORG_all']
 do_prep = False
 do_infer = True
 

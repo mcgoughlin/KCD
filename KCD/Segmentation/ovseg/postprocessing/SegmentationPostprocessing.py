@@ -174,7 +174,7 @@ class SegmentationPostprocessing(object):
 
         pred = data_tpl[prediction_key]
 
-        spacing = data_tpl['spacing'] if 'spacing' in data_tpl else None
+        spacing = np.asarray(data_tpl['spacing']) if 'spacing' in data_tpl else None
 
         if 'orig_shape' in data_tpl:
             # the data_tpl has preprocessed data.
