@@ -1,7 +1,7 @@
 import object_creation_utils as ocu
 import file_utils as fu
 import os
-dataset = 'CTORG'
+dataset = 'CTORG_all'
 home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
 im_p = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/{}/images/'.format(dataset)
 infnpy_p = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/predictions_npy/{}/[4 4 4]mm/'.format(dataset)

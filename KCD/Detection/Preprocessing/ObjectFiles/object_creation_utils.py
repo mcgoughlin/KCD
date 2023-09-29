@@ -302,6 +302,7 @@ def create_unseen_dataset(path,dataset,im_p,infnpy_p,infnii_p,
             im = nifti_2_correctarr(im_n)
             
             spacing = inf_n.header['pixdim'][1:4]
+            if len(kid_data)==0:continue
             spacing_axes = find_orientation(spacing,kid_data[:,1],is_axes=False)
             if spacing_axes == (0,0,0):continue
             z_spac,inplane_spac = spacing[spacing_axes[0]], spacing[spacing_axes[1]]
@@ -333,7 +334,7 @@ def create_unseen_dataset(path,dataset,im_p,infnpy_p,infnii_p,
 
                 single_kidney_flag = False
                 if (len(inference_centroids) > 2):
-                    kidneys = np.arange(1, len(kidney_data) + 1).astype(str).tolist()
+                    kidneys = np.arange(1, len(inference_centroids) + 1).astype(str).tolist()
                 else:
                     if inference_centroids[0][lr] < inference_centroids[1][lr]:
                         kidneys = ['right', 'left']
