@@ -79,17 +79,16 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
             cv_results.append(test_df)
             model_res.to_csv(os.path.join(slice_path,'csv',model_name+'.csv'))
 
-        if all([os.path.exists(csv_fold_path) for csv_fold_path in results_csv_fold_paths]):
-            CV_results = pd.concat(cv_results, axis=0, ignore_index=True)
-            model_ROC = eval_.ROC_func(CV_results['Top-{}'.format(params['pred_window'])],CV_results['label'],max_pred=params['pred_window'],intervals=1000)
-            np.save(os.path.join(split_path, '{}_ROC_'.format(model_type)+model_name), model_ROC)
+        CV_results = pd.concat(cv_results, axis=0, ignore_index=True)
+        model_ROC = eval_.ROC_func(CV_results['Top-{}'.format(params['pred_window'])],CV_results['label'],max_pred=params['pred_window'],intervals=1000)
+        np.save(os.path.join(split_path, '{}_ROC_'.format(model_type)+model_name), model_ROC)
 
-            fig = plt.figure(figsize=(8, 6))
-            tu.plot_roc('{}'.format(model_type),model_name,model_ROC)
-            plt.legend()
-            plt.savefig(os.path.join(split_path, '{}_ROC_'.format(model_type)+model_name+'.png'))
-            plt.show()
-            plt.close()
+        fig = plt.figure(figsize=(8, 6))
+        tu.plot_roc('{}'.format(model_type),model_name,model_ROC)
+        plt.legend()
+        plt.savefig(os.path.join(split_path, '{}_ROC_'.format(model_type)+model_name+'.png'))
+        plt.show()
+        plt.close()
 
 if __name__ == '__main__':
     dataset = 'coreg_ncct'
