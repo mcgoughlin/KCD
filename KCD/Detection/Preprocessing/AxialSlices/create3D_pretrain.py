@@ -1,7 +1,7 @@
 import slice_generating_utils as generator
 import numpy as np
 
-data_name = 'kits23sncct'
+data_name = 'kits23'
 path = "/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/{}/images".format(data_name)
 save_dir = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
 segpath = ("/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/{}/labels").format(data_name)
