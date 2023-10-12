@@ -9,7 +9,7 @@ import sys
 
 data_name = 'all_cect'
 spacing = 4
-fold = sys.argv[1]
+fold = int(sys.argv[1])
 
 pretrain_name = 'all_cect'
 preprocessed_name = '4mm_binary'
