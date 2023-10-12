@@ -17,6 +17,7 @@ from KCD.Segmentation.ovseg.augmentation.SegmentationAugmentation import Segment
 from KCD.Segmentation.ovseg.data.SegmentationData import SegmentationData
 from KCD.Segmentation.ovseg.data.Dataset import raw_Dataset
 from KCD.Segmentation.ovseg.networks.UNet import UNet
+from KCD.Segmentation.ovseg.networks.UNetTransformer import UNetTransformer
 from KCD.Segmentation.ovseg.networks.nfUNet import nfUNet
 from KCD.Segmentation.ovseg.training.SegmentationTraining import SegmentationTraining, SegmentationTrainingV2
 from KCD.Segmentation.ovseg.prediction.SlidingWindowPrediction import SlidingWindowPrediction
@@ -170,6 +171,8 @@ class SegmentationModel(ModelBase):
             self.network = UNet(**params).to(self.dev)
         elif self.model_parameters['architecture'].lower() in ['nfunet', 'nf-unet']:
             self.network = nfUNet(**params).to(self.dev)
+        elif self.model_parameters['architecture'].lower() in ['unettransformer', 'UNetTransformer', 'unet-transformer']:
+            self.network = UNetTransformer(**params).to(self.dev)
         else:
             raise ValueError('Got unkown architecture '+self.model_parameters['architecture'])
 
