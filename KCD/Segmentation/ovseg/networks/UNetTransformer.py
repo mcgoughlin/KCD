@@ -1,10 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import numpy as np
-import os
-os.environ['OV_DATA_BASE'] = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data'
-
 from KCD.Segmentation.ovseg.networks.nfUNet import concat_attention, concat
 
 
@@ -398,8 +394,8 @@ class UNetTransformer(nn.Module):
         self.tran_spatial_dims = expected_patch_size/(2**(self.n_stages-2))
         self.tran_num_channels = self.blocks_down[-2].conv1.out_channels
         self.tran_dimension = int((self.tran_spatial_dims**3)*self.tran_num_channels)
-        self.blocks_down[-1] = TransNormNonlinBlock(self.tran_dimension,self.tran_dimension//4,downsample=True)
 
+        self.blocks_down[-1] = TransNormNonlinBlock(self.tran_dimension,self.tran_dimension//4,downsample=True)
         self.Transformer_base = TransNormNonlinBlock(self.tran_dimension//4,self.tran_dimension//4,downsample=False)
 
 
@@ -418,11 +414,8 @@ class UNetTransformer(nn.Module):
 
         # bottom block and transformer inference
         xb = self.blocks_down[-1](xb)
-        # xb_shape = xb.shape
-        # xb_vect = xb.view(xb_shape[0],-1)
         xb = self.Transformer_base.forward(xb)
 
-        # print(xb.shape, " bottleneck block shape")
         # expanding path without logits
         for i in range(self.n_stages - 2, self.n_pyramid_scales-1, -1):
             xb = self.upsamplings[i](xb)
@@ -465,7 +458,7 @@ def get_3d_UNet(in_channels, out_channels, n_stages, n_2d_blocks, filters=4):
 # %%
 if __name__ == '__main__':
 
-    net_3d = get_3d_UNet(1, 2, 6, 0, 16)
+    net_3d = get_3d_UNet(1, 2, 6, 0, 8)
     xb_3d = torch.randn((1, 1, 64, 64, 64))
     print('3d')
     with torch.no_grad():
