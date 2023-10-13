@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from KCD.Segmentation.ovseg.networks.nfUNet import concat_attention, concat
+# import os
+# os.environ['OV_DATA_BASE'] = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data"
 
+from KCD.Segmentation.ovseg.networks.nfUNet import concat_attention, concat
 
 def get_padding(kernel_size):
     if isinstance(kernel_size, (list, tuple, np.ndarray)):
@@ -103,11 +105,11 @@ class TransNormNonlinBlock(nn.Module):
         self.trans_list = []
         self.norm = nn.InstanceNorm1d(self.out_dim)
         self.nonlin = nn.LeakyReLU()
-        for i in range(3):
+        for i in range(2):
             self.trans_list.append(torch.nn.TransformerEncoderLayer(d_model=self.in_dim,nhead=8,
                                                         dim_feedforward=self.in_dim))
-            self.trans_list[i].linear1 = nn.Linear(self.in_dim,self.in_dim)
-            self.trans_list[i].linear2 = nn.Linear(self.in_dim,self.in_dim)
+            self.trans_list[i].linear1 = nn.Linear(self.in_dim,self.in_dim//4)
+            self.trans_list[i].linear2 = nn.Linear(self.in_dim//4,self.in_dim)
 
         self.out_lin = nn.Linear(self.in_dim, self.out_dim)
         self.trans_list = nn.ModuleList(self.trans_list)
@@ -122,7 +124,7 @@ class TransNormNonlinBlock(nn.Module):
         else:
             out_shape=xb_shape
         # a function to compute the forward pass of the block
-        for i in range(3):
+        for i in range(2):
             xb_vect = self.trans_list[i](xb_vect)
             xb_vect = self.norm(xb_vect)
             xb_vect = self.nonlin(xb_vect)
@@ -395,7 +397,7 @@ class UNetTransformer(nn.Module):
         self.tran_num_channels = self.blocks_down[-2].conv1.out_channels
         self.tran_dimension = int((self.tran_spatial_dims**3)*self.tran_num_channels)
 
-        self.blocks_down[-1] = TransNormNonlinBlock(self.tran_dimension,self.tran_dimension//4,downsample=True)
+        # self.blocks_down[-1] = TransNormNonlinBlock(self.tran_dimension,self.tran_dimension//4,downsample=True)
         self.Transformer_base = TransNormNonlinBlock(self.tran_dimension//4,self.tran_dimension//4,downsample=False)
 
 
@@ -458,7 +460,7 @@ def get_3d_UNet(in_channels, out_channels, n_stages, n_2d_blocks, filters=4):
 # %%
 if __name__ == '__main__':
 
-    net_3d = get_3d_UNet(1, 2, 6, 0, 8)
+    net_3d = get_3d_UNet(1, 2, 6, 0, 16)
     xb_3d = torch.randn((1, 1, 64, 64, 64))
     print('3d')
     with torch.no_grad():

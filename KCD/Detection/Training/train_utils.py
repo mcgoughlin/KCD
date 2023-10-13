@@ -70,7 +70,7 @@ def init_slice3D_params_pretrain():
               "batch_size": 16,
               "dilated": 40,
               "lr": 1e-3,
-              "epochs": 5,
+              "epochs": 20,
               "depth_z": 20,
               "boundary_z": 5,
               'pred_window': 1}
