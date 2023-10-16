@@ -9,7 +9,6 @@ GAMMA_RELU = 1.7128585504496627  # =np.sqrt(2 / (1 - 1/np.pi))
 # %% nonlinearities
 
 class scaledReLU(nn.ReLU):
-    # TODO integrate the scale here so that we can put the alpha and beta in here
     def forward(self, input):
         return GAMMA_RELU * super().forward(input)
 
