@@ -10,7 +10,7 @@ import numpy as np
 import warnings
 import pandas as pd
 
-def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='coreg_ncct',
+def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='coreg_ncct',pretrain_ds='kits23_nooverlap',
                          splits:list=[0],folds=5,params:dict=None,is_3D=True):
     # Suppress warnings
     warnings.filterwarnings("ignore") #makes dgl stop complaining!
@@ -59,14 +59,14 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
             if not os.path.exists(fold_path):os.mkdir(fold_path)
             if not os.path.exists(slice_path):os.mkdir(slice_path)
 
-            if is_3D:model = torch.load('/bask/projects/p/phwq4930-renal-canc/KCD_data/Data/training_info/kits23sncct/split_0/fold_1/PatchModel/model/PatchModel_small_20_20_0.001')
+            if is_3D:model = torch.load('/bask/projects/p/phwq4930-renal-canc/KCD_data/Data/training_info/{}/split_0/fold_1/PatchModel/model/PatchModel_small_20_20_0.001'.format(pretrain_ds))
             else:model = model_generator.return_resnext(size=params['model_size'],dev=dev,in_channels=1,out_channels=3)
 
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
 
             dl,test_dl = tu.generate_dataloaders(slicedataset,test_slicedataset,cases[train_index],params['batch_size'])
             model = tu.train_model(dl,dev,params['epochs'],loss_fnc,opt,model)
-            model_name = 'finetuned_{}_{}_{}_{}_{}'.format(model_type,params['model_size'],params['epochs'],params['epochs'],params['lr'])
+            model_name = 'finetunedfrom{}_{}_{}_{}_{}_{}'.format(pretrain_ds,model_type,params['model_size'],params['epochs'],params['epochs'],params['lr'])
 
             if not os.path.exists(os.path.join(slice_path,'model')):
                 os.mkdir(os.path.join(slice_path,'model'))

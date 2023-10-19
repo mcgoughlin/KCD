@@ -100,6 +100,6 @@ if __name__ == '__main__':
     import sys
     epochs = int(sys.argv[1])
     fold = int(sys.argv[2])
-    dataset = 'kits23sncct_nooverlap'
+    dataset = 'kits23_nooverlap'
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
     train_cv_slice_model(home=home,dataname=dataset,is_3D=True,splits=[0],train_folds=[fold],epochs=epochs)
