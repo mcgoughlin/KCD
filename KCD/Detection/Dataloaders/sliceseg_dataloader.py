@@ -8,7 +8,7 @@ from random import random
 
 #make two dataloaders - one for labelled, one for unlabelled 
 ##datapath goes up to the mm folder, under which should be "kidneys","tumour","none"
-class SW_Data_labelled(Dataset):
+class SW_Data_seglabelled(Dataset):
     def __init__(self, path, name,voxel_size_mm=1,cancthresh=10,kidthresh=20,
                  depth_z=20,boundary_z=5,dilated=40,device=None):
         assert(os.path.exists(path))
@@ -147,7 +147,7 @@ class SW_Data_labelled(Dataset):
         for transform in transforms:
             image,seg = transform(image,seg)
 
-        return image,(seg,label)
+        return image,(torch.Tensor(seg).long(),torch.Tensor([label]).long())
 
 
 class SW_Data_unlabelled(Dataset):
@@ -215,7 +215,7 @@ class SW_Data_unlabelled(Dataset):
         
 
 if __name__ == '__main__':
-    dataset = SW_Data_labelled(path="/Users/mcgoug01/Downloads/Data",name="coreg_ncct",device='cpu')
+    dataset = SW_Data_seglabelled(path="/Users/mcgoug01/Downloads/Data",name="coreg_ncct",device='cpu')
     dataset.apply_foldsplit()
     im,(seg,label) = dataset[0]
 

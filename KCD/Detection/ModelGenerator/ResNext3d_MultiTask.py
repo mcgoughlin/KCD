@@ -285,7 +285,6 @@ class ResNet3D_MTL(nn.Module):
             for i,out in enumerate([x1,x2,x3,x4,x5,x6]):
                 seg_outs.append(self.seg_conv_pool(self.upconvs[i](out)))
             seg_out = torch.cat(seg_outs,1)
-            print(seg_out.shape)
             # interpolate mid and high to match shape of base
             seg_out = self.seg_conv_2(nn.functional.relu(self.seg_conv_1(seg_out)))
             return x_out, seg_out
@@ -319,10 +318,19 @@ def resnext503D_32x4d(in_channels=1,num_classes=3,**kwargs) -> ResNet3D_MTL:
 # test on dummy image
 if __name__ == "__main__":
     model = resnext503D_32x4d(in_channels=1,num_classes=3,num_seg_classes=4)
-    x = torch.randn(1, 1, 20, 224, 224)
     model.train()
-    y,seg = model(x)
-    print(y,seg.shape)
-    model.eval()
-    print(model(x))
 
+    from KCD.Detection.Dataloaders.sliceseg_dataloader import SW_Data_seglabelled
+    dataset = SW_Data_seglabelled(path="/Users/mcgoug01/Downloads/Data",name="coreg_ncct",device='cpu')
+    dataset.apply_foldsplit()
+
+    im,(seg,label) = dataset[0]
+    im = im.unsqueeze(0)
+    pred_lb,pred_seg = model(im)
+
+    seg_loss_func = nn.CrossEntropyLoss()
+    pred_loss_func = nn.CrossEntropyLoss()
+
+    pred_loss = pred_loss_func(pred_lb,label)
+    seg_loss = seg_loss_func(pred_seg,seg)
+    print(pred_loss,seg_loss)
