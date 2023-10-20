@@ -46,7 +46,7 @@ class SW_Data_seglabelled(Dataset):
         self.data_df['window'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[3])
         self.data_df['slice'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:int(x[-1].split('index')[1].split('.')[0]))
         self.cases = self.data_df.case
-        print(cases)
+        print(self.cases)
         print('DATALOADER ###############################')
                     
         self.data_dict = {0:self.none,1:self.benign,2:self.malign}
