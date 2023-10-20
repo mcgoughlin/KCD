@@ -57,7 +57,7 @@ def train_cv_slice_model_MTL(home = '/Users/mcgoug01/Downloads/Data/',dataname='
         fold_split = np.array([(fold, tr_index, ts_index) for fold, (tr_index, ts_index) in
                                enumerate(five_fold_strat.split(cases, is_ncct))])
 
-        results_csv_fold_paths = [os.path.join(split_path,'fold_{}'.format(fold),'csv','{}_{}_{}_{}_{}.csv'.format(model_type,params['model_size'],params['epochs'],params['epochs'],params['lr'])) for fold in range(folds)]
+        results_csv_fold_paths = [os.path.join(split_path,'fold_{}'.format(fold),'csv','{}-MTL_{}_{}_{}_{}.csv'.format(model_type,params['model_size'],params['epochs'],params['epochs'],params['lr'])) for fold in range(folds)]
 
         for fold,train_index, test_index in fold_split:
             if not (fold in train_folds): continue
