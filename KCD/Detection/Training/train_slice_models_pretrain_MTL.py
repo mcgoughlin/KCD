@@ -1,6 +1,6 @@
 from KCD.Detection.Training import train_utils as tu
 import KCD.Detection.Evaluation.eval_scripts as eval_
-from KCD.Detection.ModelGenerator import model_generator
+from KCD.Detection.ModelGenerator import ResNext3d_MultiTask
 from sklearn.model_selection import StratifiedKFold as kfold_strat
 import matplotlib.pyplot as plt
 import os
@@ -67,9 +67,7 @@ def train_cv_slice_model_MTL(home = '/Users/mcgoug01/Downloads/Data/',dataname='
             if not os.path.exists(fold_path):os.mkdir(fold_path)
             if not os.path.exists(slice_path):os.mkdir(slice_path)
 
-            if is_3D:model = model_generator.return_resnext3D(size=params['model_size'],dev=dev,in_channels=1,out_channels=3)
-            else:model = model_generator.return_resnext(size=params['model_size'],dev=dev,in_channels=1,out_channels=3)
-
+            model = ResNext3d_MultiTask.resnext503D_32x4d(in_channels=1,num_classes=3,num_seg_classes=4).to(dev)
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
 
             dl,test_dl = tu.generate_dataloaders(slicedataset,test_slicedataset,cases[train_index],params['batch_size'])
