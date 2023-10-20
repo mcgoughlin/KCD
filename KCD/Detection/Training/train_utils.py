@@ -125,6 +125,7 @@ def check_params(params,template_params):
 
 def get_cases(dataset):
     cases = np.unique(dataset.cases)
+    print(cases)
     is_ncct = np.array([0 if case.startswith('case') else 1 for case in cases])
     return cases, is_ncct
 
