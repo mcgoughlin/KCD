@@ -4,12 +4,7 @@ import torch.nn as nn
 from torch import Tensor
 from torch.nn import Conv3d
 
-# def _ovewrite_named_param(kwargs: Dict[str, Any], param: str, new_value: V) -> None:
-#     if param in kwargs:
-#         if kwargs[param] != new_value:
-#             raise ValueError(f"The parameter '{param}' expected value {new_value} but got {kwargs[param]} instead.")
-#     else:
-#         kwargs[param] = new_value
+# code adapted from https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py
 
 def conv3x3(in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1) -> Conv3d:
     """3x3 convolution with padding"""
@@ -136,13 +131,34 @@ class Bottleneck(nn.Module):
 
         return out
 
-class ResNet3D(nn.Module):
+
+class UpConv(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=2):
+        super().__init__()
+        # print("kernel size:",kernel_size)
+        self.conv = nn.ConvTranspose3d(in_channels, out_channels,
+                                       kernel_size, stride=kernel_size,
+                                       bias=False)
+
+        # print(self.conv)
+        nn.init.kaiming_normal_(self.conv.weight)
+
+
+    def forward(self, xb):
+        # print("UpConv before",xb.shape)
+        # print("UpConv after",self.conv(xb).shape)
+        return nn.functional.relu(self.conv(xb))
+
+class ResNet3D_MTL(nn.Module):
     def __init__(
         self,
         block: Type[Union[BasicBlock, Bottleneck]],
         layers: List[int],
         num_classes: int = 1000,
+        num_seg_classes: int = 4,
         in_channels = 1,
+        depth_z = 20,
+        internal_seg_channels=8,
         zero_init_residual: bool = False,
         groups: int = 1,
         width_per_group: int = 64,
@@ -177,6 +193,18 @@ class ResNet3D(nn.Module):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2, dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AdaptiveAvgPool3d((1, 1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
+
+        self.upconvs = nn.ModuleList()
+        self.upconvs.append(UpConv(64, internal_seg_channels, kernel_size=2))
+        self.upconvs.append(UpConv(64, internal_seg_channels, kernel_size=4))
+        filters = 256
+        for i in range(4):
+            self.upconvs.append(UpConv(filters, internal_seg_channels, kernel_size = filters//64))
+            filters*=2
+
+        self.seg_conv_pool = nn.AdaptiveMaxPool3d((depth_z,224,224))
+        self.seg_conv_1 = nn.Conv3d(internal_seg_channels*6, 2*internal_seg_channels, kernel_size=1, stride=1, padding=0, bias=False)
+        self.seg_conv_2 = nn.Conv3d(2*internal_seg_channels, num_seg_classes, kernel_size=1, stride=1, padding=0, bias=False)
 
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
@@ -240,47 +268,61 @@ class ResNet3D(nn.Module):
         # See note [TorchScript super()]
         x = self.conv1(x)
         x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
+        x1 = self.relu(x)
+        x2 = self.maxpool(x1)
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
-        x = self.avgpool(x)
-        x = torch.flatten(x, 1)
-        x = self.fc(x)
+        x3 = self.layer1(x2)
+        x4 = self.layer2(x3)
+        x5 = self.layer3(x4)
+        x6 = self.layer4(x5)
+        x_out = self.avgpool(x6)
+        x_out = torch.flatten(x_out, 1)
+        x_out = self.fc(x_out)
 
-        return x
+        if self.training:
+            ##### Segmentation MTL #####
+            seg_outs = []
+            for i,out in enumerate([x1,x2,x3,x4,x5,x6]):
+                seg_outs.append(self.seg_conv_pool(self.upconvs[i](out)))
+            seg_out = torch.cat(seg_outs,1)
+            print(seg_out.shape)
+            # interpolate mid and high to match shape of base
+            seg_out = self.seg_conv_2(nn.functional.relu(self.seg_conv_1(seg_out)))
+            return x_out, seg_out
+        else:
+            return x_out
 
     def forward(self, x: Tensor) -> Tensor:
         return self._forward_impl(x)
 
-def _resnet3D(
+def _resnet3D_mtl(
     block: Type[Union[BasicBlock, Bottleneck]],
     layers: List[int],
     in_channels: int = 1,
     num_classes: int = 1000,
     **kwargs: Any,
-) -> ResNet3D:
+) -> ResNet3D_MTL:
 
 
-    model = ResNet3D(block, layers,in_channels=in_channels,num_classes=num_classes, **kwargs)
+    model = ResNet3D_MTL(block, layers,in_channels=in_channels,num_classes=num_classes, **kwargs)
 
     return model
-def resnext503D_32x4d(in_channels=1,num_classes=3,**kwargs) -> ResNet3D:
+def resnext503D_32x4d(in_channels=1,num_classes=3,**kwargs) -> ResNet3D_MTL:
     # _ovewrite_named_param(kwargs, "groups", 32)
     groups = 32
     # _ovewrite_named_param(kwargs, "width_per_group", 4)
     width_per_group = 4
-    return _resnet3D(Bottleneck, [3, 4, 6, 3],in_channels=in_channels,num_classes=num_classes,
+    return _resnet3D_mtl(Bottleneck, [3, 4, 6, 3],in_channels=in_channels,num_classes=num_classes,
                      groups = groups, width_per_group=width_per_group,**kwargs)
 
 
 # test on dummy image
 if __name__ == "__main__":
-    model = resnext503D_32x4d(in_channels=1,num_classes=3)
+    model = resnext503D_32x4d(in_channels=1,num_classes=3,num_seg_classes=4)
     x = torch.randn(1, 1, 20, 224, 224)
-    y = model(x)
-    print(y)
+    model.train()
+    y,seg = model(x)
+    print(y,seg.shape)
+    model.eval()
+    print(model(x))
 
