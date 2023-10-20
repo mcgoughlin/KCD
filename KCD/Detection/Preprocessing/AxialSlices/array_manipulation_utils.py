@@ -55,6 +55,35 @@ def filter_shifted_windows(sw_im,sw_seg,canc_thresh,kid_thresh,target_spacing,
         for arr in [maligs,normals,none]:np.random.shuffle(arr)
     return maligs,normals,none
 
+
+def filter_shifted_windows_seg(sw_im, sw_seg, canc_thresh, kid_thresh, target_spacing,
+                           shuffle=True, has_seg_label=True):
+    labels = extract_labels(sw_seg, tumour_vol_thresh=canc_thresh, kidney_vol_thresh=kid_thresh,
+                            has_seg_label=has_seg_label)
+    maligs, maligs_seg = sw_im[labels == 2],sw_seg[labels == 2]
+    normals,normals_seg = sw_im[labels == 1],sw_seg[labels == 1]
+    none,none_seg = sw_im[labels == 0],sw_seg[labels == 0]
+
+    filter_out_blank = none.max(axis=-1).max(axis=-1).max(axis=-1) > -200
+    none,none_seg = none[filter_out_blank],none_seg[filter_out_blank]
+
+    if len(maligs) > 0:
+        maligs = maligs[maligs.reshape(len(maligs), -1).max(axis=1) > 0]
+        maligs_seg = maligs_seg[maligs_seg.reshape(len(maligs_seg), -1).max(axis=1) > 0]
+    if len(normals) > 0:
+        normals = normals[normals.reshape(len(normals), -1).max(axis=1) > 0]
+        normals_seg = normals_seg[normals_seg.reshape(len(normals_seg), -1).max(axis=1) > 0]
+
+    # shuffle order so the save limit does not bias saved patches to the top portions of the image
+    if shuffle:
+        p = np.random.permutation(len(maligs))
+        maligs,maligs_seg = maligs[p],maligs_seg[p]
+        p = np.random.permutation(len(normals))
+        normals,normals_seg = normals[p],normals_seg[p]
+        p = np.random.permutation(len(none))
+        none,none_seg = none[p],none_seg[p]
+    return maligs,maligs_seg, normals,normals_seg, none,none_seg
+
 def count_elements(array):
     vals,counts = np.unique(array,return_counts=True)
     kid_count,tum_count = 0,0

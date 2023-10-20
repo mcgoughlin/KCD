@@ -17,6 +17,21 @@ def create_save_path_structure(path,save_dir,data_name=None):
     
     return save_path
 
+
+def create_save_path_structure_seg(path, save_dir, data_name=None):
+    assert (os.path.exists(save_dir))
+    save_paths = []
+    for pathtype in ['segs','slices']:
+        save_path = os.path.join(save_dir, pathtype)
+        if not os.path.exists(save_path): os.mkdir(save_path)
+        assert (not (data_name == None))
+        save_path = os.path.join(save_path, data_name)
+        if not os.path.exists(save_path): os.mkdir(save_path)
+
+        save_paths.append(save_path)
+
+    return save_paths
+
 def filename_structure_labelled(path,name,voxel_size_mm,cancthresh,kidthresh,
                        depth_z,boundary_z,dilate):
     
