@@ -32,9 +32,9 @@ class SW_Data_seglabelled(Dataset):
 
         self.device = device
         
-        self.malign = os.listdir(os.path.join(self.image_home,"tumour"))
-        self.benign = os.listdir(os.path.join(self.image_home,"kidney"))
-        self.none = os.listdir(os.path.join(self.image_home,"none"))
+        self.malign = os.listdir(os.path.join(self.seg_home,"tumour"))
+        self.benign = os.listdir(os.path.join(self.seg_home,"kidney"))
+        self.none = os.listdir(os.path.join(self.seg_home,"none"))
 
         self.data_df = pd.DataFrame(data=np.array([[*self.none,*self.malign,*self.benign],
                                           [*[0]*len(self.none), *[2]*len(self.malign), *[1]*len(self.benign)]]).T,
