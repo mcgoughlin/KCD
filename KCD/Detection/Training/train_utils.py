@@ -1,5 +1,6 @@
 import KCD.Detection.Dataloaders.object_dataloader as dl_shape
 import KCD.Detection.Dataloaders.slice_dataloader as dl_slice
+import KCD.Detection.Dataloaders.sliceseg_dataloader as dl_sliceseg
 
 from torch.utils.data import DataLoader
 import numpy as np
@@ -73,7 +74,8 @@ def init_slice3D_params_pretrain():
               "epochs": 20,
               "depth_z": 20,
               "boundary_z": 5,
-              'pred_window': 1}
+              'pred_window': 1,
+              'seg_weight': 0.1}
     return params
 
 def init_slice3D_params_finetune():
@@ -139,6 +141,12 @@ def get_slice_data(home, dataname, voxel_size, cancthresh,kidthresh,depth_z,
     test_slicedataset = dl_slice.SW_Data_labelled(home, dataname, voxel_size_mm=voxel_size, cancthresh=0,kidthresh=0,depth_z=depth_z,boundary_z=boundary_z,dilated=dilated,device=device)
     return slicedataset, test_slicedataset
 
+def get_sliceseg_data(home, dataname, voxel_size, cancthresh,kidthresh,depth_z,
+                   boundary_z,dilated,device='cpu'):
+    slicedataset = dl_sliceseg.SW_Data_seglabelled(home, dataname, voxel_size_mm=voxel_size, cancthresh=cancthresh,kidthresh=kidthresh,depth_z=depth_z,boundary_z=boundary_z,dilated=dilated,device=device)
+    test_slicedataset = dl_slice.SW_Data_labelled(home, dataname, voxel_size_mm=voxel_size, cancthresh=0,kidthresh=0,depth_z=depth_z,boundary_z=boundary_z,dilated=dilated,device=device)
+    return slicedataset, test_slicedataset
+
 
 def train_shape_ensemble(dl, dev, epochs, loss_fnc, opt, model):
     model.train()
@@ -167,6 +175,20 @@ def train_model(dl, dev, epochs, loss_fnc, opt, model):
             opt.step()
             opt.zero_grad()
             
+    return model
+
+
+def train_model_MTL(dl, dev, epochs, class_loss_fnc, seg_loss_func, opt, model, seg_weight = 0.1):
+    model.train()
+    for i in range(epochs):
+        print("\nEpoch {}".format(i))
+        for features, (label,seg) in dl:
+            pred_lb,pred_seg = model(features.to(dev))
+            if label.numel() != 1: label = label.squeeze()
+            loss = class_loss_fnc(pred_lb, label.to(dev)) + seg_weight*seg_loss_func(pred_seg,seg.to(dev))
+            loss.backward()
+            opt.step()
+            opt.zero_grad()
     return model
 
 
