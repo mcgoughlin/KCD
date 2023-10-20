@@ -160,7 +160,7 @@ def get_centralised_windows(reshaped_im,reshaped_seg,centroid,axes=None,patch_si
                                           b1:b2] for i in z_list])
         
         central_window_seg = np.array([reshaped_seg[a1:a2,
-                                          i,
+                                          top_z+i:bottom_z+i,
                                           b1:b2] for i in z_list])
         
     elif axial_plane==2:
@@ -542,8 +542,9 @@ def create_segmentation_labelled_dataset(im_path, save_dir, seg_path, target_spa
 
             cent_im, cent_seg = get_centralised_windows(ct, seg, centroid, patch_size=patch_size, axes=axes,
                                                         boundary_z=boundary_z)
+            print(cent_im.shape,cent_seg.shape)
 
-            if (cent_im.shape[-3:] == tuple(patch_dims)) and (cent_seg.shape[-2:] == tuple(patch_dims[-2:])):
+            if (cent_im.shape[-3:] == tuple(patch_dims)) and (cent_seg.shape[-3:] == tuple(patch_dims)):
                 save_windows_segmentation_labelled(cent_im, cent_seg, canc_thresh, kid_thresh,
                                       target_spacing, slice_save_path, seg_save_path,
                                       voxel_size_mm, cancer_thresh_rmm, get_int, kidney_side=name,
