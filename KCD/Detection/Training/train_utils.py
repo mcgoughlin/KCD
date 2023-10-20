@@ -75,7 +75,7 @@ def init_slice3D_params_pretrain():
               "depth_z": 20,
               "boundary_z": 5,
               'pred_window': 1,
-              'seg_weight': 0.1}
+              'seg_weight': 0.02}
     return params
 
 def init_slice3D_params_finetune():
@@ -182,14 +182,16 @@ def train_model_MTL(dl, dev, epochs, class_loss_fnc, seg_loss_func, opt, model, 
     model.train()
     for i in range(epochs):
         print("\nEpoch {}".format(i))
-        for features, (label,seg) in dl:
+        for features, (seg,label) in dl:
             pred_lb,pred_seg = model(features.to(dev))
             if label.numel() != 1: label = label.squeeze()
             loss = class_loss_fnc(pred_lb, label.to(dev))
-            loss+=seg_weight*seg_loss_func(pred_seg,seg.to(dev))
+            seg_loss = seg_weight*seg_loss_func(pred_seg,seg.to(dev))
+            loss += seg_loss
             loss.backward()
             opt.step()
             opt.zero_grad()
+        assert False
     return model
 
 

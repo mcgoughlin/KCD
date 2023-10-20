@@ -140,8 +140,7 @@ class SW_Data_seglabelled(Dataset):
         image = torch.unsqueeze(image,0)
         seg = np.load(os.path.join(seg_dir,class_df.iloc[idx]['filepath']),allow_pickle=True)
         seg = torch.Tensor(seg).to(self.device)
-        seg = torch.unsqueeze(seg,0)
-        
+
         #shuffles order of transforms every time
         np.random.shuffle(transforms)
         for transform in transforms:
