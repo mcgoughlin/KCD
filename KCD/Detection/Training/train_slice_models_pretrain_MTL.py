@@ -50,10 +50,12 @@ def train_cv_slice_model_MTL(home = '/Users/mcgoug01/Downloads/Data/',dataname='
         split_fp = os.path.join(split_path,'split.npy')
         five_fold_strat = kfold_strat(n_splits=folds, shuffle=True)
 
-        if os.path.exists(split_fp): fold_split = np.load(split_fp,allow_pickle=True)
-        else:
-            fold_split = np.array([(fold,tr_index,ts_index) for fold,(tr_index, ts_index) in enumerate(five_fold_strat.split(cases,is_ncct))])
-            np.save(os.path.join(split_path,split_fp),fold_split)
+        # if os.path.exists(split_fp): fold_split = np.load(split_fp,allow_pickle=True)
+        # else:
+        #     fold_split = np.array([(fold,tr_index,ts_index) for fold,(tr_index, ts_index) in enumerate(five_fold_strat.split(cases,is_ncct))])
+        #     np.save(os.path.join(split_path,split_fp),fold_split)
+        fold_split = np.array([(fold, tr_index, ts_index) for fold, (tr_index, ts_index) in
+                               enumerate(five_fold_strat.split(cases, is_ncct))])
 
         results_csv_fold_paths = [os.path.join(split_path,'fold_{}'.format(fold),'csv','{}_{}_{}_{}_{}.csv'.format(model_type,params['model_size'],params['epochs'],params['epochs'],params['lr'])) for fold in range(folds)]
 
