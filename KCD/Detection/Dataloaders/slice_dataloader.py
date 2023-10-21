@@ -78,7 +78,7 @@ class SW_Data_labelled(Dataset):
         noise = torch.randn(tensor.shape,device=self.device)*random_noise_stdev
         return tensor+noise
     
-    def _rotate(self,tensor,p=1):
+    def _rotate(self,tensor,p=0.5):
         if random()>p: return tensor
         rot_extent = np.random.randint(1,4)
         return torch.rot90(tensor,rot_extent,dims=[-2,-1])
