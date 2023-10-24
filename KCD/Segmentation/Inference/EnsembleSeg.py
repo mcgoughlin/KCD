@@ -42,7 +42,7 @@ SegLoader, Segment, SegProcess = infer_network.get_3d_UNet, SlidingWindowPredict
 class Ensemble_Seg(nn.Module):
     def __init__(self, data_name: str = None,  ##seg preprocess args
                  seg_fp: str = None, spacing=np.array([3, 3, 3]),
-                 do_prep=False, do_infer=False):  ##seg args
+                 do_prep=False, do_infer=False,is_cect=True):  ##seg args
         super().__init__()
 
         print("")
@@ -54,6 +54,7 @@ class Ensemble_Seg(nn.Module):
         case_path = join(self.home, 'raw_data', data_name, 'images')
         self.cases = [file for file in listdir(case_path) if file.endswith('.nii.gz') or file.endswith('.nii')]
         self.data_name = data_name
+        self.is_cect = is_cect
 
         # ### SEG PREPROCESS ###
         self.preprocessed_name = str(spacing[0]) + ',' + str(spacing[1]) + ',' + str(spacing[2]) + "mm"
@@ -108,19 +109,34 @@ class Ensemble_Seg(nn.Module):
         print("##SEG PREPROCESS##\nPreprocessing CT Volumes to {}\n Stored in location {}.".format(seg_spacing,
                                                                                                    pp_save_path))
         print("")
-        preprocessing = SegmentationPreprocessing(apply_resizing=True,
-                                                  apply_pooling=False,
-                                                  apply_windowing=True,
-                                                  target_spacing=seg_spacing,
-                                                  pooling_stride=None,
-                                                  window=np.array([-116., 130.]),
-                                                  scaling=np.array([41.301857, 12.257426]),
-                                                  lb_classes=None,
-                                                  reduce_lb_to_single_class=True,
-                                                  lb_min_vol=None,
-                                                  prev_stages=[],
-                                                  save_only_fg_scans=False,
-                                                  n_im_channels=1)
+        if self.is_cect:
+            preprocessing = SegmentationPreprocessing(apply_resizing=True,
+                                                      apply_pooling=False,
+                                                      apply_windowing=True,
+                                                      target_spacing=seg_spacing,
+                                                      pooling_stride=None,
+                                                      window=np.array([-556.0, 309.2]),
+                                                      scaling=np.array([199.5, 71.6]),
+                                                      lb_classes=None,
+                                                      reduce_lb_to_single_class=True,
+                                                      lb_min_vol=None,
+                                                      prev_stages=[],
+                                                      save_only_fg_scans=False,
+                                                      n_im_channels=1)
+        else:
+            preprocessing = SegmentationPreprocessing(apply_resizing=True,
+                                                      apply_pooling=False,
+                                                      apply_windowing=True,
+                                                      target_spacing=seg_spacing,
+                                                      pooling_stride=None,
+                                                      window=np.array([-116., 130.]),
+                                                      scaling=np.array([41.301857, 12.257426]),
+                                                      lb_classes=None,
+                                                      reduce_lb_to_single_class=True,
+                                                      lb_min_vol=None,
+                                                      prev_stages=[],
+                                                      save_only_fg_scans=False,
+                                                      n_im_channels=1)
 
         preprocessing.preprocess_raw_data(raw_data=data_name,
                                           preprocessed_name=self.preprocessed_name,
