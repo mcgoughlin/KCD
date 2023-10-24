@@ -532,6 +532,8 @@ def create_segmentation_labelled_dataset(im_path, save_dir, seg_path, target_spa
             sw_im, sw_seg = get_shifted_windows(ct, seg, overlap=overlap, patch_size=patch_size, axes=axes,
                                                 boundary_z=boundary_z)
 
+            print(sw_im.shape,sw_im.shape)
+
             if (sw_seg.shape[-3:] == tuple(patch_dims)) and (sw_im.shape[-3:] == tuple(patch_dims)):
                 save_windows_segmentation_labelled(sw_im, sw_seg, canc_thresh, kid_thresh,
                                       target_spacing, slice_save_path,seg_save_path,
