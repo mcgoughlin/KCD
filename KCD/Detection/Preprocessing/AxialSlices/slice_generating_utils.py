@@ -24,17 +24,14 @@ def extract_sliding_windows(arr, patch_size=(32,32,32),overlap=0.1,boundary_z=1,
     shape = volume.shape[1:]
     
     zxy_shape = np.array([shape[axes[0]],shape[axes[1]],shape[axes[2]]])
-    
     #  get all top left coordinates of patches
     zxy_list = _get_zxy_list(zxy_shape,patch_size=patch_size,overlap=overlap,boundary_z=boundary_z)
-
     # introduce batch size
     # some people say that introducing a batch size at inference time makes it faster
     # I couldn't see that so far
     n_full_batches = len(zxy_list)
     zxy_batched = [zxy_list[i : (i + 1) ]
                    for i in range(n_full_batches)]
-
 
     
     if n_full_batches < len(zxy_list):
@@ -54,9 +51,8 @@ def _get_zxy_list(shape,patch_size = np.array([32,32,32]),overlap=0.1,boundary_z
     
     nz, nx, ny = shape
 
-    overlap_arr = overlap * patch_size
-    inplane = stats.mode(overlap_arr,keepdims=False)[0]
-    overlap_arr = np.where(overlap_arr==inplane,overlap_arr,boundary_z)
+    inplane = stats.mode(overlap,keepdims=False)[0]
+    overlap_arr = np.where(overlap==inplane,overlap*patch_size,boundary_z)
     n_patches = np.ceil((np.array([nz, nx, ny]) - patch_size) / 
                         overlap_arr).astype(int)
     
@@ -315,8 +311,7 @@ def create_labelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
                    data_name='coreg_ncct',boundary_z=1,depth_z=1,
                    kidney_thresh_rmm=20):
     
-    
-    save_path = fu.create_save_path_structure(im_path,data_name=data_name,save_dir=save_dir) 
+    save_path = fu.create_save_path_structure(im_path,data_name=data_name,save_dir=save_dir)
     int_list = [file for file in os.listdir(im_path)]
     
     bbox_boundary = int(np.round(bbox_boundary_mm/target_spacing[0]))
@@ -374,8 +369,7 @@ def create_labelled_dataset(im_path,save_dir,seg_path,target_spacing,overlap,
             
 
         
-            sw_im, sw_seg = get_shifted_windows(ct,seg,overlap=overlap,patch_size=patch_size,axes=axes,boundary_z=boundary_z)  
-
+            sw_im, sw_seg = get_shifted_windows(ct,seg,overlap=overlap,patch_size=patch_size,axes=axes,boundary_z=boundary_z)
             if (sw_seg.shape[-3:]==tuple(patch_dims)) and (sw_im.shape[-3:]==tuple(patch_dims)):
                 save_windows_labelled(sw_im,sw_seg,canc_thresh,kid_thresh,
                              target_spacing,save_path,
@@ -532,7 +526,6 @@ def create_segmentation_labelled_dataset(im_path, save_dir, seg_path, target_spa
             sw_im, sw_seg = get_shifted_windows(ct, seg, overlap=overlap, patch_size=patch_size, axes=axes,
                                                 boundary_z=boundary_z)
 
-            print(sw_im.shape,sw_im.shape)
 
             if (sw_seg.shape[-3:] == tuple(patch_dims)) and (sw_im.shape[-3:] == tuple(patch_dims)):
                 save_windows_segmentation_labelled(sw_im, sw_seg, canc_thresh, kid_thresh,
@@ -544,7 +537,6 @@ def create_segmentation_labelled_dataset(im_path, save_dir, seg_path, target_spa
 
             cent_im, cent_seg = get_centralised_windows(ct, seg, centroid, patch_size=patch_size, axes=axes,
                                                         boundary_z=boundary_z)
-            print(cent_im.shape,cent_seg.shape)
 
             if (cent_im.shape[-3:] == tuple(patch_dims)) and (cent_seg.shape[-3:] == tuple(patch_dims)):
                 save_windows_segmentation_labelled(cent_im, cent_seg, canc_thresh, kid_thresh,

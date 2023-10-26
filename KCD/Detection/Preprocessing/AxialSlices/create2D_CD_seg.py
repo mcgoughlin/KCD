@@ -2,9 +2,9 @@ import slice_generating_utils as generator
 import numpy as np
 
 data_name = 'coreg_ncct'
-path = "/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/{}/images".format(data_name)
-save_dir = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
-path = "/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/{}/labels".format(data_name)
+path = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/images".format(data_name)
+save_dir = '/Users/mcgoug01/Downloads/Data'
+segpath = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/labels".format(data_name)
 
 overlap_mm = 40 ## this dictates the minimum distance apart between each slice! not the overlap.
 patch2d = 224 ## in plane slice spacing
@@ -12,9 +12,9 @@ save_limit_percase_perlabel = 100 ## maximum number of saved shifted window slic
 voxel_spacings = [1] ## isotropic voxel size in mm
 thresholds_r_mm = [10] ## threshold used to calculate cancer label
 kidney_r_mm = 20 ## threshold used to calculate kidney label
-depth_z = 20 ## size of slice depth in axial dimension in mm - if 1mm, then 2D
+depth_z = 1 ## size of slice depth in axial dimension in mm - if 1mm, then 2D
 bbox_boundary_mm = 40 ## dilation of segmentation label
-boundary_z= 5 ## axial spacing between slice sampling
+boundary_z= 1 ## axial spacing between slice sampling
 has_seg_label = True ## if we don't have seg label, we only generated foreground/background slices
 
 patch_size = np.array([patch2d]*3) 

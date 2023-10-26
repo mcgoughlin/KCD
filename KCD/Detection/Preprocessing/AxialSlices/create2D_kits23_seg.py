@@ -12,9 +12,9 @@ save_limit_percase_perlabel = 100 ## maximum number of saved shifted window slic
 voxel_spacings = [1] ## isotropic voxel size in mm
 thresholds_r_mm = [10] ## threshold used to calculate cancer label
 kidney_r_mm = 20 ## threshold used to calculate kidney label
-depth_z = 20 ## size of slice depth in axial dimension in mm - if 1mm, then 2D
+depth_z = 1 ## size of slice depth in axial dimension in mm - if 1mm, then 2D
 bbox_boundary_mm = 40 ## dilation of segmentation label
-boundary_z= 5 ## axial spacing between slice sampling
+boundary_z= 1 ## axial spacing between slice sampling
 has_seg_label = True ## if we don't have seg label, we only generated foreground/background slices
 
 patch_size = np.array([patch2d]*3) 
