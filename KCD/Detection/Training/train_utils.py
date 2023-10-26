@@ -1,7 +1,7 @@
 import KCD.Detection.Dataloaders.object_dataloader as dl_shape
 import KCD.Detection.Dataloaders.slice_dataloader as dl_slice
 import KCD.Detection.Dataloaders.sliceseg_dataloader as dl_sliceseg
-
+from KCD.Detection.ModelGenerator import model_generator
 from torch.utils.data import DataLoader
 import numpy as np
 import os
@@ -45,8 +45,26 @@ def init_slice2D_params():
               "epochs": 30,
               "depth_z": 1,
               "boundary_z": 1,
-              'pred_window': 10}
+              'pred_window': 10,
+              'model':'resnext'}
     return params
+
+def get_2d_model(model_type,model_size,dev):
+    # function for retrieving models from resnet, resnext, efficientnet, swin,vit
+    # this function is only used in benchmark_tilemodels.py
+    if model_type == 'resnet':
+        model = model_generator.return_resnet(size=model_size,dev=dev,in_channels=1,out_channels=3)
+    elif model_type == 'resnext':
+        model = model_generator.return_resnext(size=model_size,dev=dev,in_channels=1,out_channels=3)
+    elif model_type == 'efficientnet':
+        model = model_generator.return_efficientnet(size=model_size,dev=dev,in_channels=1,out_channels=3)
+    elif model_type == 'swin':
+        model = model_generator.return_swin(size=model_size,dev=dev,in_channels=1,out_channels=3)
+    elif model_type == 'vit':
+        model = model_generator.return_vit(size=model_size,dev=dev,in_channels=1,out_channels=3)
+    else:
+        raise ValueError('model_type must be one of resnet, resnext, efficientnet, swin, vit')
+    return model
 
 
 def init_slice3D_params():
