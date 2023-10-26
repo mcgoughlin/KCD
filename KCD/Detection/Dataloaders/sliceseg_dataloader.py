@@ -90,7 +90,11 @@ class SW_Data_seglabelled(Dataset):
     def _flip(self,im,seg,p=0.5):
         if random()>p: return im,seg
         flip = int(np.random.choice([-3,-1],1,replace=False)[0])
-        return torch.flip(im,dims= [flip]),torch.flip(seg,dims= [flip])
+        try:
+            return torch.flip(im,dims= [flip]),torch.flip(seg,dims= [flip])
+        except:
+            print(im.shape,seg.shape,flip)
+            assert(1==2)
         
     def _blur(self,im,seg,p=0.3):
         if random()>p: return im,seg

@@ -6,7 +6,7 @@ import numpy as np
 
 # seg_fp = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/coreg_ncct/4.0mm_allbinary_noR74K118/6,3x3x3,32_pretrained_noerrors'
 seg_fp = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/all_cect/4mm_binary/6,3x3x3,32'
-data_names = ['CTORG_all']
+data_names = ['kits23']
 do_prep = False
 do_infer = True
 
