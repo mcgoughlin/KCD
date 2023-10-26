@@ -1,7 +1,7 @@
 import slice_generating_utils as generator
 import numpy as np
 
-data_name = 'coreg_ncct'
+data_name = 'kits23'
 path = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/images".format(data_name)
 save_dir = '/Users/mcgoug01/Downloads/Data'
 segpath = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/labels".format(data_name)

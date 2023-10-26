@@ -7,3 +7,5 @@ Tasks:
 - [ ] Train 2D model in top-1 mode
 - [ ] Train 2D model on coreg_ncct dataset after pretraining on kits23
 - [ ] Train 2D model with decoder branch on kits23 MTL
+
+After these tasks are complete, I should investigate further MTL improvements via CECT synthesis/prediction, based on this paper: https://www.medrxiv.org/content/10.1101/2022.01.12.22269120v1 
