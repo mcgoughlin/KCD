@@ -44,7 +44,7 @@ def benchmark(home = '/Users/mcgoug01/Downloads/Data/',dataname='coreg_ncct',
 
         if os.path.exists(split_fp): fold_split = np.load(split_fp,allow_pickle=True)
         else:
-            fold_split = np.array([(fold,tr_index,ts_index) for fold,(tr_index, ts_index) in enumerate(five_fold_strat.split(cases,is_ncct))])
+            fold_split = np.array([(fold,tr_index,ts_index) for fold,(tr_index, ts_index) in enumerate(five_fold_strat.split(cases,is_ncct))],dtype=object)
             np.save(os.path.join(split_path,split_fp),fold_split)
 
 
@@ -91,4 +91,4 @@ if __name__ == '__main__':
     model = str(sys.argv[1])
     voting_window = int(sys.argv[2])
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
-    benchmark(home=home,dataname=dataset,is_3D=True,splits=[0],model=model,voting_window=voting_window)
+    benchmark(home=home,dataname=dataset,splits=[0],model=model,voting_window=voting_window)
