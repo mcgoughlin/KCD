@@ -9,7 +9,7 @@ segpath = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/
 
 overlap_mm = 40 ## this dictates the minimum distance apart between each slice! not the overlap.
 patch2d = 224 ## in plane slice spacing
-save_limit_percase_perlabel = 100 ## maximum number of saved shifted window slices per kidney
+save_limit_percase_perlabel = 50 ## maximum number of saved shifted window slices per kidney
 voxel_spacings = [1] ## isotropic voxel size in mm
 thresholds_r_mm = [10] ## threshold used to calculate cancer label
 kidney_r_mm = 20 ## threshold used to calculate kidney label
