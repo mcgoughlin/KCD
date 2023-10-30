@@ -46,7 +46,8 @@ def init_slice2D_params():
               "depth_z": 1,
               "boundary_z": 1,
               'pred_window': 10,
-              'model':'resnext'}
+              'model':'resnext',
+              'seg_weight': 0.005}
     return params
 
 def init_benchmarking2D_params():

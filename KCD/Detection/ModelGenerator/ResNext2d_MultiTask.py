@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.nn import Conv2d
+from torchvision.models import resnext101_32x8d,ResNeXt101_32X8D_Weights
 
 # code adapted from https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py
 
@@ -322,8 +323,25 @@ def resnext502d_32x4d(in_channels=1,num_classes=3,**kwargs) -> ResNet2d_MTL:
 def resnext1012d_32x4d(in_channels=1,num_classes=3,**kwargs) -> ResNet2d_MTL:
     groups = 32
     width_per_group = 8
-    return _resnet2d_mtl(Bottleneck, [3, 4, 23, 3],in_channels=in_channels,num_classes=num_classes,
-                         groups = groups, width_per_group=width_per_group,**kwargs)
+
+    model = resnext101_32x8d(ResNeXt101_32X8D_Weights)
+
+    mtlmodel = _resnet2d_mtl(Bottleneck, [3, 4, 23, 3], in_channels=in_channels, num_classes=num_classes,
+                             groups=groups, width_per_group=width_per_group, **kwargs)
+
+    # load pretrained weights into mtl model
+    model_dict = model.state_dict()
+    mtlmodel_dict = mtlmodel.state_dict()
+    # 1. filter out unnecessary keys and keys that only exist in mtlmodel_dict
+    pretrained_dict = {k: v for k, v in model_dict.items() if k in mtlmodel_dict}
+    # 1.5. filter out final fc layer and first conv layer
+    pretrained_dict = {k: v for k, v in pretrained_dict.items() if not (k.startswith('fc') or k.startswith('conv1'))}
+    # 2. overwrite entries in the existing state dict
+    mtlmodel_dict.update(pretrained_dict)
+    # 3. load the new state dict
+    mtlmodel.load_state_dict(mtlmodel_dict)
+
+    return mtlmodel
 
 
 # test on dummy image
