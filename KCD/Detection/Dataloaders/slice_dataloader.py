@@ -87,7 +87,7 @@ class SW_Data_labelled(Dataset):
     
     def _flip(self,tensor,p=0.5):
         if random()>p: return tensor
-        flip = int(np.random.choice([-3,-1],1,replace=False))
+        flip = int(np.random.choice([-3,-2,-1],1,replace=False))
         return torch.flip(tensor,dims= [flip])
         
     def _blur(self,tensor,p=0.3):
