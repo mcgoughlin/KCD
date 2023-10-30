@@ -49,8 +49,23 @@ def init_slice2D_params():
               'model':'resnext'}
     return params
 
+def init_benchmarking2D_params():
+    params = {"voxel_size": 1,
+              "model_size": "large",
+              "cancthresh_r_mm": 10,
+              "kidthresh_r_mm": 20,
+              "batch_size": 16,
+              "dilated": 40,
+              "lr": 5e-4,
+              "epochs": 5,
+              "depth_z": 1,
+              "boundary_z": 1,
+              'pred_window': 10,
+              'model':'resnext'}
+    return params
+
 def get_2d_model(model_type,model_size,dev):
-    # function for retrieving models from resnet, resnext, efficientnet, swin,vit
+    # function for retrieving models from resnet, resnext, efficientnet, swin,vit,convnext
     # this function is only used in benchmark_tilemodels.py
     if model_type == 'resnet':
         model = model_generator.return_resnet(size=model_size,dev=dev,in_channels=1,out_channels=3)
@@ -62,8 +77,10 @@ def get_2d_model(model_type,model_size,dev):
         model = model_generator.return_swin(size=model_size,dev=dev,in_channels=1,out_channels=3)
     elif model_type == 'vit':
         model = model_generator.return_vit(size=model_size,dev=dev,in_channels=1,out_channels=3)
+    elif model_type == 'convnext':
+        model = model_generator.return_convnext(size=model_size,dev=dev,in_channels=1,out_channels=3)
     else:
-        raise ValueError('model_type must be one of resnet, resnext, efficientnet, swin, vit')
+        raise ValueError('model_type must be one of: resnet, resnext, efficientnet, swin, vit, convnext')
     return model
 
 

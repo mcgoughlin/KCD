@@ -32,6 +32,8 @@ class SW_Data_labelled(Dataset):
         self.benign = os.listdir(os.path.join(self.home_path,"kidney"))
         self.none = os.listdir(os.path.join(self.home_path,"none"))
 
+        print(self.home_path,"tumour",len(self.malign),"kidney",len(self.benign),"none",len(self.none))
+
         self.data_df = pd.DataFrame(data=np.array([[*self.none,*self.malign,*self.benign],
                                           [*[0]*len(self.none), *[2]*len(self.malign), *[1]*len(self.benign)]]).T,
                                     columns = ['filepath','class'])
