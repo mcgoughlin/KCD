@@ -58,7 +58,7 @@ def train_cv_slice_model_2dMTL(home = '/Users/mcgoug01/Downloads/Data/',dataname
             if not os.path.exists(fold_path):os.mkdir(fold_path)
             if not os.path.exists(slice_path):os.mkdir(slice_path)
 
-            model = ResNext2d_MultiTask.resnext1012d_32x4d(in_channels=1,num_classes=3,num_seg_classes=4).to(dev)
+            model = ResNext2d_MultiTask.resnext1012d_32x8d(in_channels=1,num_classes=3,num_seg_classes=4).to(dev)
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
 
             dl,test_dl = tu.generate_dataloaders(slicedataset,test_slicedataset,cases[train_index],params['batch_size'])

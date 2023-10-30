@@ -320,7 +320,7 @@ def resnext502d_32x4d(in_channels=1,num_classes=3,**kwargs) -> ResNet2d_MTL:
     return _resnet2d_mtl(Bottleneck, [3, 4, 6, 3],in_channels=in_channels,num_classes=num_classes,
                      groups = groups, width_per_group=width_per_group,**kwargs)
 
-def resnext1012d_32x4d(in_channels=1,num_classes=3,**kwargs) -> ResNet2d_MTL:
+def resnext1012d_32x8d(in_channels=1,num_classes=3,**kwargs) -> ResNet2d_MTL:
     groups = 32
     width_per_group = 8
 
@@ -346,7 +346,7 @@ def resnext1012d_32x4d(in_channels=1,num_classes=3,**kwargs) -> ResNet2d_MTL:
 
 # test on dummy image
 if __name__ == "__main__":
-    model = resnext1012d_32x4d(in_channels=1,num_classes=3,num_seg_classes=4)
+    model = resnext1012d_32x8d(in_channels=1,num_classes=3,num_seg_classes=4)
     model.train()
 
     from KCD.Detection.Dataloaders.sliceseg_dataloader import SW_Data_seglabelled
