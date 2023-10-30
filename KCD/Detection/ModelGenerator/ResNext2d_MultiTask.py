@@ -272,7 +272,6 @@ class ResNet2d_MTL(nn.Module):
     def _forward_impl(self, x: Tensor) -> Tensor:
         # See note [TorchScript super()]
         x = self.conv1(x)
-        print(x.shape)
         x = self.bn1(x)
         x1 = self.relu(x)
         x2 = self.maxpool(x1)
@@ -281,7 +280,6 @@ class ResNet2d_MTL(nn.Module):
         x4 = self.layer2(x3)
         x5 = self.layer3(x4)
         x6 = self.layer4(x5)
-        print(x6.shape)
         x_out = self.avgpool(x6)
         x_out = torch.flatten(x_out, 1)
         x_out = self.fc(x_out)
@@ -346,3 +344,5 @@ if __name__ == "__main__":
 
     pred_loss = pred_loss_func(pred_lb,label)
     seg_loss = seg_loss_func(pred_seg,seg.unsqueeze(0))
+
+    print(pred_loss,seg_loss)

@@ -85,12 +85,12 @@ class SW_Data_seglabelled(Dataset):
         if random()>p: return im,seg
         random_noise_stdev = random()*noise_strength
         noise = torch.randn(im.shape,device=self.device)*random_noise_stdev
-        return im+noise,seg
+        return im+noise, seg
     
-    def _rotate(self,tensor,p=0.5):
-        if random()>p: return tensor
+    def _rotate(self,tensor,seg,p=0.5):
+        if random()>p: return tensor,seg
         rot_extent = np.random.randint(1,4)
-        return torch.rot90(tensor,rot_extent,dims=[-2,-1])
+        return torch.rot90(tensor,rot_extent,dims=[-2,-1]), torch.rot90(seg,rot_extent,dims=[-2,-1])
     
     def _flip(self,im,seg,p=0.5):
         if random()>p: return im,seg
@@ -98,7 +98,7 @@ class SW_Data_seglabelled(Dataset):
             flip = int(np.random.choice([-3,-2,-1],1,replace=False)[0])
         else:
             flip = int(np.random.choice([-2,-1],1,replace=False)[0])
-        return torch.flip(im,dims= [flip]),torch.flip(seg,dims= [flip])
+        return torch.flip(im,dims= [flip]), torch.flip(seg,dims= [flip])
         
     def _blur(self,im,seg,p=0.3):
         if random()>p: return im,seg
@@ -130,7 +130,7 @@ class SW_Data_seglabelled(Dataset):
         transforms = []
         if type(self.test_case) == type(None):
             if self.is_train:
-                transforms = [self._blur,self._add_noise,self._rotate,self._flip,self._contrast,self._flip,self._flip]
+                transforms = [self._blur,self._add_noise,self._rotate,self._flip,self._contrast,self._flip,self._rotate]
                 label = int(np.random.choice([0,1,2],size=1)[0])
                 class_df = self.train_data[self.train_data['class']==label]
                 idx = idx % len(class_df)
