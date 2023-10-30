@@ -67,7 +67,6 @@ def train_cv_slice_model_2d(home = '/Users/mcgoug01/Downloads/Data/',dataname='c
                 os.mkdir(os.path.join(slice_path,'csv'))
 
             torch.save(model,os.path.join(slice_path,'model',model_name))
-
             model.eval()
             model_res,test_df = eval_.eval_cnn(model,test_dl,dev=dev)
             cv_results.append(test_df)
