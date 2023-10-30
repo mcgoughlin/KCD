@@ -18,8 +18,12 @@ class SW_Data_labelled(Dataset):
         
         folder = os.path.join(raw_data_path,"Voxel-"+str(voxel_size_mm)+"mm-Dilation"+str(dilated)+"mm")        
         folder = os.path.join(folder,"CancerThreshold-"+str(cancthresh)+'mm-KidneyThreshold'+str(kidthresh)+'mm')        
-        if depth_z>1:home = os.path.join(folder,"3D-Depth"+str(depth_z)+'mm-Boundary'+str(boundary_z)+'mm','labelled_data')
-        else:home = os.path.join(folder,"2D-Boundary"+str(boundary_z)+'mm','labelled_data')
+        if depth_z>1:
+            home = os.path.join(folder,"3D-Depth"+str(depth_z)+'mm-Boundary'+str(boundary_z)+'mm','labelled_data')
+            self.is_3d = True
+        else:
+            home = os.path.join(folder,"2D-Boundary"+str(boundary_z)+'mm','labelled_data')
+            self.is_3d = False
         
         print(home)
         assert(os.path.exists(home))
@@ -87,7 +91,10 @@ class SW_Data_labelled(Dataset):
     
     def _flip(self,tensor,p=0.5):
         if random()>p: return tensor
-        flip = int(np.random.choice([-3,-2,-1],1,replace=False))
+        if self.is_3d:
+            flip = int(np.random.choice([-3,-2,-1],1,replace=False))
+        else:
+            flip = int(np.random.choice([-2,-1],1,replace=False))
         return torch.flip(tensor,dims= [flip])
         
     def _blur(self,tensor,p=0.3):

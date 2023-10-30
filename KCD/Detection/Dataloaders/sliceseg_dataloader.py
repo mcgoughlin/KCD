@@ -87,21 +87,18 @@ class SW_Data_seglabelled(Dataset):
         noise = torch.randn(im.shape,device=self.device)*random_noise_stdev
         return im+noise,seg
     
-    def _rotate(self,im,seg,p=0.5):
-        if random()>p: return im,seg
-        if self.is_3d: rot_extent = np.random.randint(1,4)
-        else:rot_extent = np.random.randint(1,3)
-        return torch.rot90(im,rot_extent,dims=[-2,-1]),torch.rot90(seg,rot_extent,dims=[-2,-1])
+    def _rotate(self,tensor,p=0.5):
+        if random()>p: return tensor
+        rot_extent = np.random.randint(1,4)
+        return torch.rot90(tensor,rot_extent,dims=[-2,-1])
     
     def _flip(self,im,seg,p=0.5):
         if random()>p: return im,seg
-        if self.is_3d: flip = int(np.random.choice([-3,-2,-1],1,replace=False)[0])
-        else:flip = int(np.random.choice([-2,-1],1,replace=False)[0])
-        try:
-            return torch.flip(im,dims= [flip]),torch.flip(seg,dims= [flip])
-        except:
-            print(im.shape,seg.shape,flip)
-            assert(1==2)
+        if self.is_3d:
+            flip = int(np.random.choice([-3,-2,-1],1,replace=False)[0])
+        else:
+            flip = int(np.random.choice([-2,-1],1,replace=False)[0])
+        return torch.flip(im,dims= [flip]),torch.flip(seg,dims= [flip])
         
     def _blur(self,im,seg,p=0.3):
         if random()>p: return im,seg
@@ -158,71 +155,6 @@ class SW_Data_seglabelled(Dataset):
             image,seg = transform(image,seg)
 
         return image,(torch.Tensor(seg).long(),torch.Tensor([label]).long())
-
-
-class SW_Data_unlabelled(Dataset):
-    def __init__(self, path, name,voxel_size_mm=1,foreground_thresh=10,
-                 depth_z=20,boundary_z=5,dilated=40,device=None):
-        
-        assert(os.path.exists(path))
-        raw_data_path = os.path.join(path,"slices",name)
-        assert(os.path.exists(raw_data_path))
-        
-        folder = os.path.join(raw_data_path,"Voxel-"+str(voxel_size_mm)+"mm-Dilation"+str(dilated)+"mm")        
-        folder = os.path.join(folder,"ForegroundThresh-"+str(foreground_thresh)+'mm')        
-        if depth_z>1:home = os.path.join(folder,"3D-Depth"+str(depth_z)+'mm-Boundary'+str(boundary_z)+'mm','unlabelled_data')
-        else:home = os.path.join(folder,"2D-Boundary"+str(boundary_z)+'mm','unlabelled_data')
-        
-        print(home)
-        assert(os.path.exists(home))
-        assert([folder in os.listdir(home)for folder in ["foreground","background"]])
-
-        self.home_path = home
-        self.device = device
-        
-        self.fg = os.listdir(os.path.join(self.home_path,"foreground"))
-
-        self.data_df = pd.DataFrame(data=np.array([[*self.fg],
-                                    [*[1]*len(self.fg)]]).T,
-                                    columns = ['filepath','class'])
-        self.data_df['class'] = self.data_df['class'].astype(int)
-        self.data_df['case'] = self.data_df.filepath.str.split('_').apply(lambda x:x[0])
-        self.data_df['side'] = self.data_df.filepath.str.split('_').apply(lambda x:x[1])
-        self.data_df['window'] = self.data_df.filepath.str.split('_').apply(lambda x:x[2])
-        self.data_df['slice'] = self.data_df.filepath.str.split('_').apply(lambda x:int(x[-1].split('index')[1].split('.')[0]))
-        self.cases = self.data_df.case
-
-        self.data_dict = {1:self.fg}
-        self.dir_dict = {1:os.path.join(self.home_path,"foreground")}        
-        fg = len(self.fg)
-        print("Inference data contains {} foreground slices.".format(fg))
-                        
-        self.test_case = None
-
-    def __len__(self):
-        if type(self.test_case) == type(None):assert(1==2)
-        else:return len(self.case_specific_data)
-        
-    def set_val_kidney(self,case:str,side='left'):
-        self.test_case = case
-        print(self.data_df[(self.data_df['case'] == self.test_case)])
-        self.case_specific_data = self.data_df[(self.data_df['case'] == self.test_case) & (self.data_df['side']==side) & (self.data_df['window']=='centralised')]
-        self.case_specific_data = self.case_specific_data.sort_values('slice')
-        if len(self.case_specific_data)==0:
-            print("You tried to set the validation kidney to a kidney that does not exist within the validation data.")
-            assert(len(self.case_specific_data)>0)
-    
-    def __getitem__(self,idx:int):
-        if type(self.test_case) == type(None):assert(1==2)
-        else:
-            class_df = self.case_specific_data
-            label = class_df.iloc[idx]['class']
-            
-        directory = self.dir_dict[label]
-        image = np.load(os.path.join(directory,class_df.iloc[idx]['filepath']),allow_pickle=True)
-        image = torch.clip(torch.Tensor(image).to(self.device),-200,200)/100
-        return torch.unsqueeze(image,0)
-        
 
 if __name__ == '__main__':
     dataset = SW_Data_seglabelled(path="/Users/mcgoug01/Downloads/Data",name="coreg_ncct",device='cpu')
