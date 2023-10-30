@@ -22,11 +22,16 @@ class SW_Data_seglabelled(Dataset):
         for path in [raw_data_path,seg_data_path]:
             folder = os.path.join(path,"Voxel-"+str(voxel_size_mm)+"mm-Dilation"+str(dilated)+"mm")
             folder = os.path.join(folder,"CancerThreshold-"+str(cancthresh)+'mm-KidneyThreshold'+str(kidthresh)+'mm')
-            if depth_z>1:home.append(os.path.join(folder,"3D-Depth"+str(depth_z)+'mm-Boundary'+str(boundary_z)+'mm','labelled_data'))
-            else:home.append(os.path.join(folder,"2D-Boundary"+str(boundary_z)+'mm','labelled_data'))
+            if depth_z>1:
+                home.append(os.path.join(folder,"3D-Depth"+str(depth_z)+'mm-Boundary'+str(boundary_z)+'mm','labelled_data'))
+                self.is_3d = True
+            else:
+                home.append(os.path.join(folder,"2D-Boundary"+str(boundary_z)+'mm','labelled_data'))
+                self.is_3d = False
         
         self.image_home = home[0]
         self.seg_home = home[1]
+        print(self.image_home)
         assert(os.path.exists(self.image_home))
         assert([folder in os.listdir(self.image_home)for folder in ["tumour","kidney","none"]])
 
@@ -45,7 +50,7 @@ class SW_Data_seglabelled(Dataset):
         self.data_df['side'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[2])
         self.data_df['window'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:x[3])
         self.data_df['slice'] = self.data_df.filepath.str.replace('-','_').str.split('_').apply(lambda x:int(x[-1].split('index')[1].split('.')[0]))
-        self.cases = self.data_df.case
+        self.cases = np.unique(self.data_df.case.values)
                     
         self.data_dict = {0:self.none,1:self.benign,2:self.malign}
         self.dir_dict = {0:(os.path.join(self.image_home,"none"),os.path.join(self.seg_home,"none")),
@@ -84,12 +89,14 @@ class SW_Data_seglabelled(Dataset):
     
     def _rotate(self,im,seg,p=0.5):
         if random()>p: return im,seg
-        rot_extent = np.random.randint(1,4)
+        if self.is_3d: rot_extent = np.random.randint(1,4)
+        else:rot_extent = np.random.randint(1,3)
         return torch.rot90(im,rot_extent,dims=[-2,-1]),torch.rot90(seg,rot_extent,dims=[-2,-1])
     
     def _flip(self,im,seg,p=0.5):
         if random()>p: return im,seg
-        flip = int(np.random.choice([-3,-1],1,replace=False)[0])
+        if self.is_3d: flip = int(np.random.choice([-3,-2,-1],1,replace=False)[0])
+        else:flip = int(np.random.choice([-2,-1],1,replace=False)[0])
         try:
             return torch.flip(im,dims= [flip]),torch.flip(seg,dims= [flip])
         except:
@@ -114,7 +121,7 @@ class SW_Data_seglabelled(Dataset):
             self.train_cases = np.random.choice(self.cases,int(split_ratio*len(self.cases)),replace=False)
         else:
             self.train_cases = train_cases
-            
+
         self.test_cases = self.cases[~np.isin(self.cases, self.train_cases)]
         self.train_data = self.data_df[self.data_df['case'].isin(self.train_cases)]
         self.test_data = self.data_df[~np.isin(self.data_df['case'],self.train_cases)]
