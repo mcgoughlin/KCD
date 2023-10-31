@@ -11,7 +11,8 @@ import warnings
 import pandas as pd
 
 def benchmark(home = '/Users/mcgoug01/Downloads/Data/',dataname='coreg_ncct',
-                            splits:list=[0],folds=5,params:dict=None,model_arch='resnext',voting_window=10):
+                            splits:list=[0],folds=5,params:dict=None,model_arch='resnext',
+              voting_window=10, reading=0):
     # Suppress warnings
     warnings.filterwarnings("ignore") #makes dgl stop complaining!
 
@@ -61,7 +62,7 @@ def benchmark(home = '/Users/mcgoug01/Downloads/Data/',dataname='coreg_ncct',
 
             dl,test_dl = tu.generate_dataloaders(slicedataset,test_slicedataset,cases[train_index],params['batch_size'])
             model = tu.train_model(dl,dev,params['epochs'],loss_fnc,opt,model)
-            model_name = '{}_{}_{}_{}_{}_{}'.format(model_type,model_arch,params['model_size'],params['epochs'],params['pred_window'],params['lr'])
+            model_name = '{}_{}_{}_{}_{}_{}_{}'.format(model_type,model_arch,params['model_size'],params['epochs'],params['pred_window'],params['lr'],reading)
 
             if not os.path.exists(os.path.join(slice_path,'model')):
                 os.mkdir(os.path.join(slice_path,'model'))
@@ -90,5 +91,6 @@ if __name__ == '__main__':
     dataset = 'coreg_ncct'
     model_arch = str(sys.argv[1])
     voting_window = int(sys.argv[2])
+    reading = int(sys.argv[3])
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
-    benchmark(home=home,dataname=dataset,splits=[0],model_arch=model_arch,voting_window=voting_window)
+    benchmark(home=home,dataname=dataset,splits=[0],model_arch=model_arch,voting_window=voting_window,reading=reading)
