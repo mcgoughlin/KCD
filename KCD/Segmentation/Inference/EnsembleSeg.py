@@ -42,7 +42,7 @@ SegLoader, Segment, SegProcess = infer_network.get_3d_UNet, SlidingWindowPredict
 class Ensemble_Seg(nn.Module):
     def __init__(self, data_name: str = None,  ##seg preprocess args
                  seg_fp: str = None, spacing=np.array([3, 3, 3]),
-                 do_prep=False, do_infer=False,is_cect=True):  ##seg args
+                 do_prep=False, do_infer=False,is_cect=False):  ##seg args
         super().__init__()
 
         print("")
