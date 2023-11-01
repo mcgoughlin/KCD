@@ -255,13 +255,13 @@ def return_resnext(size='small',dev='cpu',in_channels=1,out_channels=3):
 
 def return_convnext(size='small',dev='cpu',in_channels=1,out_channels=3):
     if size == 'small':
-        model_generator = models.convnext_small
+        model_generator = models.convnext_tiny
         weights = models.ConvNeXt_Small_Weights.IMAGENET1K_V1
     elif size == 'medium':
-        model_generator = models.convnext_base
+        model_generator = models.convnext_small
         weights = models.ConvNeXt_Base_Weights.IMAGENET1K_V1
     elif size == 'large':
-        model_generator = models.convnext_large
+        model_generator = models.convnext_base
         weights = models.ConvNeXt_Large_Weights.IMAGENET1K_V1
     else:
         assert(1==2)
