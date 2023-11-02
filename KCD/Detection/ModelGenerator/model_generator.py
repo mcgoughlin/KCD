@@ -250,13 +250,13 @@ def return_resnext(size='small',dev='cpu',in_channels=1,out_channels=3):
 def return_convnext(size='small',dev='cpu',in_channels=1,out_channels=3):
     if size == 'small':
         model_generator = models.convnext_tiny
-        weights = models.ConvNeXt_Small_Weights.IMAGENET1K_V1
+        weights = models.ConvNeXt_Tiny_Weights.IMAGENET1K_V1
     elif size == 'medium':
         model_generator = models.convnext_small
-        weights = models.ConvNeXt_Base_Weights.IMAGENET1K_V1
+        weights = models.ConvNeXt_Small_Weights.IMAGENET1K_V1
     elif size == 'large':
         model_generator = models.convnext_base
-        weights = models.ConvNeXt_Large_Weights.IMAGENET1K_V1
+        weights = models.ConvNeXt_Base_Weights.IMAGENET1K_V1
     else:
         assert(1==2)
         
@@ -264,14 +264,14 @@ def return_convnext(size='small',dev='cpu',in_channels=1,out_channels=3):
     axial_tile_model = model_generator(weights = weights).to(dev)
     
     if size == 'large':
-        axial_tile_model.features[0][0] = nn.Conv2d(in_channels,192,kernel_size=(4, 4), stride=(4, 4)).to(dev)
-        axial_tile_model.classifier[-1]= nn.Linear(1536,out_channels,bias=True).to(dev) 
-    elif size =='medium':
         axial_tile_model.features[0][0] = nn.Conv2d(in_channels,128, kernel_size=(4, 4), stride=(4, 4)).to(dev)
-        axial_tile_model.classifier[-1]= nn.Linear(1024,out_channels,bias=True).to(dev) 
-    else:
+        axial_tile_model.classifier[-1]= nn.Linear(1024,out_channels,bias=True).to(dev)
+    elif size =='medium':
         axial_tile_model.features[0][0] = nn.Conv2d(in_channels,96, kernel_size=(4, 4), stride=(4, 4)).to(dev)
-        axial_tile_model.classifier[-1]= nn.Linear(768,out_channels,bias=True).to(dev) 
+        axial_tile_model.classifier[-1]= nn.Linear(768,out_channels,bias=True).to(dev)
+    else:
+        axial_tile_model.features[0][0] = nn.Conv2d(in_channels,64, kernel_size=(4, 4), stride=(4, 4)).to(dev)
+        axial_tile_model.classifier[-1]= nn.Linear(512,out_channels,bias=True).to(dev)
 
 
     return axial_tile_model.to(dev)
@@ -431,6 +431,6 @@ def return_shapeensemble(MLP,GNN,n1=128,n2=16,num_labels=2,dev='cpu'):
 
 
 if __name__ == '__main__':
-    model = return_vit(size='large',dev='cpu',in_channels=1,out_channels=3)
+    model = return_convnext(size='large',dev='cpu',in_channels=1,out_channels=3)
     ex_im = torch.randn(1,1,224,224)
     print(model(ex_im).shape)
