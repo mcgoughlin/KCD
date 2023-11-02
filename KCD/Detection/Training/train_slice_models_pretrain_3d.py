@@ -59,7 +59,7 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
             if not os.path.exists(fold_path):os.mkdir(fold_path)
             if not os.path.exists(slice_path):os.mkdir(slice_path)
 
-            model = EfficientNet_V2_L_3D.return_efficientnet(in_channels=1,num_classes=3)(size=params['model_size'],dev=dev,in_channels=1,out_channels=3)
+            model = EfficientNet_V2_L_3D.return_efficientnet(in_channels=1,num_classes=3).to(dev)
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
 
             dl,test_dl = tu.generate_dataloaders(slicedataset,test_slicedataset,cases[train_index],params['batch_size'])
