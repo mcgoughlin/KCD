@@ -1,6 +1,6 @@
 from KCD.Detection.Training import train_utils as tu
 import KCD.Detection.Evaluation.eval_scripts as eval_
-from KCD.Detection.ModelGenerator import model_generator
+from KCD.Detection.ModelGenerator import EfficientNet_V2_L_3D
 from sklearn.model_selection import StratifiedKFold as kfold_strat
 import matplotlib.pyplot as plt
 import os
@@ -11,7 +11,7 @@ import warnings
 import pandas as pd
 
 def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='coreg_ncct',
-                         splits:list=[0],folds=5,params:dict=None,is_3D=True,train_folds=[0],
+                         splits:list=[0],folds=5,params:dict=None,train_folds=[0],
                          epochs = None):
     # Suppress warnings
     warnings.filterwarnings("ignore") #makes dgl stop complaining!
@@ -19,14 +19,9 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
     # Initialization
     dev = tu.initialize_device()
 
-    if is_3D:
-        if params==None:params = tu.init_slice3D_params_pretrain()
-        else:tu.check_params(params,tu.init_slice3D_params_pretrain())
-        model_type = 'PatchModel'
-    else:
-        if params==None:params = tu.init_slice2D_params()
-        else:tu.check_params(params,tu.init_shape2D_params())
-        model_type = 'TileModel'
+    if params==None:params = tu.init_slice3D_params_pretrain()
+    else:tu.check_params(params,tu.init_slice3D_params_pretrain())
+    model_type = 'PatchModel'
 
     if epochs != None:
         params['epochs'] = epochs
@@ -64,9 +59,7 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
             if not os.path.exists(fold_path):os.mkdir(fold_path)
             if not os.path.exists(slice_path):os.mkdir(slice_path)
 
-            if is_3D:model = model_generator.return_resnext3D(size=params['model_size'],dev=dev,in_channels=1,out_channels=3)
-            else:model = model_generator.return_resnext(size=params['model_size'],dev=dev,in_channels=1,out_channels=3)
-
+            model = EfficientNet_V2_L_3D.return_efficientnet(in_channels=1,num_classes=3)(size=params['model_size'],dev=dev,in_channels=1,out_channels=3)
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
 
             dl,test_dl = tu.generate_dataloaders(slicedataset,test_slicedataset,cases[train_index],params['batch_size'])
@@ -102,4 +95,4 @@ if __name__ == '__main__':
     fold = int(sys.argv[2])
     dataset = 'kits23_nooverlap'
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
-    train_cv_slice_model(home=home,dataname=dataset,is_3D=True,splits=[0],train_folds=[fold],epochs=epochs)
+    train_cv_slice_model(home=home,dataname=dataset,splits=[0],train_folds=[fold],epochs=epochs)

@@ -50,6 +50,22 @@ def init_slice2D_params():
               'seg_weight': 0.005}
     return params
 
+def init_slice2D_params_pretrain():
+    params = {"voxel_size": 1,
+              "model_size": "large",
+              "cancthresh_r_mm": 10,
+              "kidthresh_r_mm": 20,
+              "batch_size": 16,
+              "dilated": 40,
+              "lr": 1e-3,
+              "epochs": 30,
+              "depth_z": 1,
+              "boundary_z": 1,
+              'pred_window': 10,
+              'model':'resnext',
+              'seg_weight': 0.005}
+    return params
+
 def init_benchmarking2D_params():
     params = {"voxel_size": 1,
               "model_size": "large",
@@ -107,7 +123,7 @@ def init_slice3D_params_pretrain():
               "batch_size": 16,
               "dilated": 40,
               "lr": 1e-3,
-              "epochs": 25,
+              "epochs": 5,
               "depth_z": 20,
               "boundary_z": 5,
               'pred_window': 1,

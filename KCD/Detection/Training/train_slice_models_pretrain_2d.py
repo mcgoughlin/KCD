@@ -19,8 +19,8 @@ def train_cv_slice_model_2d(home = '/Users/mcgoug01/Downloads/Data/',dataname='c
     # Initialization
     dev = tu.initialize_device()
 
-    if params==None:params = tu.init_slice2D_params()
-    else:tu.check_params(params,tu.init_slice2D_params())
+    if params==None:params = tu.init_slice2D_params_pretrain()
+    else:tu.check_params(params,tu.init_slice2D_params_pretrain())
     model_type = 'TileModel'
 
     if epochs != None:
@@ -55,7 +55,7 @@ def train_cv_slice_model_2d(home = '/Users/mcgoug01/Downloads/Data/',dataname='c
             if not os.path.exists(fold_path):os.mkdir(fold_path)
             if not os.path.exists(slice_path):os.mkdir(slice_path)
 
-            model = model_generator.return_resnext(size=params['model_size'],dev=dev,in_channels=1,out_channels=3)
+            model = model_generator.return_efficientnet(size=params['model_size'],dev=dev,in_channels=1,out_channels=3)
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
 
             dl,test_dl = tu.generate_dataloaders(slicedataset,test_slicedataset,cases[train_index],params['batch_size'])

@@ -30,7 +30,9 @@ for i in range(len(unique_modelnames)):
 colours = ['b','g','r','c','m','y','k','w']
 plot_colours = colours[:len(unique_modelnames)]
 
-
+# loop through model names and AUCS and print
+for i in range(len(unique_modelnames)):
+    print(unique_modelnames[i] + ' {:.3f}'.format(AUCs_avg[i]))
 # plot the AUCs with a categorical x-axis with modelnames, with a scatter plot y axis is AUC
 plt.scatter(unique_modelnames, AUCs_avg,c=plot_colours)
 plt.ylabel('AUC')
