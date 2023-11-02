@@ -190,26 +190,20 @@ def return_vit(size='small',dev='cpu',in_channels=1,out_channels=3):
     if size == 'small':
         model_generator = models.vit_b_16
         weights = models.ViT_B_16_Weights.IMAGENET1K_V1
-    elif size == 'medium':
+    elif size == 'large':
         model_generator = models.vit_b_32
         weights = models.ViT_B_32_Weights.IMAGENET1K_V1
-    elif size == 'large':
-        model_generator = models.vit_l_32
-        weights = models.ViT_L_32_Weights.IMAGENET1K_V1
     else:
         assert(1==2)
         
     axial_tile_model = model_generator(weights = weights).to(dev)
 
     if size == 'large':
-        axial_tile_model.conv_proj = nn.Conv2d(in_channels,1024,kernel_size=(32, 32), stride=(32, 32)).to(dev)
-        axial_tile_model.heads.head= nn.Linear(1024,out_channels,bias=True).to(dev) 
-    elif size == 'medium':
         axial_tile_model.conv_proj = nn.Conv2d(in_channels,768,kernel_size=(32, 32), stride=(32, 32)).to(dev)
-        axial_tile_model.heads.head= nn.Linear(768,out_channels,bias=True).to(dev) 
+        axial_tile_model.heads.head= nn.Linear(768,out_channels,bias=True).to(dev)
     else:
         axial_tile_model.conv_proj = nn.Conv2d(in_channels,768,kernel_size=(16,16), stride=(16,16)).to(dev)
-        axial_tile_model.heads.head= nn.Linear(768,out_channels,bias=True).to(dev) 
+        axial_tile_model.heads.head= nn.Linear(768,out_channels,bias=True).to(dev)
     
     return axial_tile_model.to(dev)
 
@@ -436,5 +430,7 @@ def return_shapeensemble(MLP,GNN,n1=128,n2=16,num_labels=2,dev='cpu'):
     return ShapeEnsemble(MLP,GNN,n1=n1,n2=n2,num_labels=num_labels,device=dev).to(dev)
 
 
-
-    
+if __name__ == '__main__':
+    model = return_vit(size='large',dev='cpu',in_channels=1,out_channels=3)
+    ex_im = torch.randn(1,1,224,224)
+    print(model(ex_im).shape)
