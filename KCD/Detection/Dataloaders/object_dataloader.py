@@ -19,7 +19,7 @@ def assign_rowwise_max(df, columns,new_column_name):
     return df
 
 def convert_to_binary(df, column_name, substring1,substring2):
-    df = df[df[column_name]==substring1 | df[column_name]==substring2]
+    df = df[(df[column_name]==substring1) | (df[column_name]==substring2)]
     df[column_name] = df[column_name].str.contains(substring1).astype(int)
     return df
 

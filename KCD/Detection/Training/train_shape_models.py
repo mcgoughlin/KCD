@@ -41,7 +41,7 @@ def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname
         if os.path.exists(split_fp):
             fold_split = np.load(split_fp,allow_pickle=True)
         else:  
-            fold_split = np.array([(fold,tr_index,ts_index) for fold,(tr_index, ts_index) in enumerate(five_fold_strat.split(cases,is_ncct))])
+            fold_split = np.array([(fold,tr_index,ts_index) for fold,(tr_index, ts_index) in enumerate(five_fold_strat.split(cases,is_ncct))],dtype=object)
             np.save(os.path.join(split_path,split_fp),fold_split)
 
 
@@ -126,7 +126,7 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
         if os.path.exists(split_fp):
             fold_split = np.load(split_fp,allow_pickle=True)
         else:  
-            fold_split = np.array([(fold,tr_index,ts_index) for fold,(tr_index, ts_index) in enumerate(five_fold_strat.split(cases,is_ncct))])
+            fold_split = np.array([(fold,tr_index,ts_index) for fold,(tr_index, ts_index) in enumerate(five_fold_strat.split(cases,is_ncct))],dtype=object)
             np.save(os.path.join(split_path,split_fp),fold_split)
 
 
@@ -189,6 +189,6 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
         plt.close()
         
 if __name__ == '__main__':
-    dataset = 'merged_training_set'
+    dataset = 'coreg_ncct'
     train_cv_individual_models(dataname=dataset)
     train_cv_shape_ensemble(dataname=dataset)
