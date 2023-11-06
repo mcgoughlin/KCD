@@ -24,7 +24,7 @@ def nifti_2_correctarr(im_n):
     nda = np.rot90(sitk.GetArrayViewFromImage(flip_im))
     return nda.copy()
 
-def get_masses(binary_arr,vol_thresh,intensity_image = None): 
+def get_masses(binary_arr,vol_thresh,intensity_image = None):
     return [[mass,mass.centroid] for mass in regionprops(spim.label(binary_arr)[0],intensity_image = intensity_image) if mass.area>vol_thresh]
 
 def assign_labels_2_kidneys(k,masses):
