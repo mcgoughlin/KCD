@@ -12,7 +12,7 @@ import pandas as pd
 
 def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='coreg_ncct',
                          splits:list=[0],folds=5,params:dict=None,train_folds=[0],
-                         epochs = None):
+                         epochs = None,learning_rate=None):
     # Suppress warnings
     warnings.filterwarnings("ignore") #makes dgl stop complaining!
 
@@ -25,6 +25,9 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
 
     if epochs != None:
         params['epochs'] = epochs
+
+    if learning_rate != None:
+        params['lr'] = learning_rate
 
     save_dir = tu.init_training_home(home, dataname)
     print(save_dir)
@@ -93,6 +96,7 @@ if __name__ == '__main__':
     import sys
     epochs = int(sys.argv[1])
     fold = int(sys.argv[2])
+    lr = float(sys.argv[3])
     dataset = 'kits23_nooverlap'
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
-    train_cv_slice_model(home=home,dataname=dataset,splits=[0],train_folds=[fold],epochs=epochs)
+    train_cv_slice_model(home=home,dataname=dataset,splits=[0],train_folds=[fold],epochs=epochs,learning_rate=lr)

@@ -122,7 +122,7 @@ def init_slice3D_params_pretrain():
               "kidthresh_r_mm": 20,
               "batch_size": 16,
               "dilated": 40,
-              "lr": 1e-2,
+              "lr": 1e-3,
               "epochs": 5,
               "depth_z": 20,
               "boundary_z": 5,
