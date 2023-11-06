@@ -189,6 +189,6 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
         plt.close()
         
 if __name__ == '__main__':
-    dataset = 'coreg_ncct'
+    dataset = 'merged_training_set'
     train_cv_individual_models(dataname=dataset)
     train_cv_shape_ensemble(dataname=dataset)
