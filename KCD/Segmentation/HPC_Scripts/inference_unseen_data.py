@@ -5,8 +5,8 @@ from KCD.Segmentation.Inference.EnsembleSeg import Ensemble_Seg
 import numpy as np
 
 # seg_fp = '/home/wcm23/rds/hpc-work/FineTuningKITS23/trained_models/coreg_ncct/4.0mm_alllabels/cect2coreg_finetune'
-seg_fp = '/home/wcm23/rds/hpc-work/FineTuningKITS23/trained_models/kits23/4.0mm_binary/6,3x3x3,32'
-data_names = ['kits23']
+seg_fp = '/home/wcm23/rds/hpc-work/FineTuningKITS23/trained_models/all_cect/4mm_binary/6,3x3x3,32'
+data_names = ['kits23_nooverlap']
 do_prep = True
 do_infer = True
 

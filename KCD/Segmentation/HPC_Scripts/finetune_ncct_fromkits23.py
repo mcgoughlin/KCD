@@ -13,7 +13,7 @@ fold = int(sys.argv[1])
 
 pretrain_name = 'kits23'
 # preprocessed_name = '4mm_binary'
-preprocessed_name = '4.0mm_binary'
+preprocessed_name = '4mm_binary'
 # preprocessed_name='4mm_binary_test'
 model_name = '6,3x3x3,32_finetune_fromkits23'
 
@@ -69,7 +69,7 @@ model_params['data']['val_dl_params']['epoch_len']=50
 
 
 for vf in vfs:
-    path_to_model = '{}/trained_models/{}/4mm_binary/{}/fold_2/network_weights'.format(os.environ['OV_DATA_BASE'],
+    path_to_model = '{}/trained_models/{}/4.0mm_binary/{}/fold_2/network_weights'.format(os.environ['OV_DATA_BASE'],
                                                                                          pretrain_name, model_name.split('_')[0])
     model = SegmentationModel(val_fold=vf,
                                 data_name=data_name,
