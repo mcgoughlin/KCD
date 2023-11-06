@@ -19,8 +19,8 @@ def train_cv_slice_model_2d(home = '/Users/mcgoug01/Downloads/Data/',dataname='c
     # Initialization
     dev = tu.initialize_device()
 
-    if params==None:params = tu.init_slice2D_params_pretrain()
-    else:tu.check_params(params,tu.init_slice2D_params_pretrain())
+    if params==None:params = tu.init_slice2D_params_finetune()
+    else:tu.check_params(params,tu.init_slice2D_params_finetune())
     model_type = 'TileModel'
 
     if epochs != None:

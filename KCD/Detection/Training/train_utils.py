@@ -144,6 +144,20 @@ def init_slice3D_params_finetune():
               'pred_window': 1}
     return params
 
+def init_slice2D_params_finetune():
+    params = {"voxel_size": 1,
+              "model_size": "large",
+              "cancthresh_r_mm": 10,
+              "kidthresh_r_mm": 20,
+              "batch_size": 16,
+              "dilated": 40,
+              "lr": 5e-4,
+              "epochs": 5,
+              "depth_z": 20,
+              "boundary_z": 5,
+              'pred_window': 1}
+    return params
+
 def init_slice3D_params_finetune_fromMTL():
     params = {"voxel_size": 1,
               "model_size": "small",
