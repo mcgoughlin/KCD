@@ -116,89 +116,6 @@ def eval_cnn(CNN,test_tw_dl,plot_path=None,dev='cpu'):
     return results_df,test_df
 
 
-def eval_shapemodels(CNN,MLP,GNN,test_dl,plot_path=None,model_name='graph',dev='cpu'):
-    test_dl.dataset.is_train=True
-    train_res,test_res,final_results = [],[],[]
-    softmax = nn.Softmax(dim=-1)
-    with torch.no_grad():
-        for case in test_dl.dataset.train_cases:
-            for position in test_dl.dataset.case_data[test_dl.dataset.case_data['case'] ==case].position.unique():
-                test_dl.dataset.set_val_kidney(case,position)
-                entry = {'case':case,
-                         'position':position}
-                for sv_im,features,graph, lb in test_dl:
-                    sv_lb,feat_lb,graph_lb = lb.T
-                    CNNpred = softmax(CNN(sv_im.to(dev)))
-                    MLPpred = softmax(MLP(features.to(dev)))
-                    GNNpred = softmax(GNN(graph.to(dev)))
-                    
-                entry['CNNlabel']=sv_lb.item()
-                entry['MLPlabel']=feat_lb.item()
-                entry['GNNlabel']=graph_lb.item()
-                entry['CNNpred']=CNNpred[0,1].item()
-                entry['MLPpred']=MLPpred[0,1].item()
-                entry['GNNpred']=GNNpred[0,1].item()
-
-                train_res.append(entry)
-
-        test_dl.dataset.is_train=False
-        for case in test_dl.dataset.test_cases:
-            for position in test_dl.dataset.case_data[test_dl.dataset.case_data['case'] ==case].position.unique():
-                test_dl.dataset.set_val_kidney(case,position)
-                entry = {'case':case,
-                         'position':position}
-                for sv_im,features,graph, lb in test_dl:
-                    sv_lb,feat_lb,graph_lb = lb.T
-                    CNNpred = softmax(CNN(sv_im.to(dev)))
-                    MLPpred = softmax(MLP(features.to(dev)))
-                    GNNpred = softmax(GNN(graph.to(dev)))
-                    
-                entry['CNNlabel']=sv_lb.item()
-                entry['MLPlabel']=feat_lb.item()
-                entry['GNNlabel']=graph_lb.item()
-                entry['CNNpred']=CNNpred[0,1].item()
-                entry['MLPpred']=MLPpred[0,1].item()
-                entry['GNNpred']=GNNpred[0,1].item()
-                test_res.append(entry)
-            
-    train_df = pd.DataFrame(train_res)
-    test_df = pd.DataFrame(test_res)
-    
-    for df, df_name in zip([train_df,test_df],['train','test']):
-        for labname,model in zip(['CNNlabel','MLPlabel','GNNlabel'],['CNNpred','MLPpred','GNNpred']):
-            pred = df[model].values
-            label = df[labname].values
-                    
-            ens_ROC= ROC_func(pred,label,max_pred=1,intervals=1000)
-            AUC = np.trapz(ens_ROC[:,0],ens_ROC[:,1])
-            
-            sens98spec=ens_ROC[ens_ROC[:,1]>0.98][:,0].max()
-            sens95spec=ens_ROC[ens_ROC[:,1]>0.95][:,0].max()
-            sens90spec=ens_ROC[ens_ROC[:,1]>0.90][:,0].max()
-            sens100spec=ens_ROC[ens_ROC[:,1]==1.0][:,0].max()
-            
-            boundary90 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens90spec])/len(ens_ROC)
-            boundary95 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens95spec])/len(ens_ROC)
-            boundary98 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens98spec])/len(ens_ROC)
-            boundary100 = max([i for i, (sens,spec) in enumerate(ens_ROC) if sens==sens100spec])/len(ens_ROC)
-    
-                    
-            final_results.append({'dataset_loc':df_name,
-                    'model':model,
-                    'AUC':AUC,
-                    'Highest Cancer Sens @ 100% Cancer Spec':sens100spec,
-                    'Highest Cancer Sens @ 98% Cancer Spec':sens98spec,
-                    'Highest Cancer Sens @ 95% Cancer Spec':sens95spec,
-                    'Highest Cancer Sens @ 90% Cancer Spec':sens90spec,
-                    'Boundary 90':boundary90,
-                    'Boundary 95':boundary95,
-                    'Boundary 98':boundary98,
-                    'Boundary 100':boundary100})
-
-            
-    results_df = pd.DataFrame(final_results).groupby(['model','dataset_loc']).mean()
-    return results_df
-
 def eval_shape_ensemble(shape_ensemble,test_dl,plot_path=None,dev='cpu'):
     test_dl.dataset.is_train=True
     train_res,test_res,final_results = [],[],[]
@@ -263,6 +180,89 @@ def eval_shape_ensemble(shape_ensemble,test_dl,plot_path=None,dev='cpu'):
 
     results_df = pd.DataFrame(final_results).groupby(['dataset_loc']).mean()
     return results_df,test_df
+
+
+def eval_shape_models_xgb(GNN, MLP,xgb,
+                          test_dl, plot_path=None, dev='cpu'):
+    test_dl.dataset.is_train = True
+    train_res, test_res, final_results = [], [], []
+    softmax = nn.Softmax(dim=-1)
+    with torch.no_grad():
+        for case in test_dl.dataset.train_cases:
+            for position in test_dl.dataset.case_data[test_dl.dataset.case_data['case'] == case].position.unique():
+                test_dl.dataset.set_val_kidney(case, position)
+                entry = {'case': case,
+                         'position': position}
+                for features, graph, lb in test_dl:
+                    feat_lb, graph_lb = lb.T
+                    GNNpred = softmax(GNN(graph))
+                    XGBpred = xgb.predict_proba(features.detach().cpu().numpy())
+                    MLPpred = softmax(MLP(features))
+
+                entry['label'] = feat_lb.item()
+                entry['GNNpred'] = GNNpred[0, 1].item()
+                entry['MLPpred'] = MLPpred[0, 1].item()
+                entry['XGBpred'] = XGBpred[0, 1].item()
+
+                train_res.append(entry)
+
+        test_dl.dataset.is_train = False
+        for case in test_dl.dataset.test_cases:
+            for position in test_dl.dataset.case_data[test_dl.dataset.case_data['case'] == case].position.unique():
+                test_dl.dataset.set_val_kidney(case, position)
+                entry = {'case': case,
+                         'position': position}
+                for features, graph, lb in test_dl:
+                    feat_lb, graph_lb = lb.T
+                    GNNpred = softmax(GNN(graph))
+                    MLPpred = softmax(MLP(features))
+
+                entry['label'] = feat_lb.item()
+                entry['GNNpred'] = GNNpred[0, 1].item()
+                entry['MLPpred'] = MLPpred[0, 1].item()
+                entry['XGBpred'] = MLPpred[0, 1].item()
+                test_res.append(entry)
+
+    train_df = pd.DataFrame(train_res)
+    test_df = pd.DataFrame(test_res)
+
+    for df, df_name in zip([train_df, test_df], ['train', 'test']):
+        GNNpred = df.GNNpred.values
+        MLPpred = df.MLPpred.values
+        XGBpred = df.XGBpred.values
+        label = df.label.values
+
+        GNNens_ROC = ROC_func(GNNpred, label, max_pred=1, intervals=1000)
+        MLPens_ROC = ROC_func(MLPpred, label, max_pred=1, intervals=1000)
+        XGBens_ROC = ROC_func(XGBpred, label, max_pred=1, intervals=1000)
+
+        for model_name, ens_ROC in zip(['GNN', 'MLP', 'XGB'], [GNNens_ROC, MLPens_ROC,XGBens_ROC]):
+            AUC = np.trapz(ens_ROC[:, 0], ens_ROC[:, 1])
+
+            sens98spec = ens_ROC[ens_ROC[:, 1] > 0.98][:, 0].max()
+            sens95spec = ens_ROC[ens_ROC[:, 1] > 0.95][:, 0].max()
+            sens90spec = ens_ROC[ens_ROC[:, 1] > 0.90][:, 0].max()
+            sens100spec = ens_ROC[ens_ROC[:, 1] == 1.0][:, 0].max()
+
+            boundary90 = max([i for i, (sens, spec) in enumerate(ens_ROC) if sens == sens90spec]) / len(ens_ROC)
+            boundary95 = max([i for i, (sens, spec) in enumerate(ens_ROC) if sens == sens95spec]) / len(ens_ROC)
+            boundary98 = max([i for i, (sens, spec) in enumerate(ens_ROC) if sens == sens98spec]) / len(ens_ROC)
+            boundary100 = max([i for i, (sens, spec) in enumerate(ens_ROC) if sens == sens100spec]) / len(ens_ROC)
+
+            final_results.append({'dataset_loc': df_name,
+                                  'AUC': AUC,
+                                  'model': model_name,
+                                  'Highest Cancer Sens @ 100% Cancer Spec': sens100spec,
+                                  'Highest Cancer Sens @ 98% Cancer Spec': sens98spec,
+                                  'Highest Cancer Sens @ 95% Cancer Spec': sens95spec,
+                                  'Highest Cancer Sens @ 90% Cancer Spec': sens90spec,
+                                  'Boundary 90': boundary90,
+                                  'Boundary 95': boundary95,
+                                  'Boundary 98': boundary98,
+                                  'Boundary 100': boundary100})
+
+    results_df = pd.DataFrame(final_results).groupby(['dataset_loc', 'model']).mean()
+    return results_df, test_df
 
 def eval_shape_models(GNN,MLP,test_dl,plot_path=None,dev='cpu'):
     test_dl.dataset.is_train=True
