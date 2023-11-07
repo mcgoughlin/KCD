@@ -71,7 +71,7 @@ def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname
             Y = np.concatenate([x[1] for x in np_training_data], axis=0)
 
             MLP_name = '{}_{}_{}_{}'.format(params['s1_objepochs'],params['mlp_thresh'],params['mlp_lr'],params['object_batchsize'])
-            XGB_name = 'xgb'
+            XGB_name = 'XGB'
             GNN_name = '{}_{}_{}_{}_{}_{}_{}'.format(params['s1_objepochs'],params['graph_thresh'],params['gnn_lr'],params['gnn_layers'],params['gnn_hiddendim'],params['gnn_neighbours'],params['object_batchsize'])
             XGB.fit(X,Y)
             for modpath in [MLP_path,GNN_path,XGB_path]:

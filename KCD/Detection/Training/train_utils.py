@@ -138,7 +138,7 @@ def init_slice3D_params_finetune():
               "batch_size": 16,
               "dilated": 40,
               "lr": 5e-4,
-              "epochs": 5,
+              "epochs": 15,
               "depth_z": 20,
               "boundary_z": 5,
               'pred_window': 1}
@@ -152,7 +152,7 @@ def init_slice2D_params_finetune():
               "batch_size": 16,
               "dilated": 40,
               "lr": 5e-4,
-              "epochs": 5,
+              "epochs": 15,
               "depth_z": 1,
               "boundary_z": 1,
               'pred_window': 1}
