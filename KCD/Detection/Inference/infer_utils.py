@@ -124,8 +124,9 @@ def get_shape_data(home, dataname, graph_thresh, mlp_thresh,ensemble=False,dev='
     return shapedataset, test_shapedataset
 
 
-def get_shape_data_inference(home, dataname,dev='cpu'):
-    return dl_shape.ObjectData_unlabelled(home, data_name=dataname, graph_thresh=0, mlp_thresh=0,dev=dev)
+def get_shape_data_inference(home, dataname,dev='cpu',norm_param_dataname='merged_training_set'):
+    return dl_shape.ObjectData_unlabelled(home, data_name=dataname, graph_thresh=0, mlp_thresh=0,
+                                          norm_param_dataname=norm_param_dataname,dev=dev)
 
 
 def get_slice_data_inference(home, dataname,voxel_size,fg_thresh,depth_z,
@@ -263,7 +264,6 @@ def eval_shape_ensemble(shape_ensemble,test_dl,boundary=0.98,dev='cpu'):
                 test_dl.dataset.set_val_kidney(case,position)
                 entry = {'case':case,
                          'position':position}
-                print(entry)
                 for features,graph in test_dl:
                     pred = softmax(shape_ensemble(features,graph))
                     

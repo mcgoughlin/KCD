@@ -14,7 +14,7 @@ import pandas as pd
 
 
 def eval_individual_shape_models(home='/Users/mcgoug01/Downloads/Data',trainname='merged_training_set',
-                                 infername='add_ncct_unseen',params:dict=None,tr_split=0,tr_folds=5,spec_boundary=98):
+                                 infername='test_set',params:dict=None,tr_split=0,tr_folds=5,spec_boundary=98):
     warnings.filterwarnings("ignore")
     if params==None:params = iu.init_shape_params()
     else:iu.check_params(params,iu.init_shape_params())
@@ -76,7 +76,7 @@ def eval_individual_shape_models(home='/Users/mcgoug01/Downloads/Data',trainname
     
     
 def eval_shape_ensemble(home='/Users/mcgoug01/Downloads/Data',trainname='merged_training_set',
-                                 infername='add_ncct_unseen',params:dict=None,tr_split=0,tr_folds=5,spec_boundary=98):
+                                 infername='test_set',params:dict=None,tr_split=0,tr_folds=5,spec_boundary=98):
     warnings.filterwarnings("ignore")
     if params==None:params = iu.init_shape_params()
     else:iu.check_params(params,iu.init_shape_params())
@@ -90,19 +90,21 @@ def eval_shape_ensemble(home='/Users/mcgoug01/Downloads/Data',trainname='merged_
     dev = iu.initialize_device()
 
     #### init dataset
-    inference_dataset = iu.get_shape_data_inference(home,infername,dev=dev)
+    inference_dataset = iu.get_shape_data_inference(home,infername,dev=dev,norm_param_dataname=trainname)
     
     # Here, we decide the threshold boundary of our models, based on cross-validation data
     load_split_path = os.path.join(load_dir,'split_{}'.format(tr_split))    
     boundary = []
     for fold in range(tr_folds):
-        ensemble_name = '{}_{}_{}_{}_{}_{}_{}_{}_{}_{}'.format(params['ensemble_n1'],params['ensemble_n2'],fold,params['shape_freeze_epochs'],params['shape_unfreeze_epochs'],params['graph_thresh'],params['mlp_thresh'],params['s1_objepochs'],params['shape_freeze_lr'],params['shape_unfreeze_lr'])
+        ensemble_name = '{}_{}_{}_{}_{}_{}_{}_{}_{}'.format(params['ensemble_n1'],params['ensemble_n2'],params['shape_freeze_epochs'],params['shape_unfreeze_epochs'],params['graph_thresh'],params['mlp_thresh'],params['s1_objepochs'],params['shape_freeze_lr'],params['shape_unfreeze_lr'])
         fold_path = os.path.join(load_split_path,'fold_{}'.format(fold))
         shape_path = os.path.join(fold_path,'shape_ensemble')
         results = pd.read_csv(os.path.join(shape_path,'csv',ensemble_name+'.csv'))
         results = results[(results['dataset_loc']=='test')]
         boundary.append(results['Boundary {}'.format(spec_boundary)].values[0])
     ensemble_b = np.median(boundary)
+
+    print('Ensemble Boundary: {}'.format(ensemble_b))
     # begin inference!
     foldwise_results = []
     for fold in range(tr_folds):
@@ -119,7 +121,7 @@ def eval_shape_ensemble(home='/Users/mcgoug01/Downloads/Data',trainname='merged_
         foldwise_results.append(s2_shape_res)
         
     all_results = pd.concat(foldwise_results)
-    all_results = all_results.groupby(['case','position']).sum().reset_index(level=['case','position'])[['case','position','Ensemblepred-hard']]
+    all_results = all_results.groupby(['case','position']).sum().reset_index(level=['case','position'])[['case','position','Ensemblepred-hard','pred-cont']]
     all_results['Ensemblepred-hard'] = all_results['Ensemblepred-hard'].apply(lambda x:1 if x>=(tr_folds/2) else 0)
     all_results.to_csv(os.path.join(inference_path,'ensemble_'+ensemble_name+'.csv'))
 

@@ -109,6 +109,7 @@ def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname
         fig = plt.figure(figsize=(8, 6))
         tu.plot_roc('MLP',MLP_name,MLP_ROC)
         tu.plot_roc('GNN',GNN_name,GNN_ROC)
+        tu.plot_roc('XGB', XGB_name, XGB_ROC)
         plt.legend()
         plt.savefig(os.path.join(split_path, 'ShapeModels_ROC_'+MLP_name + '+' + GNN_name + '.png'))
         plt.show()

@@ -1,7 +1,7 @@
 import slice_generating_utils as generator
 import numpy as np
 
-data_name = 'add_ncct_unseen'
+data_name = 'test_set'
 path = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/{}/images".format(data_name)
 save_dir = '/Users/mcgoug01/Downloads/Data'
 segpath='/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/predictions_nii/{}/[4 4 4]mm'.format(data_name)
@@ -10,10 +10,10 @@ overlap_mm = 40 ## this dictates the minimum distance apart between each slice! 
 patch2d = 224 ## in plane slice spacing
 save_limit_percase_perlabel = 100 ## maximum number of saved shifted window slices per kidney
 voxel_spacings = [1] ## isotropic voxel size in mm
-thresholds_r_mm = [10] ## threshold used to calculate cancer label
-depth_z = 1 ## size of slice depth in axial dimension in mm - if 1mm, then 2D
+thresholds_r_mm = [0] ## threshold used to calculate cancer label
+depth_z = 20 ## size of slice depth in axial dimension in mm - if 1mm, then 2D
 bbox_boundary_mm = 40 ## dilation of segmentation label
-boundary_z= 1 ## axial spacing between slice sampling
+boundary_z= 5 ## axial spacing between slice sampling
 patch_size = np.array([patch2d]*3) 
 patch_size[0]=depth_z
 
