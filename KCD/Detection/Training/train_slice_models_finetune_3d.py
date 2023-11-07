@@ -18,14 +18,9 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
     # Initialization
     dev = tu.initialize_device()
 
-    if is_3D:
-        if params==None:params = tu.init_slice3D_params_finetune()
-        else:tu.check_params(params,tu.init_slice3D_params_finetune())
-        model_type = 'PatchModel'
-    else:
-        if params==None:params = tu.init_slice2D_params()
-        else:tu.check_params(params,tu.init_shape2D_params())
-        model_type = 'TileModel'
+    if params==None:params = tu.init_slice3D_params_finetune()
+    else:tu.check_params(params,tu.init_slice3D_params_finetune())
+    model_type = 'PatchModel'
 
     save_dir = tu.init_training_home(home, dataname)
     print(save_dir)
@@ -89,4 +84,4 @@ def train_cv_slice_model(home = '/Users/mcgoug01/Downloads/Data/',dataname='core
 if __name__ == '__main__':
     dataset = 'coreg_ncct'
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
-    train_cv_slice_model(home=home,dataname=dataset,is_3D=True,splits=[0,1])
+    train_cv_slice_model(home=home,dataname=dataset,is_3D=True,splits=[0])

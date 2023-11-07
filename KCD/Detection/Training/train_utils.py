@@ -153,8 +153,8 @@ def init_slice2D_params_finetune():
               "dilated": 40,
               "lr": 5e-4,
               "epochs": 5,
-              "depth_z": 20,
-              "boundary_z": 5,
+              "depth_z": 1,
+              "boundary_z": 1,
               'pred_window': 1}
     return params
 

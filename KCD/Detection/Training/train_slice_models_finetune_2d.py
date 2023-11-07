@@ -84,8 +84,7 @@ def train_cv_slice_model_2d(home = '/Users/mcgoug01/Downloads/Data/',dataname='c
 
 if __name__ == '__main__':
     import sys
-    epochs = int(sys.argv[1])
     dataset = 'coreg_ncct'
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
     pretrain_ds = 'kits23_nooverlap'
-    train_cv_slice_model_2d(home=home,dataname=dataset,splits=[0],epochs=epochs,pretrain_ds=pretrain_ds)
+    train_cv_slice_model_2d(home=home,dataname=dataset,splits=[0],pretrain_ds=pretrain_ds)
