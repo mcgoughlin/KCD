@@ -423,8 +423,8 @@ def return_MLP(num_features=28, num_labels=2, enc1_size=128, enc1_layers=1,
     return MLP_classifier(num_features, num_labels, enc1_size, enc1_layers,
                  enc2_size, enc2_layers, final_layers,dev).to(dev)
 
-def return_xgb():
-    return xgb.XGBClassifier(objective='binary:logitraw',random_state=42)
+def return_xgb(scale_pos_weight=1):
+    return xgb.XGBClassifier(objective='binary:logitraw',random_state=42,scale_pos_weight=scale_pos_weight)
 
 def return_GNN(num_features=4,hidden_dim=50,num_labels=2,layers_deep=8,neighbours=8,dev='cpu'):
     return GNN_classifier(num_features,hidden_dim,num_labels,layers_deep,neighbours,dev).to(dev)

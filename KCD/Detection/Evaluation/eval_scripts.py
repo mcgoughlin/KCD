@@ -196,7 +196,7 @@ def eval_shape_models_xgb(GNN, MLP,xgb,
                 for features, graph, lb in test_dl:
                     feat_lb, graph_lb = lb.T
                     GNNpred = softmax(GNN(graph))
-                    XGBpred = xgb.predict_proba(features.detach().cpu().numpy())
+                    XGBpred = softmax(torch.Tensor(xgb.predict_proba(features.detach().cpu().numpy())))
                     MLPpred = softmax(MLP(features))
 
                 entry['label'] = feat_lb.item()
@@ -215,12 +215,13 @@ def eval_shape_models_xgb(GNN, MLP,xgb,
                 for features, graph, lb in test_dl:
                     feat_lb, graph_lb = lb.T
                     GNNpred = softmax(GNN(graph))
+                    XGBpred = softmax(torch.Tensor(xgb.predict_proba(features.detach().cpu().numpy())))
                     MLPpred = softmax(MLP(features))
 
                 entry['label'] = feat_lb.item()
                 entry['GNNpred'] = GNNpred[0, 1].item()
                 entry['MLPpred'] = MLPpred[0, 1].item()
-                entry['XGBpred'] = MLPpred[0, 1].item()
+                entry['XGBpred'] = XGBpred[0, 1].item()
                 test_res.append(entry)
 
     train_df = pd.DataFrame(train_res)

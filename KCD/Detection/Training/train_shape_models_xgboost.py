@@ -59,13 +59,12 @@ def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname
                 
             MLP = model_generator.return_MLP(dev=dev)
             GNN = model_generator.return_GNN(num_features=4,num_labels=2,layers_deep=params['gnn_layers'],hidden_dim=params['gnn_hiddendim'],neighbours=params['gnn_neighbours'],dev=dev)
-            XGB = model_generator.return_xgb()
             GNNopt = torch.optim.Adam(GNN.parameters(),lr=params['gnn_lr'])
             MLPopt = torch.optim.Adam(MLP.parameters(),lr=params['mlp_lr'])
 
             dl,test_dl = tu.generate_dataloaders(shapedataset,test_shapedataset,cases[train_index],params['object_batchsize'],tu.shape_collate)
             MLP,GNN = tu.train_shape_models(dl,dev,params['s1_objepochs'],loss_fnc,MLPopt,GNNopt,MLP,GNN)
-            np_training_data = [(batch.detach().cpu().numpy(),lb.detach().cpu().numpy()) for batch,graph,lb in dl]
+            np_training_data = [(batch.detach().cpu().numpy(),lb[:,1].detach().cpu().numpy()) for batch,graph,lb in dl]
             # concatenate all the batches and labels into X and Y
             X = np.concatenate([x[0] for x in np_training_data], axis=0)
             Y = np.concatenate([x[1] for x in np_training_data], axis=0)
@@ -73,14 +72,18 @@ def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname
             MLP_name = '{}_{}_{}_{}'.format(params['s1_objepochs'],params['mlp_thresh'],params['mlp_lr'],params['object_batchsize'])
             XGB_name = 'XGB'
             GNN_name = '{}_{}_{}_{}_{}_{}_{}'.format(params['s1_objepochs'],params['graph_thresh'],params['gnn_lr'],params['gnn_layers'],params['gnn_hiddendim'],params['gnn_neighbours'],params['object_batchsize'])
+
+            scale_pos_weight = (Y.shape[0]-Y.sum())/Y.sum()
+            XGB = model_generator.return_xgb(scale_pos_weight=scale_pos_weight)
             XGB.fit(X,Y)
+
             for modpath in [MLP_path,GNN_path,XGB_path]:
                 if not os.path.exists(os.path.join(modpath,'model')):os.mkdir(os.path.join(modpath,'model'))
                 if not os.path.exists(os.path.join(modpath,'csv')):os.mkdir(os.path.join(modpath,'csv'))
 
             torch.save(MLP,os.path.join(MLP_path,'model',MLP_name))
             torch.save(GNN,os.path.join(GNN_path,'model',GNN_name))
-            XGB.save_model(os.path.join(XGB_path,'model',XGB_name))
+            XGB.save_model(os.path.join(XGB_path,'model',XGB_name+'.txt'))
             
             GNN.eval(),MLP.eval()
             shape_model_res,test_df = eval_.eval_shape_models_xgb(GNN,MLP,XGB,test_dl,dev=dev)
