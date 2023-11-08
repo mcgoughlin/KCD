@@ -178,9 +178,9 @@ class SW_Data_unlabelled(Dataset):
                                     [*[1]*len(self.fg)]]).T,
                                     columns = ['filepath','class'])
         self.data_df['class'] = self.data_df['class'].astype(int)
-        self.data_df['case'] = self.data_df.filepath.str.split('_').apply(lambda x:x[0])
-        self.data_df['side'] = self.data_df.filepath.str.split('_').apply(lambda x:x[1])
-        self.data_df['window'] = self.data_df.filepath.str.split('_').apply(lambda x:x[2])
+        self.data_df['case'] = self.data_df.filepath.str.split('_').apply(lambda x:x[0] if not x[0].startswith('Rcc') else x[0]+'_'+x[1])
+        self.data_df['side'] = self.data_df.filepath.str.split('_').apply(lambda x:x[1] if not x[0].startswith('Rcc') else x[2])
+        self.data_df['window'] = self.data_df.filepath.str.split('_').apply(lambda x:x[2] if not x[0].startswith('Rcc') else x[3])
         self.data_df['slice'] = self.data_df.filepath.str.split('_').apply(lambda x:int(x[-1].split('index')[1].split('.')[0]))
         self.cases = self.data_df.case
 
@@ -197,13 +197,11 @@ class SW_Data_unlabelled(Dataset):
         
     def set_val_kidney(self,case:str,side='left'):
         self.test_case = case
-        print(self.data_df[(self.data_df['case'] == self.test_case)])
         self.case_specific_data = self.data_df[(self.data_df['case'] == self.test_case) & (self.data_df['side']==side) & (self.data_df['window']=='centralised')]
         self.case_specific_data = self.case_specific_data.sort_values('slice')
         if len(self.case_specific_data)==0:
             print("You tried to set the validation kidney to a kidney that does not exist within the validation data.")
-            assert(len(self.case_specific_data)>0)
-    
+
     def __getitem__(self,idx:int):
         if type(self.test_case) == type(None):assert(1==2)
         else:

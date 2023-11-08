@@ -9,38 +9,19 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-path = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Classification/evaluate/inference_unseen/twcnn3d/fold_wise_results/'
-save_dir = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Classification/evaluate/inference_unseen/twcnn3d/'
-indobj_dfs,twcnn_dfs,shape_dfs,all_dfs = [],[],[],[]
-for results in [file for file in os.listdir(path) if (file.endswith('.csv'))]:
-    tempdf = pd.read_csv(os.path.join(path,results))
-    
-    if results.startswith('resnext3D') and results.endswith('10.csv'):
-        twcnn_dfs.append( tempdf)
-    else:
-        pass
-        
-final_dfs =[]
-for name,dfs in zip(['twcnn'],[twcnn_dfs]):
-    model_df = pd.concat(dfs, axis=0, ignore_index=True)
-    model_df = model_df.drop([column for column in model_df.columns if not (column  in ['case','position','prediction','pred-hard'])],axis=1)
-    model_df = model_df.groupby(['case','position']).sum()
-    model_df['output'] = (model_df>=2.5).astype(int)
-    model_df.to_csv(os.path.join(save_dir,name)+'.csv')
-    final_dfs.append(model_df)
-    
-final = pd.concat(final_dfs, axis=0)
-final = final.groupby(['case','position']).sum()
-final['tile_output']=(final['prediction']>2).astype(int)
-final.to_csv(os.path.join(save_dir,'final')+'.csv')
-    
+lab_path = '/Users/mcgoug01/Downloads/Data/inference/label.csv'
+path_3d = '/Users/mcgoug01/Downloads/Data/inference/coreg_ncct_split_0/test_set/PatchModel_TESTMODEL_RESNEXT_kits23_nooverlap_PatchModel_small_5_5_0.0005.csv'
+save_loc = '/Users/mcgoug01/Downloads/Data/inference/coreg_ncct_split_0/test_set/combined_results_resnext.csv'
 
-    
-    # for column in average_df.columns:
-    #     if 'num' in column.lower(): continue
-    #     plt.scatter(average_df.index,average_df[column])
-    #     plt.ylabel(column)
-    #     plt.xlabel('Training Label Threshold / mm cubed')
-    #     plt.show()
-    #     plt.savefig(os.path.join(save_dir,'png','{}.png'.format(column)))
-    #     plt.close()
+lab_df = pd.read_csv(lab_path,index_col=False)
+#convert lab_df position to 'right' if 1 and 'left' if 0
+lab_df['position'] = lab_df['position'].apply(lambda x: 'right' if x==1 else 'left')
+pred_3d = pd.read_csv(path_3d,index_col=False)
+# drop columns that contain 'unnamed'
+pred_3d = pred_3d.drop([column for column in pred_3d.columns if 'unnamed' in column.lower()],axis=1)
+#combine on label's case and position
+combined = pd.merge(lab_df,pred_3d,on=['case','position'],how='outer')
+#fill with 0s prediction
+combined['prediction'] = combined['prediction'].fillna(0)
+#save
+combined.to_csv(save_loc,index=False)

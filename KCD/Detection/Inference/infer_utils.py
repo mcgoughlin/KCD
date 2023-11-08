@@ -66,6 +66,19 @@ def init_slice3D_params():
               'pred_window':1}
     return params
 
+def init_slice3D_params_finetune():
+    params = {"voxel_size": 1,
+              "model_size": "small",
+              "fg_thresh": 0,
+              "batch_size": 16,
+              "dilated": 40,
+              "lr": 5e-4,
+              "epochs": 5,
+              "depth_z": 20,
+              "boundary_z": 5,
+              'pred_window': 1}
+    return params
+
 
 def initialize_device():
     if torch.cuda.is_available():
@@ -228,7 +241,9 @@ def eval_cnn(twCNN,test_tw_dl,ps_boundary=0.98,dev='cpu',boundary_size=10):
     softmax = nn.Softmax(dim=-1)
     with torch.no_grad():
         test_tw_dl.dataset.is_train=True
-        for case in test_tw_dl.dataset.cases:
+        cases = np.unique(test_tw_dl.dataset.cases.values)
+        cases.sort()
+        for case in cases:
             for position in test_tw_dl.dataset.data_df[test_tw_dl.dataset.data_df['case'] ==case].side.unique():
                 if position == 'random': continue
                 print(case,position)

@@ -9,4 +9,4 @@ infnii_p = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute
 is_testing_code=False
 overwrite=False
 ocu.create_unseen_dataset(home,dataset,im_p,infnpy_p,infnii_p,is_testing=is_testing_code,overwrite=overwrite)
-fu.save_normalisation_params(os.path.join(home,'objects',dataset),is_labelled=True)
+fu.save_normalisation_params(os.path.join(home,'objects',dataset),is_labelled=False)
