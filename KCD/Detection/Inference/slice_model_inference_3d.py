@@ -5,6 +5,7 @@ Created on Sat Dec 24 20:12:22 2022
 @author: mcgoug01
 """
 from KCD.Detection.Inference import infer_utils as iu
+from KCD.Detection.Training import train_utils as tu
 
 import os
 import torch
@@ -18,16 +19,11 @@ import pandas as pd
 
 def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname='coreg_ncct',
                                  infername='test_set',params:dict=None,tr_split=0,tr_folds=5,
-                                 spec_boundary=98,is_3D=True):
+                                 spec_boundary=98):
     warnings.filterwarnings("ignore")
-    if is_3D:
-        if params==None:params = iu.init_slice3D_params()
-        else:iu.check_params(params,iu.init_shape3D_params())
-        model_type = 'PatchModel'
-    else:
-        model_type = 'TileModel'
-        if params==None:params = iu.init_slice2D_params()
-        else:iu.check_params(params,iu.init_shape2D_params())
+    if params==None:params = tu.init_slice3D_params_finetune()
+    else:tu.check_params(params,tu.init_slice3D_params_finetune())
+    model_type = 'PatchModel'
     
     inference_path = os.path.join(home,'inference')
     inference_path = iu.init_inference_home(inference_path,infername,trainname,tr_split)
@@ -39,8 +35,9 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
 
     #### init dataset
     inference_dataset = iu.get_slice_data_inference(home,infername,params['voxel_size'],params['fg_thresh'],params['depth_z'],params['boundary_z'],params['dilated'],dev=dev)
-    
-    model_name = '{}_{}_{}_{}_{}'.format(model_type,params['model_size'],params['epochs'],params['epochs'],params['lr'])
+
+    model_name = 'TESTMODEL_EFFNET_{}_{}_{}_{}_{}_{}'.format(pretrain_ds, model_type, params['model_size'],
+                                                             params['epochs'], params['epochs'], params['lr'])
     load_split_path = os.path.join(load_dir,'split_{}'.format(tr_split))    
 
     boundary = []
@@ -79,6 +76,6 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
 if __name__ == '__main__':
     home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
     trainname = 'coreg_ncct'
-    infername='add_ncct_unseen'
-    eval_individual_slice_models(home=home,trainname=trainname,infername=infername,is_3D=True)
+    infername='test_set'
+    eval_individual_slice_models(home=home,trainname=trainname,infername=infername)
     
