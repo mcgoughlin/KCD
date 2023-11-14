@@ -3,9 +3,11 @@ from torchvision import models
 import torch
 import torch.nn as nn
 from dgl.nn import ChebConv
+import dgl
 import torch.nn.functional as F
 import copy
 import xgboost as xgb
+dgl.seed(2)
 
 class MLP_classifier(nn.Module):
     def __init__(self,num_features, num_labels, enc1_size=256, enc1_layers=3,
@@ -22,7 +24,7 @@ class MLP_classifier(nn.Module):
         self.layer3 = nn.Linear(enc2_size,num_labels,bias=False).to(dev)
         self.actv = nn.ReLU()
         self.final_actv = nn.Tanh()
-        self.dropout = nn.Dropout(0.8)
+        self.dropout = nn.Dropout(0.4)
         
     def forward(self,x):
         x = self.dropout(x)
@@ -86,16 +88,16 @@ class ShapeEnsemble(nn.Module):
         self.final = nn.Linear(n2,num_labels).to(device)
         self.dropout = nn.Dropout(dropout)
         self.actv = nn.ReLU()
-        
+        self.final_actv = nn.Tanh()
         self.device=device
         
     def forward(self, features,graph):
         graph_enc = self.GNN(graph)
         mlp_enc = self.MLP(features)
         
-        common_16 = self.actv(self.dropout(self.process1(graph_enc+mlp_enc)))
+        common_16 = self.actv(self.dropout(self.process1(self.dropout(graph_enc+mlp_enc))))
         
-        return self.final(common_16)
+        return self.final_actv(self.final(common_16))
 
 
 def return_efficientnet(size='small',dev='cpu',in_channels=6,out_channels=2):

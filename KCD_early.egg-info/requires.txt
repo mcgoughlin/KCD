@@ -15,3 +15,4 @@ simpleitk
 torchvision
 pymeshfix
 rt_utils
+xgboost

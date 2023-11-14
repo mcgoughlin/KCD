@@ -5,13 +5,17 @@ import warnings
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+
+torch.manual_seed(2)
+np.random.seed(2)
+
 from sklearn.model_selection import StratifiedKFold as kfold_strat
 import KCD.Detection.Evaluation.eval_scripts as eval_
 from KCD.Detection.ModelGenerator import model_generator
 from KCD.Detection.Training import train_utils as tu
-    
 
-def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname='merged_training_set',
+
+def train_cv_individual_models(home = '/media/mcgoug01/nvme/SecondYear/Data/',dataname='merged_training_set',
                             splits:list=[0],folds=5,params:dict=None):
     # Suppress warnings
     warnings.filterwarnings("ignore") #makes dgl stop complaining!
@@ -98,7 +102,7 @@ def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname
         plt.close()
         
 
-def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='merged_training_set',
+def train_cv_shape_ensemble(home = '/media/mcgoug01/nvme/SecondYear/Data/',dataname='merged_training_set',
                          splits:list=[0],params:dict=None,folds=5):
     # Suppress warnings
     warnings.filterwarnings("ignore") #makes dgl stop complaining!
@@ -107,6 +111,8 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
     dev = tu.initialize_device()
     if params==None:params = tu.init_shape_params()
     else:tu.check_params(params,tu.init_shape_params())
+
+    print(params)
     save_dir = tu.init_training_home(home, dataname)
     shapedataset, test_shapedataset = tu.get_shape_data(home, dataname, params['combined_threshold'], params['combined_threshold'],ensemble=True)
     cases, is_ncct = tu.get_cases(shapedataset)
@@ -190,5 +196,5 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
         
 if __name__ == '__main__':
     dataset = 'merged_training_set'
-    train_cv_individual_models(dataname=dataset)
+    # train_cv_individual_models(dataname=dataset)
     train_cv_shape_ensemble(dataname=dataset)
