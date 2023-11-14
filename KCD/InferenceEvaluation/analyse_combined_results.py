@@ -3,36 +3,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 from statsmodels.nonparametric.smoothers_lowess import lowess
 from sklearn.utils import resample
+import warnings
+warnings.filterwarnings("ignore")
 
 resnext_3d = pandas.read_csv('/Users/mcgoug01/Downloads/Data/inference/coreg_ncct_split_0/test_set/combined_results_resnext.csv')
 effnet_3d = pandas.read_csv('/Users/mcgoug01/Downloads/Data/inference/coreg_ncct_split_0/test_set/combined_results_effnet.csv')
-
+shape = pandas.read_csv('/Users/mcgoug01/Downloads/Data/inference/coreg_ncct_split_0/test_set/combined_results_shape.csv')
+tile2d = pandas.read_csv('/Users/mcgoug01/Downloads/Data/inference/coreg_ncct_split_0/test_set/combined_results_2d.csv')
 #drop unnamed
 resnext_3d = resnext_3d.drop([column for column in resnext_3d.columns if 'unnamed' in column.lower()],axis=1)
-resnext_3d = resnext_3d.drop([column for column in resnext_3d.columns if 'unnamed' in column.lower()],axis=1)
-
+effnet_3d = effnet_3d.drop([column for column in effnet_3d.columns if 'unnamed' in column.lower()],axis=1)
+shape = shape.drop([column for column in shape.columns if 'unnamed' in column.lower()],axis=1)
+tile2d = tile2d.drop([column for column in tile2d.columns if 'unnamed' in column.lower()],axis=1)
 
 #calculate TP, FP, FN, TN at size thresholds
-radii = np.arange(0,50,2.5)
+radii = np.arange(0,45,3)
 size_wise_results = []
 #calculate specificity from the combined results
 
-for df, model in zip([resnext_3d,effnet_3d],['ResNeXt 3D','EffNet 3D']):
+for df, model in zip([resnext_3d,effnet_3d,shape,tile2d],['ResNeXt 3D','EffNet 3D','Shape Ensemble','EffNet 2D']):
     prev_rad = 0
     prev_prev_rad= 0
     counter = 0
     size_wise_results.append(
         {'model': model, 'diameter': 0, 'size_threshold': 0, 'TP': 0, 'FP': 0, 'FN': 0, 'TN': 0, 'Sensitivity': 0})
     for radius in radii:
-        size_threshold = (4/3)*np.pi*(radius**3)
         prev_prev_threshold = (4/3)*np.pi*(prev_prev_rad**3)
-        print(radius,prev_rad,prev_prev_rad)
-        size_df = df[(df['size']<size_threshold) & (df['size']>prev_prev_threshold)]
         mid_radius = (radius+prev_prev_rad)/2
-
+        if radius == radii[-1]:
+            radius=1000
+        size_threshold = (4/3)*np.pi*(radius**3)
+        size_df = df[(df['size'] < size_threshold) & (df['size'] > prev_prev_threshold)]
         entry = {'model':model, 'diameter': mid_radius*2}
         healthy_df = size_df[size_df['label']==0]
         entry['size_threshold'] = size_threshold
+
         entry['TP'] = size_df[size_df['prediction']==1].shape[0]
         entry['FP'] = healthy_df[healthy_df['prediction']==1].shape[0]
         entry['FN'] = size_df[size_df['prediction']==0].shape[0]
@@ -60,7 +65,7 @@ fig, ax = plt.subplots()
 xnew = np.linspace(0,80,20)
 bootstrap_samples = 1000
 
-for model,m,c in zip(['ResNeXt 3D','EffNet 3D'],['o','^'],['red','blue']):
+for model,m,c in zip(['ResNeXt 3D','EffNet 3D','Shape Ensemble','EffNet 2D'],['o','^','+'],['red','blue','green']):
     model_df = size_results_df[size_results_df['model']==model]
     model_df['total'] = model_df['TP'].copy()+model_df['FN'].copy() + model_df['FP'].copy() + model_df['TN'].copy()
     samples = model_df.total.values
@@ -70,7 +75,6 @@ for model,m,c in zip(['ResNeXt 3D','EffNet 3D'],['o','^'],['red','blue']):
     samples = model_df.total.values
     lowess_lines = np.zeros((bootstrap_samples, len(x)))
     for i in range(bootstrap_samples):
-
         sample_indices = resample(np.arange(len(x)), replace=True, n_samples=len(x))
         sample_x, sample_y = x[sample_indices], np.array(y)[sample_indices]
         lowess_lines[i, :] = lowess(sample_y, sample_x, frac=0.3)[:, 1]
@@ -90,7 +94,16 @@ for model,m,c in zip(['ResNeXt 3D','EffNet 3D'],['o','^'],['red','blue']):
     if model == 'ResNeXt 3D':
         ax.scatter(model_df['diameter'], model_df['Sensitivity'] * 100, s=40, marker=m, color=c, label=None, alpha=0.5)
         ax.plot(x, lowess_mean, c=c, alpha=1, label=model)
-        ax.fill_between(x, lowess_lower, lowess_upper, alpha=0.2,color=c,label='ResNeXt 95% CI')
+        ax.fill_between(x, lowess_lower, lowess_upper, alpha=0.2,color=c,label=None)
+    elif model == 'Shape Ensemble':
+        ax.scatter(model_df['diameter'], model_df['Sensitivity'] * 100, s=40, marker=m, color=c, label=None, alpha=0.5)
+        ax.plot(x, lowess_mean, c=c, alpha=1, label=model)
+        ax.fill_between(x, lowess_lower, lowess_upper, alpha=0.2,color=c,label=None)
+    elif model == 'EffNet 2D':
+        ax.scatter(model_df['diameter'], model_df['Sensitivity'] * 100, s=40, marker=m, color=c, label=None, alpha=0.5)
+        ax.plot(x, lowess_mean, c=c, alpha=1, label=model)
+        ax.fill_between(x, lowess_lower, lowess_upper, alpha=0.2,color=c,label=None)
+
 ax.legend()
 ax.set_xlabel('Diameter (mm)')
 ax.set_ylabel('Sensitivity / %')

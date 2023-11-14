@@ -20,14 +20,10 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
                                  infername='test_set',params:dict=None,tr_split=0,tr_folds=5,
                                  spec_boundary=98,is_3D=True):
     warnings.filterwarnings("ignore")
-    if is_3D:
-        if params==None:params = iu.init_slice3D_params()
-        else:iu.check_params(params,iu.init_shape3D_params())
-        model_type = 'PatchModel'
-    else:
-        model_type = 'TileModel'
-        if params==None:params = iu.init_slice2D_params()
-        else:iu.check_params(params,iu.init_shape2D_params())
+
+    model_type = 'TileModel'
+    if params==None:params = iu.init_slice2D_params()
+    else:iu.check_params(params,iu.init_slice2D_params())
     
     inference_path = os.path.join(home,'inference')
     inference_path = iu.init_inference_home(inference_path,infername,trainname,tr_split)
@@ -40,7 +36,7 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
     #### init dataset
     inference_dataset = iu.get_slice_data_inference(home,infername,params['voxel_size'],params['fg_thresh'],params['depth_z'],params['boundary_z'],params['dilated'],dev=dev)
     
-    model_name = '{}_{}_{}_{}_{}'.format(model_type,params['model_size'],params['epochs'],params['epochs'],params['lr'])
+    model_name = 'TESTMODEL_EFFNET_TileModel_large_5_1_0.0005'
     load_split_path = os.path.join(load_dir,'split_{}'.format(tr_split))    
 
     boundary = []
@@ -77,8 +73,8 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
     all_results.to_csv(os.path.join(inference_path,'{}_'.format(model_type)+model_name+'.csv'))
     
 if __name__ == '__main__':
-    home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
+    home = '/Users/mcgoug01/Downloads/Data'
     trainname = 'coreg_ncct'
-    infername='add_ncct_unseen'
-    eval_individual_slice_models(home=home,trainname=trainname,infername=infername,is_3D=True)
+    infername='test_set'
+    eval_individual_slice_models(home=home,trainname=trainname,infername=infername)
     

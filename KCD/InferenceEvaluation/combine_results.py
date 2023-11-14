@@ -10,8 +10,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 lab_path = '/Users/mcgoug01/Downloads/Data/inference/label.csv'
-path_3d = '/Users/mcgoug01/Downloads/Data/inference/coreg_ncct_split_0/test_set/PatchModel_TESTMODEL_RESNEXT_kits23_nooverlap_PatchModel_small_5_5_0.0005.csv'
-save_loc = '/Users/mcgoug01/Downloads/Data/inference/coreg_ncct_split_0/test_set/combined_results_resnext.csv'
+path_3d = '/Users/mcgoug01/Downloads/Data/inference/coreg_ncct_split_0/test_set/TileModel_TESTMODEL_EFFNET_TileModel_large_5_1_0.0005.csv'
+save_loc = '/Users/mcgoug01/Downloads/Data/inference/coreg_ncct_split_0/test_set/combined_results_2d.csv'
 
 lab_df = pd.read_csv(lab_path,index_col=False)
 #convert lab_df position to 'right' if 1 and 'left' if 0

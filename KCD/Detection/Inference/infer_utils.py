@@ -40,7 +40,7 @@ def init_slice2D_params():
               "model_size":"large",
               "cancthresh_r_mm":10,
               "kidthresh_r_mm":20,
-              "fg_thresh":10,
+              "fg_thresh":0,
               "batch_size":16,
               "dilated":40,
               "lr":  5e-4,

@@ -21,14 +21,14 @@ class MLP_classifier(nn.Module):
         self.skip2 = nn.Linear(num_features,num_labels,bias= False).to(dev)
         self.layer3 = nn.Linear(enc2_size,num_labels,bias=False).to(dev)
         self.actv = nn.ReLU()
-        self.tanh = nn.Tanh()
-        self.dropout = nn.Dropout(0.4)
+        self.final_actv = nn.Tanh()
+        self.dropout = nn.Dropout(0.8)
         
     def forward(self,x):
         x = self.dropout(x)
         layer1 = self.dropout(self.actv(self.layer1(x)))
         layer2 = self.dropout(self.skip1(x) + self.actv(self.layer2(layer1)))
-        return self.tanh(self.skip2(x) + self.actv(self.layer3(layer2)))
+        return self.final_actv(self.skip2(x) + self.actv(self.layer3(layer2)))
 
 class GNN_classifier(nn.Module):
     def __init__(self, in_dim, hidden_dim_graph,n_classes,neighbours=10,layers_deep = 4,device='cpu'):
@@ -423,8 +423,11 @@ def return_MLP(num_features=28, num_labels=2, enc1_size=128, enc1_layers=1,
     return MLP_classifier(num_features, num_labels, enc1_size, enc1_layers,
                  enc2_size, enc2_layers, final_layers,dev).to(dev)
 
-def return_xgb(scale_pos_weight=1):
-    return xgb.XGBClassifier(objective='binary:logitraw',random_state=42,scale_pos_weight=scale_pos_weight)
+def return_xgb(scale_pos_weight=1,learning_rate=0.1,max_depth=3,n_estimators=100,subsample=0.8):
+    return xgb.XGBClassifier(objective='binary:logitraw',random_state=42,
+                             scale_pos_weight=scale_pos_weight,learning_rate=learning_rate,
+                             max_depth=max_depth,n_estimators=n_estimators,n_jobs=1,
+                             eval_metric='logloss',subsample=subsample)
 
 def return_GNN(num_features=4,hidden_dim=50,num_labels=2,layers_deep=8,neighbours=8,dev='cpu'):
     return GNN_classifier(num_features,hidden_dim,num_labels,layers_deep,neighbours,dev).to(dev)

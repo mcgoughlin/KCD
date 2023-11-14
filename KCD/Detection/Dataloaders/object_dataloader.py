@@ -268,7 +268,6 @@ class ObjectData_unlabelled(Dataset):
     
     def _get_features(self,case_df):
         features = case_df.drop(['obj_fp','filename','case']).values
-        
         return torch.Tensor(features.astype(float))
     
     

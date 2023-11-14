@@ -56,26 +56,28 @@ def train_cv_individual_models(home = '/Users/mcgoug01/Downloads/Data/',dataname
                 os.mkdir(MLP_path)
                 os.mkdir(GNN_path)
                 os.mkdir(XGB_path)
-                
+
             MLP = model_generator.return_MLP(dev=dev)
             GNN = model_generator.return_GNN(num_features=4,num_labels=2,layers_deep=params['gnn_layers'],hidden_dim=params['gnn_hiddendim'],neighbours=params['gnn_neighbours'],dev=dev)
+
             GNNopt = torch.optim.Adam(GNN.parameters(),lr=params['gnn_lr'])
             MLPopt = torch.optim.Adam(MLP.parameters(),lr=params['mlp_lr'])
 
             dl,test_dl = tu.generate_dataloaders(shapedataset,test_shapedataset,cases[train_index],params['object_batchsize'],tu.shape_collate)
-            MLP,GNN = tu.train_shape_models(dl,dev,params['s1_objepochs'],loss_fnc,MLPopt,GNNopt,MLP,GNN)
             np_training_data = [(batch.detach().cpu().numpy(),lb[:,1].detach().cpu().numpy()) for batch,graph,lb in dl]
             # concatenate all the batches and labels into X and Y
             X = np.concatenate([x[0] for x in np_training_data], axis=0)
             Y = np.concatenate([x[1] for x in np_training_data], axis=0)
+            scale_pos_weight = (Y.shape[0]-Y.sum())/Y.sum()
+            XGB = model_generator.return_xgb(scale_pos_weight=scale_pos_weight,learning_rate = params['xgb_lr'],
+                                             max_depth=params['xgb_max_depth'],subsample=params['xgb_subsample'])
+
+            MLP,GNN = tu.train_shape_models(dl,dev,params['s1_objepochs'],loss_fnc,MLPopt,GNNopt,MLP,GNN)
+            XGB.fit(X,Y)
 
             MLP_name = '{}_{}_{}_{}'.format(params['s1_objepochs'],params['mlp_thresh'],params['mlp_lr'],params['object_batchsize'])
             XGB_name = 'XGB'
             GNN_name = '{}_{}_{}_{}_{}_{}_{}'.format(params['s1_objepochs'],params['graph_thresh'],params['gnn_lr'],params['gnn_layers'],params['gnn_hiddendim'],params['gnn_neighbours'],params['object_batchsize'])
-
-            scale_pos_weight = (Y.shape[0]-Y.sum())/Y.sum()
-            XGB = model_generator.return_xgb(scale_pos_weight=scale_pos_weight)
-            XGB.fit(X,Y)
 
             for modpath in [MLP_path,GNN_path,XGB_path]:
                 if not os.path.exists(os.path.join(modpath,'model')):os.mkdir(os.path.join(modpath,'model'))
@@ -153,7 +155,8 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
             ensemble_path = os.path.join(fold_path,'shape_ensemble')
             MLP_path = os.path.join(fold_path,'MLP')
             GNN_path = os.path.join(fold_path,'GNN')
-            dl,test_dl = tu.generate_dataloaders(shapedataset,test_shapedataset,cases[train_index],params['object_batchsize'],tu.shape_collate)
+            dl,test_dl = tu.generate_dataloaders(shapedataset,test_shapedataset,cases[train_index],
+                                                 params['object_batchsize'],tu.shape_collate)
 
             if not os.path.exists(ensemble_path): os.mkdir(ensemble_path)
                 
@@ -208,5 +211,5 @@ def train_cv_shape_ensemble(home = '/Users/mcgoug01/Downloads/Data/',dataname='m
         
 if __name__ == '__main__':
     dataset = 'merged_training_set'
-    train_cv_individual_models(dataname=dataset)
+    # train_cv_individual_models(dataname=dataset)
     train_cv_shape_ensemble(dataname=dataset)
