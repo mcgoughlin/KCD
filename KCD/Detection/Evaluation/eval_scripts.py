@@ -26,7 +26,7 @@ def eval_cnn(CNN,test_tw_dl,plot_path=None,dev='cpu'):
     train_res,test_res,final_results = [],[],[]
     softmax = nn.Softmax(dim=-1)
     with torch.no_grad():
-        for case in test_tw_dl.dataset.train_cases:
+        for case in np.unique(test_tw_dl.dataset.train_cases.values):
             for position in test_tw_dl.dataset.data_df[test_tw_dl.dataset.data_df['case'] ==case].side.unique():
                 if position == 'random': continue
                 test_tw_dl.dataset.set_val_kidney(case,position)
@@ -50,7 +50,7 @@ def eval_cnn(CNN,test_tw_dl,plot_path=None,dev='cpu'):
                 train_res.append(entry)
     
         test_tw_dl.dataset.is_train=False
-        for case in test_tw_dl.dataset.test_cases:
+        for case in np.unique(test_tw_dl.dataset.test_cases.values):
             for position in test_tw_dl.dataset.data_df[test_tw_dl.dataset.data_df['case'] ==case].side.unique():
                 if position == 'random': continue
                 test_tw_dl.dataset.set_val_kidney(case,position)
