@@ -21,8 +21,8 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
                                  infername='test_set',params:dict=None,tr_split=0,tr_folds=5,
                                  spec_boundary=98):
     warnings.filterwarnings("ignore")
-    if params==None:params = tu.init_slice3D_params_finetune()
-    else:tu.check_params(params,tu.init_slice3D_params_finetune())
+    if params==None:params = iu.init_slice3D_params_finetune()
+    else:tu.check_params(params,iu.init_slice3D_params_finetune())
     model_type = 'PatchModel'
     
     inference_path = os.path.join(home,'inference')
@@ -36,7 +36,7 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
     #### init dataset
     inference_dataset = iu.get_slice_data_inference(home,infername,params['voxel_size'],params['fg_thresh'],params['depth_z'],params['boundary_z'],params['dilated'],dev=dev)
 
-    model_name = 'TESTMODEL_EFFNET_{}_{}_{}_{}_{}_{}'.format(pretrain_ds, model_type, params['model_size'],
+    model_name = 'TESTMODEL_RESNEXT_kits23_nooverlap_{}_{}_{}_{}_{}'.format(model_type, params['model_size'],
                                                              params['epochs'], params['epochs'], params['lr'])
     load_split_path = os.path.join(load_dir,'split_{}'.format(tr_split))    
 
@@ -74,8 +74,8 @@ def eval_individual_slice_models(home='/Users/mcgoug01/Downloads/Data',trainname
     all_results.to_csv(os.path.join(inference_path,'{}_'.format(model_type)+model_name+'.csv'))
     
 if __name__ == '__main__':
-    home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
+    # home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
     trainname = 'coreg_ncct'
     infername='test_set'
-    eval_individual_slice_models(home=home,trainname=trainname,infername=infername)
+    eval_individual_slice_models(trainname=trainname,infername=infername)
     

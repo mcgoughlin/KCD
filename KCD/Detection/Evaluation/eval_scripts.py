@@ -26,12 +26,17 @@ def eval_cnn(CNN,test_tw_dl,plot_path=None,dev='cpu'):
     train_res,test_res,final_results = [],[],[]
     softmax = nn.Softmax(dim=-1)
     with torch.no_grad():
+<<<<<<< HEAD
         for case in np.unique(test_tw_dl.dataset.train_cases.values):
+=======
+        for case in np.unique(test_tw_dl.dataset.train_cases):
+>>>>>>> 43b3b81ff9ef7b552b3d71fbb7c3fa646b5fdbc1
             for position in test_tw_dl.dataset.data_df[test_tw_dl.dataset.data_df['case'] ==case].side.unique():
                 if position == 'random': continue
                 test_tw_dl.dataset.set_val_kidney(case,position)
                 entry = {'case':case,
                          'position':position}
+                print(case,position)
                 label = 0
                 case_store = []
                 for x,lb in test_tw_dl:
@@ -50,12 +55,18 @@ def eval_cnn(CNN,test_tw_dl,plot_path=None,dev='cpu'):
                 train_res.append(entry)
     
         test_tw_dl.dataset.is_train=False
+<<<<<<< HEAD
         for case in np.unique(test_tw_dl.dataset.test_cases.values):
+=======
+        for case in np.unique(test_tw_dl.dataset.test_cases):
+>>>>>>> 43b3b81ff9ef7b552b3d71fbb7c3fa646b5fdbc1
             for position in test_tw_dl.dataset.data_df[test_tw_dl.dataset.data_df['case'] ==case].side.unique():
                 if position == 'random': continue
                 test_tw_dl.dataset.set_val_kidney(case,position)
                 entry = {'case':case,
                          'position':position}
+
+                print(case,position)
                 label = 0
                 case_store = []
                 for x,lb in test_tw_dl:
@@ -111,7 +122,7 @@ def eval_cnn(CNN,test_tw_dl,plot_path=None,dev='cpu'):
                     'Boundary 98':boundary98,
                     'Boundary 100':boundary100})
 
-            
+    print('FINISHED')
     results_df = pd.DataFrame(final_results).groupby(['Type','Voting Size','dataset_loc']).mean()
     return results_df,test_df
 

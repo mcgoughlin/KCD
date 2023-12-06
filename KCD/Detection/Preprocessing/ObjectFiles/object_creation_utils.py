@@ -197,7 +197,6 @@ def create_labelled_dataset(path,dataset,im_p,infnpy_p,infnii_p,lb_p,
             inference_segmentations = [im.image_filled for im,_ in get_masses(inf_4mm==1,size_thresh)]
             inference_locations = [im.bbox for im,_ in get_masses(inf_4mm>0,size_thresh)]
             inference_intensity = [im.image_intensity for im,_ in get_masses(inf,size_thresh,im)]
-    
             if len(inference_centroids)==1:
                 print(case, "has 1 kidney")
                 single_kidney_flag=  True

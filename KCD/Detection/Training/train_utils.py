@@ -12,8 +12,6 @@ import matplotlib.pyplot as plt
 
 def init_shape_params():
     params = {
-        'tw_size': 'large',
-        'sv_size': 'small',
         'gnn_layers': 5,
         'gnn_hiddendim': 25,
         'gnn_neighbours': 2,
@@ -23,13 +21,16 @@ def init_shape_params():
         'mlp_lr': 0.01,
         'gnn_lr': 0.001,
         's1_objepochs': 100,
-        'shape_unfreeze_epochs': 2,
-        'shape_freeze_epochs': 25,
+        'shape_unfreeze_epochs': 100,
+        'shape_freeze_epochs': 100,
         'shape_freeze_lr': 1e-3,
         'shape_unfreeze_lr': 1e-3,
         'combined_threshold': 500,
         'ensemble_n1': 128,
-        'ensemble_n2': 32
+        'ensemble_n2': 64,
+        'xgb_lr': 0.01,
+        'xgb_max_depth': 4,
+        'xgb_subsample': 0.75,
     }
     return params
 

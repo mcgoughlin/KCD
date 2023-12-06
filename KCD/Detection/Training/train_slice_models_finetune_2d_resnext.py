@@ -54,7 +54,7 @@ def train_cv_slice_model_2d(home = '/Users/mcgoug01/Downloads/Data/',dataname='c
             if not os.path.exists(fold_path):os.mkdir(fold_path)
             if not os.path.exists(slice_path):os.mkdir(slice_path)
 
-            model = torch.load('/bask/projects/p/phwq4930-renal-canc/KCD_data/Data/training_info/{}/split_0/fold_2/TileModel/model/TileModel_resnext_large_5_10_0.001'.format(pretrain_ds))
+            model = torch.load('/media/mcgoug01/nvme/SecondYear/Data/slices/TileModel_resnext_large_5_10_0.001'.format(pretrain_ds))
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
 
             dl,test_dl = tu.generate_dataloaders(slicedataset,test_slicedataset,cases[train_index],params['batch_size'])
@@ -85,6 +85,6 @@ def train_cv_slice_model_2d(home = '/Users/mcgoug01/Downloads/Data/',dataname='c
 if __name__ == '__main__':
     import sys
     dataset = 'coreg_ncct'
-    home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
+    home = '/media/mcgoug01/nvme/SecondYear/Data/'
     pretrain_ds = 'kits23_nooverlap'
     train_cv_slice_model_2d(home=home,dataname=dataset,splits=[0],pretrain_ds=pretrain_ds)

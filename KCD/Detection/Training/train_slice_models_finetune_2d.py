@@ -10,7 +10,7 @@ import numpy as np
 import warnings
 import pandas as pd
 
-def train_cv_slice_model_2d(home = '/Users/mcgoug01/Downloads/Data/',dataname='coreg_ncct',pretrain_ds='kits23_nooverlap',
+def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',dataname='coreg_ncct',pretrain_ds='kits23_nooverlap',
                          splits:list=[0],folds=5,params:dict=None,train_folds=[0],
                          epochs = None):
     # Suppress warnings
@@ -25,6 +25,7 @@ def train_cv_slice_model_2d(home = '/Users/mcgoug01/Downloads/Data/',dataname='c
 
     if epochs != None:
         params['epochs'] = epochs
+
 
     save_dir = tu.init_training_home(home, dataname)
     slicedataset, test_slicedataset = tu.get_slice_data(home, dataname, params['voxel_size'], params['cancthresh_r_mm'],params['kidthresh_r_mm'],params['depth_z'],params['boundary_z'],params['dilated'],device=dev)
@@ -44,7 +45,7 @@ def train_cv_slice_model_2d(home = '/Users/mcgoug01/Downloads/Data/',dataname='c
 
         if os.path.exists(split_fp): fold_split = np.load(split_fp,allow_pickle=True)
         else:
-            fold_split = np.array([(fold,tr_index,ts_index) for fold,(tr_index, ts_index) in enumerate(five_fold_strat.split(cases,is_ncct))])
+            fold_split = np.array([(fold,tr_index,ts_index) for fold,(tr_index, ts_index) in enumerate(five_fold_strat.split(cases,is_ncct))],dtype=object)
             np.save(os.path.join(split_path,split_fp),fold_split)
 
         for fold,train_index, test_index in fold_split:
@@ -54,7 +55,8 @@ def train_cv_slice_model_2d(home = '/Users/mcgoug01/Downloads/Data/',dataname='c
             if not os.path.exists(fold_path):os.mkdir(fold_path)
             if not os.path.exists(slice_path):os.mkdir(slice_path)
 
-            model = torch.load('/bask/projects/p/phwq4930-renal-canc/KCD_data/Data/training_info/{}/split_0/fold_2/TileModel/model/TileModel_large_5_10_0.001'.format(pretrain_ds))
+            # model = torch.load('/bask/projects/p/phwq4930-renal-canc/KCD_data/Data/training_info/{}/split_0/fold_2/TileModel/model/TileModel_large_5_10_0.001'.format(pretrain_ds))
+            model = torch.load('/media/mcgoug01/nvme/SecondYear/Data/slices/TileModel_large_5_10_0.001')
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
 
             dl,test_dl = tu.generate_dataloaders(slicedataset,test_slicedataset,cases[train_index],params['batch_size'])
@@ -85,6 +87,6 @@ def train_cv_slice_model_2d(home = '/Users/mcgoug01/Downloads/Data/',dataname='c
 if __name__ == '__main__':
     import sys
     dataset = 'coreg_ncct'
-    home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
+    # home = '/bask/projects/p/phwq4930-renal-canc/KCD_data/Data'
     pretrain_ds = 'kits23_nooverlap'
-    train_cv_slice_model_2d(home=home,dataname=dataset,splits=[0],pretrain_ds=pretrain_ds)
+    train_cv_slice_model_2d(home='/media/mcgoug01/nvme/SecondYear/Data/',dataname=dataset,splits=[0],pretrain_ds=pretrain_ds)
