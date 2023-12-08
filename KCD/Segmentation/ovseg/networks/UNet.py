@@ -1,12 +1,9 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import numpy as np
 import os
 os.environ['OV_DATA_BASE'] = "/Users/mcgoug01/Downloads/ovseg_test"
 from KCD.Segmentation.ovseg.networks.nfUNet import concat_attention, concat
-from KCD.Segmentation.ovseg.training.loss_functions import VoxelSimilarity
-from KCD.Segmentation.ovseg.training.MLP_Similarity import MLP_Similarity
 
 
 def get_padding(kernel_size):
@@ -188,7 +185,7 @@ class UNet(nn.Module):
                  conv_params=None, norm=None, norm_params=None, nonlin_params=None,
                  kernel_sizes_up=None, skip_type='skip', use_trilinear_upsampling=False,
                  use_less_hid_channels_in_decoder=False, fac_skip_channels=1,
-                 p_dropout_logits=0.0, stem_kernel_size=None, is_voxsim=False):
+                 p_dropout_logits=0.0, stem_kernel_size=None):
         super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -361,21 +358,7 @@ class UNet(nn.Module):
                                         self.stem_kernel_size)
 
 
-        if is_voxsim:
-            self.SimMLPs = []
-            self.SimMLPOpts = []
-            if torch.cuda.is_available():
-                sim_device = torch.device('cuda:0')
-            else:
-                sim_device = torch.device('cpu')
-            for i in range(len(self.blocks_up)-1, 1, -1):
-                num = self.blocks_up[i].norm1.num_features
-                print("num",num)
-                self.SimMLPs.append(MLP_Similarity(num,100).to(sim_device))
-                self.SimMLPOpts.append(torch.optim.Adam(self.SimMLPs[-1].parameters(),lr=0.001))
-            self.sim_loss = VoxelSimilarity().to(sim_device)
-
-    def forward(self, xb,calc_voxsim=False):
+    def forward(self, xb):
         if self.stem_kernel_size is not None:
             xb = self.stem(xb)
         # keep all out tensors from the contracting path
@@ -390,19 +373,9 @@ class UNet(nn.Module):
         xb = self.blocks_down[-1](xb)
         # print(xb.shape, " bottleneck block shape")
         # expanding path without logits
-        if calc_voxsim:
-            sim = 0
 
         for i in range(self.n_stages - 2, self.n_pyramid_scales-1, -1):
             xb = self.upsamplings[i](xb)
-            if calc_voxsim and i>=3:
-                N,C,D,H,W = xb.shape
-                # generate clone copies of xb and xb_list[i] of the size C,NxDxHxW
-                xb_sim = xb.clone().detach().permute(0,2,3,4,1).reshape(-1,C)
-                skip_sim = xb_list[i].clone().detach().permute(0,2,3,4,1).reshape(-1,C)
-                simloss_part, self.SimMLPs[3-i], self.SimMLPOpts[3-i] = self.sim_loss(xb_sim,skip_sim,
-                                                                                      self.SimMLPs[3-i],self.SimMLPOpts[3-i])
-                sim += simloss_part
             xb = self.concats[i](xb, xb_list[i])
             del xb_list[i]
             xb = self.blocks_up[i](xb)
@@ -410,14 +383,6 @@ class UNet(nn.Module):
         # expanding path with logits
         for i in range(self.n_pyramid_scales - 1, -1, -1):
             xb = self.upsamplings[i](xb)
-            if calc_voxsim and i>=2:
-                N,C,D,H,W = xb.shape
-                # generate clone copies of xb and xb_list[i] of the size C,NxDxHxW
-                xb_sim = xb.clone().detach().permute(0,2,3,4,1).reshape(-1,C)
-                skip_sim = xb_list[i].clone().detach().permute(0,2,3,4,1).reshape(-1,C)
-                simloss_part, self.SimMLPs[3-i], self.SimMLPOpts[3-i] = self.sim_loss(xb_sim,skip_sim,
-                                                                                      self.SimMLPs[3-i],self.SimMLPOpts[3-i])
-                sim += simloss_part
             xb = self.concats[i](xb, xb_list[i])
             del xb_list[i]
             xb = self.blocks_up[i](xb)
@@ -441,10 +406,10 @@ def get_2d_UNet(in_channels, out_channels, n_stages, filters=32):
     return UNet(in_channels, out_channels, kernel_sizes, True)
 
 
-def get_3d_UNet(in_channels, out_channels, n_stages, n_2d_blocks, filters=32,is_voxsim=False):
+def get_3d_UNet(in_channels, out_channels, n_stages, n_2d_blocks, filters=32):
     kernel_sizes = [(3,3,1) if i < n_2d_blocks else 3
                     for i in range(n_stages)]
-    return UNet(in_channels, out_channels, kernel_sizes, False,is_voxsim=is_voxsim)
+    return UNet(in_channels, out_channels, kernel_sizes, False)
 
 
 # %%
@@ -459,7 +424,7 @@ if __name__ == '__main__':
     for log in yb_2d:
         print(log.shape)
 
-    net_3d = get_3d_UNet(1, 2, 5, 2, 8,is_voxsim=True).to(gpu)
+    net_3d = get_3d_UNet(1, 2, 5, 2, 8).to(gpu)
     xb_3d = torch.randn((1, 1, 128, 128, 32), device=gpu)
     print('3d')
     with torch.no_grad():

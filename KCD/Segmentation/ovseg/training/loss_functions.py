@@ -50,40 +50,6 @@ class CE_dice_loss(nn.Module):
         loss = ce + dice
         return loss
 
-class VoxelSimilarity(nn.Module):
-    # weighted sum of the two losses
-    # this functions is just here for historic reason
-    def __init__(self, lambda_sim=1e-3, discrim_epochs=20):
-        super().__init__()
-        self.MSE_loss = nn.MSELoss()
-        self.lambda_sim = lambda_sim
-        self.discrim_epochs = discrim_epochs
-
-
-    def forward(self, enc, skip, discriminator,
-                discrim_opt):
-        assert(enc.shape == skip.shape)
-        assert(len(enc.shape)==2) # number of voxels, number of features
-        shuffle_index = torch.randperm(enc.shape[0])
-        enc_, skip_ = enc[shuffle_index].clone().detach(), skip[shuffle_index]
-        enc_tr, enc_test = enc_[enc_.shape[0] // 5:], enc_[:enc_.shape[0] // 5]
-        skip_tr, skip_test = skip_[skip_.shape[0] // 5:], skip_[:skip_.shape[0] // 5]
-
-        with torch.enable_grad():
-            for i in range(self.discrim_epochs):
-                discrim_opt.zero_grad()
-                skip_tr_pred = discriminator(enc_tr)
-                sim_loss = self.MSE_loss(skip_tr_pred, skip_tr)
-                sim_loss.backward()
-                discrim_opt.step()
-                discrim_opt.zero_grad()
-
-            discriminator.eval()
-            skip_ts_pred = discriminator(enc_test)
-            ts_loss = self.MSE_loss(skip_ts_pred, skip_test)
-
-            return ts_loss*self.lambda_sim, discriminator, discrim_opt
-    
 class CE_dice_pyramid_loss(nn.Module):
 
     def __init__(self, eps=1e-5, ce_weight=1.0, dice_weight=1.0,
