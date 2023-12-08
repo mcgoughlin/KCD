@@ -88,7 +88,6 @@ class ShapeEnsemble(nn.Module):
         self.final = nn.Linear(n2,num_labels).to(device)
         self.dropout = nn.Dropout(dropout)
         self.actv = nn.ReLU()
-        self.final_actv = nn.Tanh()
         self.device=device
         
     def forward(self, features,graph):
@@ -97,7 +96,7 @@ class ShapeEnsemble(nn.Module):
         
         common_16 = self.actv(self.dropout(self.process1(self.dropout(graph_enc+mlp_enc))))
         
-        return self.final_actv(self.final(common_16))
+        return self.final(common_16)
 
 
 def return_efficientnet(size='small',dev='cpu',in_channels=6,out_channels=2):
