@@ -53,15 +53,11 @@ class CE_dice_loss(nn.Module):
 class VoxelSimilarity(nn.Module):
     # weighted sum of the two losses
     # this functions is just here for historic reason
-    def __init__(self, lambda_sim=1e-3,
-                 discrim_epochs=20, discrim_batch_size=128,
-                 discrim_lr=1e-3):
+    def __init__(self, lambda_sim=1e-3, discrim_epochs=20):
         super().__init__()
         self.MSE_loss = nn.MSELoss()
         self.lambda_sim = lambda_sim
         self.discrim_epochs = discrim_epochs
-        self.discrim_batch_size = discrim_batch_size
-        self.discrim_lr = discrim_lr
 
 
     def forward(self, enc, skip, discriminator,
@@ -74,7 +70,7 @@ class VoxelSimilarity(nn.Module):
         skip_tr, skip_test = skip_[skip_.shape[0] // 5:], skip_[:skip_.shape[0] // 5]
 
         with torch.enable_grad():
-            for i in range(20):
+            for i in range(self.discrim_epochs):
                 discrim_opt.zero_grad()
                 skip_tr_pred = discriminator(enc_tr)
                 sim_loss = self.MSE_loss(skip_tr_pred, skip_tr)

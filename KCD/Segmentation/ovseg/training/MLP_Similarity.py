@@ -77,7 +77,7 @@ def train_sim_model(sim_MLP, x, encoding,sim_loss_func,opt):
     x_, enc_ = x[shuffle_index].clone().detach(), encoding[shuffle_index]
     x_tr, x_test = x_[:x_.shape[0] // 5], x_[x_.shape[0] // 5:]
     enc_tr, enc_test = enc_[:enc_.shape[0] // 5], enc_[enc_.shape[0] // 5:]
-    for i in range(20):
+    for i in range(2):
         opt.zero_grad()
         enc_tr_pred = sim_MLP(x_tr.clone().detach())
         sim_loss = sim_loss_func(enc_tr_pred, enc_tr.clone().detach())
@@ -96,16 +96,23 @@ if __name__ == '__main__':
 
     torch.manual_seed(0)
     np.random.seed(0)
-    dims = 100
-    hidden_size = 100
+    dims = 200
+    hidden_size = 200
     bottom_size = hidden_size//2
-    ds_size = 20000
 
-    model = MLP_encdec(dims, hidden_size, bottom_size).to('cuda')
+    calc_sim = True
+    include_sim = True
+
+    #very clear relationship - the higher the number of dimensions in the latent space, the
+    #greater the improvement in test accuracy in the MI method. This feels intuitive.
+
+    model = MLP_encdec(dims, hidden_size, bottom_size).to('cpu')
     optimizer = torch.optim.Adam(list(model.encoder.parameters())+
                                  list(model.decoder.parameters()),lr=5e-4)
 
-    sim_model = MLP_Similarity(hidden_size,25).to('cuda')
+    ds_size = 20000
+
+    sim_model = MLP_Similarity(hidden_size,25).to('cpu')
     sim_opt = torch.optim.Adam(sim_model.parameters(), lr=1e-3)
 
     _ = np.random.rand(dims, dims)
@@ -136,24 +143,23 @@ if __name__ == '__main__':
     test_loader = torch.utils.data.DataLoader(test_data,batch_size=100,shuffle=True)
 
     #train the model
-    criterion = nn.MSELoss().to('cuda')
+    criterion = nn.MSELoss().to('cpu')
     epochs = 100
     mse_losses = []
     sim_losses = []
     lambda_sim = 1e-3
-    calc_sim = True
-    include_sim = True
+
 
     for epoch in range(epochs):
         print_sim= True
         for batch in train_loader:
-            batch = batch.to('cuda')
+            batch = batch.to('cpu')
             optimizer.zero_grad()
             if calc_sim:
                 outputs,dissim,sim_model = model(batch,calc_sim=calc_sim,print_sim=print_sim,sim_opt=sim_opt,
                                     sim_MLP=sim_model,sim_loss = criterion)
                 sim = (1 - torch.exp(-dissim))
-                sim_losses.append(sim.detach().to('cuda').item())
+                sim_losses.append(sim.detach().to('cpu').item())
                 MSE_loss = criterion(outputs, batch)
                 loss = MSE_loss
                 if include_sim:
@@ -162,7 +168,7 @@ if __name__ == '__main__':
                 outputs = model(batch, calc_sim=False)
                 MSE_loss = criterion(outputs, batch)
                 loss = MSE_loss
-            mse_losses.append(MSE_loss.detach().to('cuda').item())
+            mse_losses.append(MSE_loss.detach().to('cpu').item())
             loss.backward()
             optimizer.step()
             print_sim = False
@@ -194,7 +200,7 @@ if __name__ == '__main__':
     total_loss= 0
     with torch.no_grad():
         for data in test_loader:
-            data = data.to('cuda')
+            data = data.to('cpu')
             outputs = model(data,calc_sim=False)
             MSE_loss = criterion(outputs, data)
             total_loss += MSE_loss.item()
