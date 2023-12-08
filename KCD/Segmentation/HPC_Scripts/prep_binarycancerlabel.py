@@ -2,10 +2,10 @@ import os
 os.environ['OV_DATA_BASE'] = "/home/wcm23/rds/hpc-work/FineTuningKITS23"
 from KCD.Segmentation.ovseg.preprocessing.SegmentationPreprocessing import SegmentationPreprocessing
 
-data_name = 'all_ncct'
-spacing = 4
+data_name = 'masked_coreg_ncct'
+spacing = 2
 
-preprocessed_name = '4mm_binary'
+preprocessed_name = '2mm_binary'
 
 lb_classes = [2]
 
