@@ -49,7 +49,7 @@ class CE_dice_loss(nn.Module):
         dice = self.dice_loss(logs, yb, mask) * self.dice_weight
         loss = ce + dice
         return loss
-    
+
 class CE_dice_pyramid_loss(nn.Module):
 
     def __init__(self, eps=1e-5, ce_weight=1.0, dice_weight=1.0,

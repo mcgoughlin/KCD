@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import numpy as np
+import os
+os.environ['OV_DATA_BASE'] = "/Users/mcgoug01/Downloads/ovseg_test"
 from KCD.Segmentation.ovseg.networks.nfUNet import concat_attention, concat
 
 
@@ -354,7 +355,8 @@ class UNet(nn.Module):
             self.final_up_conv = UpConv(self.filters,
                                         self.out_channels,
                                         self.is_2d,
-                                        self.stem_kernel_size)                
+                                        self.stem_kernel_size)
+
 
     def forward(self, xb):
         if self.stem_kernel_size is not None:
@@ -371,6 +373,7 @@ class UNet(nn.Module):
         xb = self.blocks_down[-1](xb)
         # print(xb.shape, " bottleneck block shape")
         # expanding path without logits
+
         for i in range(self.n_stages - 2, self.n_pyramid_scales-1, -1):
             xb = self.upsamplings[i](xb)
             xb = self.concats[i](xb, xb_list[i])
@@ -411,7 +414,7 @@ def get_3d_UNet(in_channels, out_channels, n_stages, n_2d_blocks, filters=32):
 
 # %%
 if __name__ == '__main__':
-    gpu = torch.device('cuda:0')
+    gpu = torch.device('cpu')
     net_2d = get_2d_UNet(1, 2, 7, 8).to(gpu)
     xb_2d = torch.randn((3, 1, 512, 512), device=gpu)
     print('2d')

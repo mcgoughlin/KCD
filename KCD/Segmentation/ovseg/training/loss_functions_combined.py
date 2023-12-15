@@ -167,6 +167,7 @@ class CE_dice_pyramid_loss(nn.Module):
 
         return loss
 
+
 class weighted_combined_pyramid_loss(nn.Module):
 
     def __init__(self, loss_names, loss_weights=None, loss_kwargs=None, pyramid_weight=0.5):

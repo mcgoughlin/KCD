@@ -44,8 +44,10 @@ class SegmentationTraining(NetworkTraining):
         else:
             self.prg_trn_process_batch = nn.Identity()
 
-    def initialise_loss(self):
+    def initialise_loss(self,include_voxsim=False):
         self.loss_fctn = CE_dice_pyramid_loss(**self.loss_params)
+        if include_voxsim:
+            self.is_voxsim = True
 
     def compute_batch_loss(self, batch):
 
@@ -80,7 +82,7 @@ class SegmentationTraining(NetworkTraining):
             mask = mask * xb[: -1:]      
 
         yb = to_one_hot_encoding(yb, self.network.out_channels)
-        out = self.network(xb)
+        out = self.network(xb,is_voxsim=self.is_voxsim)
         loss = self.loss_fctn(out, yb, mask)
         return loss
 
