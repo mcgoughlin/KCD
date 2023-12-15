@@ -418,6 +418,125 @@ class ModelBase(object):
             print('Merging resuts to CV....')
             self._merge_results_to_CV(ds_name)
 
+
+    def eval_ds_continuous(self, ds, ds_name: str, save_preds: bool = True, save_plots: bool = False,
+                force_evaluation: bool = False, merge_to_CV_results: bool = False,
+                save_folder_name=None):
+        '''
+
+        Parameters
+        ----------
+        ds : Dataset
+            Dataset type object that has a length and return a data_tpl for each index
+        ds_name : string
+            name of the dataset used when saving the results
+        save_preds : bool, optional
+            if save_preds the predictions are kept in the "predictions" folder at OV_DATA_BASE.
+            The default is True.
+        save_plots : bool, optional
+            if save_preds the predictions are kept in the "predictions" folder at OV_DATA_BASE.
+        force_evaluation : bool, optional
+            if not force_evaluation the results files and folders are superficially checked.
+            If everything seems to be there we skip the evaluation
+            The default is False.
+        merge_to_CV_results : bool, optional
+            Set true only for the validation set.
+            Results are merged with the ones from other folds and stored in the CV path.
+            The default is False.
+
+        Returns
+        -------
+        None.
+
+        '''
+
+        if len(ds) == 0:
+            print('Got empty dataset for evaluation. Nothing to do here --> leaving!')
+            return
+
+        global NO_NAME_FOUND_WARNING_PRINTED
+
+        if save_folder_name is None:
+            save_folder_name = ds_name + '_' + self.val_fold_str
+
+        # first check if the evaluation is already done and quit in case we don't want to force
+        # the evaluation
+        if not force_evaluation:
+            # first check if the two results file exist
+            # if the files do not exist we have an indicator that we have to repeat
+            # the evaluation
+            do_evaluation = not np.all([exists(join(self.model_path, ds_name+'_results.'+ext))
+                                        for ext in ['txt', 'pkl']])
+
+            if save_preds:
+                # next check if the prediction folder exists
+                pred_folder = os.path.join(os.environ['OV_DATA_BASE'], 'predictions',
+                                           self.data_name,
+                                           self.preprocessed_name,
+                                           self.model_name,
+                                           save_folder_name)
+                if not exists(pred_folder):
+                    do_evaluation = True
+
+            if save_plots:
+                # same for the plot folder, if it doesn't exsist we do the prediction
+                plot_folder = os.path.join(os.environ['OV_DATA_BASE'], 'plots',
+                                           self.data_name,
+                                           self.preprocessed_name,
+                                           self.model_name,
+                                           save_folder_name)
+                if not exists(plot_folder):
+                    do_evaluation = True
+
+            if not do_evaluation:
+                print('Found existing evaluation folders and files for this dataset (' + ds_name +
+                      '). Their content wasn\'t checked, but the evaluation will be skipped.\n'
+                      'If you want to force the evaluation please delete the old files and folders '
+                      'or pass force_evaluation=True.\n\n')
+                if merge_to_CV_results:
+                    print('Merging resuts to CV....')
+                    self._merge_results_to_CV(ds_name)
+                return
+
+        self._init_global_metrics()
+        results = {}
+        names_for_txt = {}
+        print('Evaluating '+ds_name+'...\n\n')
+        sleep(1)
+        for i in tqdm(range(len(ds))):
+            # get the data
+            data_tpl = ds[i]
+            # first let's try to find the name
+            if 'scan' in data_tpl.keys():
+                scan = data_tpl['scan']
+            else:
+                d = str(int(np.ceil(np.log10(len(ds)))))
+                scan = 'case_%0'+d+'d'
+                scan = scan % i
+                if not NO_NAME_FOUND_WARNING_PRINTED:
+                    print('Warning! Could not find an scan name in the data_tpl.'
+                          'Please make sure that the items of the dataset have a key \'scan\'.'
+                          'A simple choice could be the name of a raw (e.g. segmentation) file.'
+                          'Choose generic naming case_xxx as names.\n')
+                    NO_NAME_FOUND_WARNING_PRINTED = True
+            if 'name' in data_tpl.keys():
+                names_for_txt[scan] = data_tpl['name']
+            else:
+                names_for_txt[scan] = scan
+
+            # predict from this datapoint
+            pred = self.__call__(data_tpl,do_postprocessing=False)
+            if torch.is_tensor(pred):
+                pred = pred.cpu().numpy()
+
+            pred *= 1000
+            pred = pred.astype(np.uint16)
+
+            # store the prediction for example as nii files
+            if save_preds:
+                self.save_prediction(data_tpl, folder_name=save_folder_name, filename=scan)
+
+
     def _merge_results_to_CV(self, ds_name='validation'):
         # we also store the results in the CV folder and merge them with
         # possible other results from other folds
@@ -434,7 +553,8 @@ class ModelBase(object):
                                           self.model_cv_path,
                                           ds_name=ds_name+'_CV')
 
-    def eval_validation_set(self, save_preds=True, save_plots=False, force_evaluation=False):
+    def eval_validation_set(self, save_preds=True, save_plots=False, force_evaluation=False,
+                            continuous=False):
         if not hasattr(self.data, 'val_ds'):
             print('No validation data found! Skipping prediction...')
             return
@@ -443,6 +563,12 @@ class ModelBase(object):
                      save_preds=save_preds, save_plots=save_plots,
                      force_evaluation=force_evaluation,
                      merge_to_CV_results=True, save_folder_name='cross_validation')
+
+        if continuous:
+            self.eval_ds_continuous(self.data.val_ds, ds_name='validation',
+                         save_preds=save_preds, save_plots=save_plots,
+                         force_evaluation=force_evaluation,
+                         merge_to_CV_results=True, save_folder_name='cross_validation_continuous')
 
     def eval_training_set(self, save_preds=False, save_plots=False, force_evaluation=False):
         self.eval_ds(self.data.trn_ds, ds_name='training',

@@ -192,7 +192,7 @@ class SlidingWindowPrediction(object):
     
             return pred / ovlp
 
-    def predict_volume(self, volume, ROI=None, mode=None):
+    def predict_volume(self, volume, ROI=None, mode=None,continuous=False):
         # evaluates the siliding window on this volume
         # predictions are returned as soft segmentations
         if mode is None:
