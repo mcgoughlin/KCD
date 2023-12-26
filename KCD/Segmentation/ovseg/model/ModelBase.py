@@ -12,6 +12,7 @@ except ModuleNotFoundError:
     print('No tqdm found, using no pretty progressing bars')
     tqdm = lambda x: x
 import numpy as np
+import torch.nn.functional as F
 
 
 NO_NAME_FOUND_WARNING_PRINTED = False
@@ -525,13 +526,13 @@ class ModelBase(object):
                 names_for_txt[scan] = scan
 
             # predict from this datapoint
-            pred = self.__call__(data_tpl,do_postprocessing=False)
+            print(data_tpl['orig_shape'],data_tpl['image'].shape)
+            pred = torch.Tensor(self.__callcont__(data_tpl,do_postprocessing=True))
+
             if torch.is_tensor(pred):
-                pred = pred.cpu().numpy()
+                pred = pred.cpu().int().numpy()
 
-            pred *= 1000
-            pred = pred.astype(np.uint16)
-
+            print(pred.max(),pred.min())
             # store the prediction for example as nii files
             if save_preds:
                 self.save_prediction(data_tpl, folder_name=save_folder_name, filename=scan)
@@ -559,16 +560,18 @@ class ModelBase(object):
             print('No validation data found! Skipping prediction...')
             return
 
+        if continuous:
+            print('so true bestie')
+            self.eval_ds_continuous(self.data.val_ds, ds_name='validation_cont',
+                         save_preds=save_preds, save_plots=save_plots,
+                         force_evaluation=force_evaluation,
+                         merge_to_CV_results=True, save_folder_name='cross_validation_continuous')
+
         self.eval_ds(self.data.val_ds, ds_name='validation',
                      save_preds=save_preds, save_plots=save_plots,
                      force_evaluation=force_evaluation,
                      merge_to_CV_results=True, save_folder_name='cross_validation')
 
-        if continuous:
-            self.eval_ds_continuous(self.data.val_ds, ds_name='validation',
-                         save_preds=save_preds, save_plots=save_plots,
-                         force_evaluation=force_evaluation,
-                         merge_to_CV_results=True, save_folder_name='cross_validation_continuous')
 
     def eval_training_set(self, save_preds=False, save_plots=False, force_evaluation=False):
         self.eval_ds(self.data.trn_ds, ds_name='training',

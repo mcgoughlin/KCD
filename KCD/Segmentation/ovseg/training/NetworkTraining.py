@@ -231,7 +231,10 @@ class NetworkTraining(TrainingBase):
         # now let's try to load the network parameters
         net_pp = join(path, self.network_name+'_weights')
         if exists(net_pp):
-            self.network.load_state_dict(torch.load(net_pp))
+            # self.network.load_state_dict(torch.load(net_pp),map_location=self.dev)
+            # print('load network weight to {}'.format(self.dev))
+            self.network.load_state_dict(torch.load(net_pp,map_location=torch.device(self.dev)))
+
         else:
             return False
 
@@ -240,7 +243,7 @@ class NetworkTraining(TrainingBase):
         self.initialise_opt()
         opt_pp = join(path, 'opt_parameters')
         if exists(opt_pp):
-            self.opt.load_state_dict(torch.load(opt_pp))
+            self.opt.load_state_dict(torch.load(opt_pp,map_location=torch.device(self.dev)))
         else:
             return False
         # load the loss function. Nothing should go wrong here

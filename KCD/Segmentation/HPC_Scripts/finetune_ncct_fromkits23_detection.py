@@ -1,5 +1,5 @@
 import os
-os.environ['OV_DATA_BASE'] = "/home/wcm23/rds/hpc-work/FineTuningKITS23"
+os.environ['OV_DATA_BASE'] = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
 from KCD.Segmentation.ovseg.networks.UNet import Logits
@@ -10,7 +10,7 @@ import sys
 
 data_name = 'masked_coreg_ncct'
 spacing = 2
-fold = int(sys.argv[1])
+fold = 0
 
 pretrain_name = 'kits23_nooverlap'
 # preprocessed_name = '4mm_binary'
@@ -103,22 +103,22 @@ alternate_model_params['data']['val_dl_params']['epoch_len']=50
 
 
 
-for vf in vfs:
-    path_to_model = '{}/trained_models/{}/2mm_binary/6,3x3x3,32/fold_4/network_weights'.format(os.environ['OV_DATA_BASE'],
-                                                                                         pretrain_name)
-
-    model = SegmentationModel(val_fold=vf,
-                                data_name=data_name,
-                                preprocessed_name=preprocessed_name, 
-                                model_name=model_name,
-                                model_parameters=model_params)
-
-    model.network.load_state_dict(torch.load(path_to_model,map_location=dev))
-
-    for i,log_layer in enumerate(model.network.all_logits):
-        model.network.all_logits[i] = Logits(log_layer.logits.in_channels,
-                                              2,
-                                              False)
+for vf in [0,1,2,3,4]:
+    # path_to_model = '{}/trained_models/{}/2mm_binary/6,3x3x3,32/fold_4/network_weights'.format(os.environ['OV_DATA_BASE'],
+    #                                                                                      pretrain_name)
+    #
+    # model = SegmentationModel(val_fold=vf,
+    #                             data_name=data_name,
+    #                             preprocessed_name=preprocessed_name,
+    #                             model_name=model_name,
+    #                             model_parameters=model_params)
+    #
+    # model.network.load_state_dict(torch.load(path_to_model,map_location=dev))
+    #
+    # for i,log_layer in enumerate(model.network.all_logits):
+    #     model.network.all_logits[i] = Logits(log_layer.logits.in_channels,
+    #                                           2,
+    #                                           False)
 
     alternate_model = SegmentationModel(val_fold=vf,
                                 data_name=data_name,
@@ -126,7 +126,7 @@ for vf in vfs:
                                 model_name=model_name,
                                 model_parameters=alternate_model_params)
 
-    alternate_model.network.load_state_dict(model.network.state_dict())
+    # alternate_model.network.load_state_dict(model.network.state_dict())
 
-    alternate_model.training.train()
-    alternate_model.eval_validation_set()
+    # alternate_model.training.train()
+    alternate_model.eval_validation_set(continuous=True)
