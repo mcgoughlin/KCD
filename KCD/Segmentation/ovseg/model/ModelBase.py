@@ -527,12 +527,12 @@ class ModelBase(object):
 
             # predict from this datapoint
             print(data_tpl['orig_shape'],data_tpl['image'].shape)
-            pred = torch.Tensor(self.__callcont__(data_tpl,do_postprocessing=True))
+            pred = self.__callcont__(data_tpl,do_postprocessing=True)
 
             if torch.is_tensor(pred):
-                pred = pred.cpu().int().numpy()
+                pred = pred.cpu().numpy()
 
-            print(pred.max(),pred.min())
+            print(pred.max(),pred.min(),pred.shape)
             # store the prediction for example as nii files
             if save_preds:
                 self.save_prediction(data_tpl, folder_name=save_folder_name, filename=scan)

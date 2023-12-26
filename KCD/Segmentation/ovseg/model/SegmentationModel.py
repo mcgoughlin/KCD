@@ -353,7 +353,8 @@ class SegmentationModel(ModelBase):
         # inside the postprocessing the result will be attached to the data_tpl
         if do_postprocessing:
             self.postprocessing.postprocess_cont_data_tpl(data_tpl, self.pred_key, bin_pred)
-
+        data_tpl[self.pred_key] = data_tpl[self.pred_key][0]
+        data_tpl[self.pred_key+'_orig_shape'] = data_tpl[self.pred_key+'_orig_shape'][0]
         return data_tpl[self.pred_key]
 
 
