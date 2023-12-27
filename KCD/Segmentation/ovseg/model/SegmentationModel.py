@@ -345,9 +345,7 @@ class SegmentationModel(ModelBase):
                 bin_pred = None
         # now the importat part: the sliding window evaluation (or derivatives of it)
         pred = np.expand_dims(self.prediction(im)[1], axis=0)
-        print(pred.shape,pred.mean(),pred.max(),pred.min())
         #print the median of the prediction
-        print(np.median(pred))
         data_tpl[self.pred_key] = pred
 
         # inside the postprocessing the result will be attached to the data_tpl

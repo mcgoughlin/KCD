@@ -495,7 +495,6 @@ def save_nii_from_data_tpl(data_tpl, out_file, key):
             for imf in im_folders:
                 if basename(data_tpl['raw_image_file']) in listdir(join(raw_path, imf)):
                     im_file.append(join(raw_path, imf, basename(data_tpl['raw_image_file'])))
-
     if im_file is not None:
         # if we have found a raw_image_file, we will use it to build the prediction nifti
         if isinstance(im_file, (list, tuple)):

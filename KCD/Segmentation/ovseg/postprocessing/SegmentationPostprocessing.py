@@ -222,10 +222,6 @@ class SegmentationPostprocessing(object):
         # now change to CPU and numpy
         if torch.is_tensor(volume):
             volume = volume.cpu().numpy()
-
-        print('postprocess_volume_cont: volume.shape = ', volume.shape)
-        print('postprocess_volume_cont: volume.max() = ', volume.max())
-        print('postprocess_volume_cont: volume.min() = ', volume.min())
         return volume
 
     def postprocess_data_tpl(self, data_tpl, prediction_key, reg=None):
