@@ -10,7 +10,7 @@ import sys
 
 data_name = 'masked_coreg_ncct'
 spacing = 2
-fold = 0
+fold = int(sys.argv[1])
 
 pretrain_name = 'kits23_nooverlap'
 # preprocessed_name = '4mm_binary'
@@ -103,7 +103,7 @@ alternate_model_params['data']['val_dl_params']['epoch_len']=50
 
 
 
-for vf in [0,1,2,3,4]:
+for vf in [vfs]:
     path_to_model = '{}/trained_models/{}/2mm_binary/6,3x3x3,32/fold_4/network_weights'.format(os.environ['OV_DATA_BASE'],
                                                                                          pretrain_name)
     #
