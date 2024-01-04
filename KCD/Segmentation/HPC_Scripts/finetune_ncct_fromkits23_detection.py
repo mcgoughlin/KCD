@@ -104,21 +104,21 @@ alternate_model_params['data']['val_dl_params']['epoch_len']=50
 
 
 for vf in [0,1,2,3,4]:
-    # path_to_model = '{}/trained_models/{}/2mm_binary/6,3x3x3,32/fold_4/network_weights'.format(os.environ['OV_DATA_BASE'],
-    #                                                                                      pretrain_name)
+    path_to_model = '{}/trained_models/{}/2mm_binary/6,3x3x3,32/fold_4/network_weights'.format(os.environ['OV_DATA_BASE'],
+                                                                                         pretrain_name)
     #
-    # model = SegmentationModel(val_fold=vf,
-    #                             data_name=data_name,
-    #                             preprocessed_name=preprocessed_name,
-    #                             model_name=model_name,
-    #                             model_parameters=model_params)
+    model = SegmentationModel(val_fold=vf,
+                                data_name=data_name,
+                                preprocessed_name=preprocessed_name,
+                                model_name=model_name,
+                                model_parameters=model_params)
     #
-    # model.network.load_state_dict(torch.load(path_to_model,map_location=dev))
+    model.network.load_state_dict(torch.load(path_to_model,map_location=dev))
     #
-    # for i,log_layer in enumerate(model.network.all_logits):
-    #     model.network.all_logits[i] = Logits(log_layer.logits.in_channels,
-    #                                           2,
-    #                                           False)
+    for i,log_layer in enumerate(model.network.all_logits):
+        model.network.all_logits[i] = Logits(log_layer.logits.in_channels,
+                                              2,
+                                              False)
 
     alternate_model = SegmentationModel(val_fold=vf,
                                 data_name=data_name,
@@ -126,7 +126,7 @@ for vf in [0,1,2,3,4]:
                                 model_name=model_name,
                                 model_parameters=alternate_model_params)
 
-    # alternate_model.network.load_state_dict(model.network.state_dict())
+    alternate_model.network.load_state_dict(model.network.state_dict())
 
-    # alternate_model.training.train()
+    alternate_model.training.train()
     alternate_model.eval_validation_set(continuous=True)
