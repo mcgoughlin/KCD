@@ -82,9 +82,17 @@ class Ensemble_Seg(nn.Module):
         if not exists(self.lrsv_fold_size):
             mkdir(self.lrsv_fold_size)
 
+        self.lrsv_fold_size_c = join(lrsv_fold, "{}mm_cont".format(self.spacing))
+        if not exists(self.lrsv_fold_size_c):
+            mkdir(self.lrsv_fold_size_c)
+
         self.sv_fold_size = join(self.seg_save_loc, self.data_name, '{}mm'.format(self.spacing))
         if not exists(self.sv_fold_size):
             mkdir(self.sv_fold_size)
+
+        self.sv_fold_size_c = join(self.seg_save_loc, self.data_name, '{}mm_cont'.format(self.spacing))
+        if not exists(self.sv_fold_size_c):
+            mkdir(self.sv_fold_size_c)
 
         if do_prep:
             self.Segmentation_Preparation(self.spacing, data_name=self.data_name)
@@ -189,6 +197,32 @@ class Ensemble_Seg(nn.Module):
         print("pred_holder max", pred_holder.max())
         return pred_holder, np.where(pred_lowres > 2, 1, 0)
 
+    def seg_pred_cont(self, data_tpl):
+
+        im = data_tpl['image']
+        im = maybe_add_channel_dim(im)
+
+        im = torch.from_numpy(im)
+        # if torch.backends.mps.is_available:
+        #     im.type(torch.MPSFloatType)
+        im.to(self.seg_dev)
+        # now the importat part: the sliding window evaluation (or derivatives of it)
+        pred_holder = None
+        pred_lowres = None
+        for model in self.Segment:
+            pred = model(im)
+            data_tpl['pred'] = pred
+
+            if type(pred_holder) == type(None):
+                pred_holder = data_tpl['pred_orig_shape']
+                pred_lowres = data_tpl['pred']
+            else:
+                pred_holder += data_tpl['pred_orig_shape']
+                pred_lowres += data_tpl['pred']
+
+        print("pred_holder max", pred_holder.max())
+        return pred_holder, pred_lowres
+
     def save_prediction(self, data_tpl, filename=None, key='pred_orig_shape',
                         save_npy=True):
 
@@ -207,6 +241,26 @@ class Ensemble_Seg(nn.Module):
         im_aff = self.save_nii_from_data_tpl(data_tpl, join(self.sv_fold_size, filename), key)
         if save_npy:
             self.save_npy_from_data_tpl(data_tpl, join(self.lrsv_fold_size, filename[:-7]), lr_key, aff=im_aff)
+
+    def save_prediction_cont(self, data_tpl, filename=None, key='pred_orig_shape_cont',
+                        save_npy=True):
+
+        # find name of the file
+        if filename is None:
+            filename = data_tpl['scan'] + '.nii.gz'
+        else:
+            # remove fileextension e.g. .nii.gz
+            filename = filename.split('.')[0] + '.nii.gz'
+
+        key = 'pred_orig_shape_cont'
+        lr_key = 'pred_lowres_cont'
+        assert (key in data_tpl)
+        assert (lr_key in data_tpl)
+
+        im_aff = self.save_nii_from_data_tpl_cont(data_tpl, join(self.sv_fold_size_c, filename), key)
+        if save_npy:
+            self.save_npy_from_data_tpl(data_tpl, join(self.lrsv_fold_size_c, filename[:-7]), lr_key,
+                                        aff=im_aff, cont=True)
 
     def save_nii_from_data_tpl(self, data_tpl, out_file, key):
         arr = data_tpl[key]
@@ -255,7 +309,7 @@ class Ensemble_Seg(nn.Module):
         nib.save(nii_img, out_file)
         return img.affine
 
-    def save_npy_from_data_tpl(self, data_tpl, out_file, key, aff=None):
+    def save_nii_from_data_tpl(self, data_tpl, out_file, key):
         arr = data_tpl[key]
 
         if not data_tpl['had_z_first']:
@@ -265,8 +319,95 @@ class Ensemble_Seg(nn.Module):
             for i in range(len(arr)):
                 arr[i] = binary_fill_holes(arr[i])
         else:
+
             for i in range(len(arr[0, 0])):
                 arr[:, :, i] = binary_fill_holes(arr[:, :, i])
+
+        raw_path = join(self.home, 'raw_data', data_tpl['dataset'])
+        im_file = None
+        if data_tpl['raw_image_file'].endswith('.nii.gz'):
+            # if not the file was loaded from dcm
+            if exists(data_tpl['raw_image_file']):
+                im_file = data_tpl['raw_image_file']
+            elif exists(raw_path):
+                # ups! This happens when you've copied over the preprocessed data from one
+                # system to antoher. We have to find the raw image file, but luckily everything
+                # should be contained in the data_tpl to track the file
+                im_folders = [imf for imf in listdir(raw_path) if imf.startswith('images')]
+                im_file = []
+                for imf in im_folders:
+                    if basename(data_tpl['raw_image_file']) in listdir(join(raw_path, imf)):
+                        im_file.append(join(raw_path, imf, basename(data_tpl['raw_image_file'])))
+
+        if im_file is not None:
+            # if we have found a raw_image_file, we will use it to build the prediction nifti
+            if isinstance(im_file, (list, tuple)):
+                im_file = im_file[0]
+            img = nib.load(im_file)
+            nii_img = nib.Nifti1Image(arr, img.affine, img.header)
+        else:
+            # if we couldn't find anything (e.g. if the image was given as a DICOM)
+            nii_img = nib.Nifti1Image(arr, np.eye(4))
+            if key.endswith('orig_shape') and 'orig_spacing' in data_tpl:
+                nii_img.header['pixdim'][1:4] = data_tpl['orig_spacing']
+            else:
+                nii_img.header['pixdim'][1:4] = data_tpl['spacing']
+
+        nib.save(nii_img, out_file)
+        return img.affine
+
+    def save_nii_from_data_tpl_cont(self, data_tpl, out_file, key):
+        arr = data_tpl[key]
+
+        if not data_tpl['had_z_first']:
+            arr = np.stack([arr[z] for z in range(arr.shape[0])], -1)
+
+        raw_path = join(self.home, 'raw_data', data_tpl['dataset'])
+        im_file = None
+        if data_tpl['raw_image_file'].endswith('.nii.gz'):
+            # if not the file was loaded from dcm
+            if exists(data_tpl['raw_image_file']):
+                im_file = data_tpl['raw_image_file']
+            elif exists(raw_path):
+                # ups! This happens when you've copied over the preprocessed data from one
+                # system to antoher. We have to find the raw image file, but luckily everything
+                # should be contained in the data_tpl to track the file
+                im_folders = [imf for imf in listdir(raw_path) if imf.startswith('images')]
+                im_file = []
+                for imf in im_folders:
+                    if basename(data_tpl['raw_image_file']) in listdir(join(raw_path, imf)):
+                        im_file.append(join(raw_path, imf, basename(data_tpl['raw_image_file'])))
+
+        if im_file is not None:
+            # if we have found a raw_image_file, we will use it to build the prediction nifti
+            if isinstance(im_file, (list, tuple)):
+                im_file = im_file[0]
+            img = nib.load(im_file)
+            nii_img = nib.Nifti1Image((arr*1000).astype(int), img.affine, img.header)
+        else:
+            # if we couldn't find anything (e.g. if the image was given as a DICOM)
+            nii_img = nib.Nifti1Image((arr*1000).astype(int), np.eye(4))
+            if key.endswith('orig_shape') and 'orig_spacing' in data_tpl:
+                nii_img.header['pixdim'][1:4] = data_tpl['orig_spacing']
+            else:
+                nii_img.header['pixdim'][1:4] = data_tpl['spacing']
+
+        nib.save(nii_img, out_file)
+        return img.affine
+
+    def save_npy_from_data_tpl(self, data_tpl, out_file, key, aff=None,cont=False):
+        arr = data_tpl[key]
+
+        if not data_tpl['had_z_first']:
+            arr = np.stack([arr[z] for z in range(arr.shape[0])], -1)
+
+        if not cont:
+            if data_tpl['had_z_first']:
+                for i in range(len(arr)):
+                    arr[i] = binary_fill_holes(arr[i])
+            else:
+                for i in range(len(arr[0, 0])):
+                    arr[:, :, i] = binary_fill_holes(arr[:, :, i])
 
         if not (aff is None):
             # ensures images always come in with a constant orientation,
@@ -280,8 +421,7 @@ class Ensemble_Seg(nn.Module):
 
         np.save(out_file, arr)
 
-    def Segment_CT(self, im_path: str = None, save_path: str = None,
-                   volume_thresholds=[250]):
+    def Segment_CT(self,volume_thresholds=[250],cont=False):
         ##to convert the save process from .npy to .nii.gz we need to do the following:
         ## use from ovseg.utils.io import save_nii_from_data_tpl, which requires data to be in data_tpl form not volume form. This requires:
         ## we use Dataset dataloader to feed data to unet, as this generates the data_tpl for each scan. Effectively, we will be setting up Simstudy data as a validation
@@ -311,13 +451,20 @@ class Ensemble_Seg(nn.Module):
 
                 # predict from this datapoint
                 pred, pred_lowres = self.seg_pred(data_tpl)
+                data_tpl['pred_orig_shape'] = pred
+                data_tpl['pred_lowres'] = pred_lowres
+
+                if cont:
+                    pred_cont, pred_lowres_cont = self.seg_pred_cont(data_tpl)
+                    data_tpl['pred_orig_shape_cont'] = pred
+                    data_tpl['pred_lowres_cont'] = pred_lowres
 
                 if torch.is_tensor(pred):
                     pred = pred.cpu().numpy()
+                    if cont: pred_cont = pred_cont.cpu().numpy()
 
-                data_tpl['pred_orig_shape'] = pred
-                data_tpl['pred_lowres'] = pred_lowres
                 self.save_prediction(data_tpl, filename=data_tpl['scan'])
+                self.save_prediction_cont(data_tpl, filename=data_tpl['scan'])
                 print("")
 
             print("Segmentations complete!\n")
