@@ -1,22 +1,24 @@
 import os
 os.environ['OV_DATA_BASE'] = "/home/wcm23/rds/hpc-work/FineTuningKITS23"
-
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
-from KCD.Segmentation.ovseg.preprocessing.SegmentationPreprocessing import SegmentationPreprocessing
-
+from KCD.Segmentation.ovseg.networks.UNet import Logits
 import gc
 import torch
 import sys
 
 
-data_name = 'kits23_nooverlap'
+data_name = 'masked_coreg_ncct'
 spacing = 2
 fold = int(sys.argv[1])
+pretrain_name = 'kits23_nooverlap'
+# preprocessed_name = '4mm_binary'
+preprocessed_name = '2mm_binary'
+# preprocessed_name='4mm_binary_test'
+model_name = '6,3x3x3,32_finetune_fromkits23no-canceronly_detection'
 
-preprocessed_name = '2mm_binary_canceronly'
-model_name = '6,3x3x3,32_justcancer'
 
+dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 vfs = [fold]
 
 patch_size = [64,64,64]
@@ -51,35 +53,44 @@ del model_params['network']['stochdepth_rate']
 lr=0.0001
 model_params['data']['folders'] = ['images', 'labels']
 model_params['data']['keys'] = ['image', 'label']
-model_params['training']['num_epochs'] = 500
+model_params['training']['num_epochs'] = 300
 model_params['training']['opt_name'] = 'ADAM'
 model_params['training']['opt_params'] = {'lr': lr,
                                             'betas': (0.95, 0.9),
                                             'eps': 1e-08}
-model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.004}
+model_params['training']['lr_params'] = {'n_warmup_epochs': 20, 'lr_max': 1e-4}
 model_params['data']['trn_dl_params']['epoch_len']=250
 model_params['data']['trn_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['data']['val_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['training']['lr_schedule'] = 'lin_ascent_log_decay'
 model_params['training']['lr_exponent'] = 3
-model_params['data']['trn_dl_params']['batch_size']=16
+model_params['data']['trn_dl_params']['batch_size']=48
 model_params['data']['val_dl_params']['epoch_len']=50
-model_params['training']['is_voxsim'] = False
-# model_params['postprocessing'] = {'mask_with_reg': True}
+model_params['data']['trn_dl_params']['min_biased_samples'] = 40
 
 for vf in vfs:
+    path_to_model = '/home/wcm23/rds/hpc-work/FineTuningKITS23/trained_models/kits23_nooverlap/2mm_binary_canceronly/6,3x3x3,32_justcancer/fold_4/network_weights'
+
     model = SegmentationModel(val_fold=vf,
                                 data_name=data_name,
-                                preprocessed_name=preprocessed_name, 
+                                preprocessed_name=preprocessed_name,
                                 model_name=model_name,
                                 model_parameters=model_params)
-    torch.cuda.empty_cache()
-    gc.collect()
-    model.training.train()
-    
-    torch.cuda.empty_cache()
-    gc.collect()
 
-    model.eval_validation_set()
-    torch.cuda.empty_cache()
-    gc.collect()
+    model.network.load_state_dict(torch.load(path_to_model,map_location=dev))
+    #
+    # for i,log_layer in enumerate(model.network.all_logits):
+    #     model.network.all_logits[i] = Logits(log_layer.logits.in_channels,
+    #                                           2,
+    #                                           False)
+
+    # alternate_model = SegmentationModel(val_fold=vf,
+    #                             data_name=data_name,
+    #                             preprocessed_name=preprocessed_name,
+    #                             model_name=model_name,
+    #                             model_parameters=alternate_model_params)
+
+    # alternate_model.network.load_state_dict(model.network.state_dict())
+
+    model.training.train()
+    model.eval_validation_set(continuous=True)

@@ -82,7 +82,7 @@ class SegmentationTraining(NetworkTraining):
             mask = mask * xb[: -1:]      
 
         yb = to_one_hot_encoding(yb, self.network.out_channels)
-        out = self.network(xb,is_voxsim=self.is_voxsim)
+        out = self.network(xb)
         loss = self.loss_fctn(out, yb, mask)
         return loss
 

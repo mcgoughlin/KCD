@@ -28,7 +28,7 @@ class NetworkTraining(TrainingBase):
                  augmentation=None, val_dl=None, dev='cuda', nu_ema_trn=0.99,
                  nu_ema_val=0.7, network_name='network', fp32=False,
                  p_plot_list=[1, 0.5, 0.2], opt_name='SGD', lr_schedule='almost_linear', lr_exponent=0,
-                 no_bias_weight_decay=False, save_additional_weights_after_epochs=[]):
+                 no_bias_weight_decay=False, save_additional_weights_after_epochs=[],is_voxsim=False):
         super().__init__(trn_dl, num_epochs, model_path)
 
         self.network = network
@@ -57,6 +57,7 @@ class NetworkTraining(TrainingBase):
                                  'lr_params', 'nu_ema_trn', 'nu_ema_val', 'fp32']
         # training loss
         self.trn_loss = None
+        self.is_voxsim = is_voxsim
         self.trn_losses = []
         self.checkpoint_attributes.append('trn_losses')
         if self.val_dl is not None:
