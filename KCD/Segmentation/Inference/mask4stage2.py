@@ -17,6 +17,9 @@ save_loc = str(sys.argv[3]) # '/Users/mcgoug01/Downloads/masked_coreg_ncct/image
 npy_label_list = os.listdir(npy_label_loc)
 nii_image_list = os.listdir(nii_image_loc)
 
+if not os.path.exists(save_loc):
+    os.makedirs(save_loc)
+
 #we want to dilate label 40x40x40mm, so 10x10x10 voxels
 
 for npy_label in npy_label_list:

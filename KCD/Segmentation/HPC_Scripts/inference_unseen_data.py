@@ -6,8 +6,8 @@ import numpy as np
 
 seg_fp = '/home/wcm23/rds/hpc-work/FineTuningKITS23/trained_models/coreg_ncct/4mm_binary/6,3x3x3,32_finetune_fromallcect'
 # seg_fp = '/home/wcm23/rds/hpc-work/FineTuningKITS23/trained_models/all_cect/4mm_binary/6,3x3x3,32'
-data_names = ['coreg_ncct']
-do_prep = False
+data_names = ['test_set']
+do_prep = True
 do_infer = True
 
 for data_name in data_names:
