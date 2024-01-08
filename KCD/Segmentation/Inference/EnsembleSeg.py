@@ -267,8 +267,6 @@ class Ensemble_Seg(nn.Module):
     def save_nii_from_data_tpl(self, data_tpl, out_file, key):
         arr = data_tpl[key]
 
-        print("arr shape", arr.shape)
-
         if not data_tpl['had_z_first']:
             arr = np.stack([arr[z] for z in range(arr.shape[0])], -1)
 
@@ -309,8 +307,6 @@ class Ensemble_Seg(nn.Module):
                 nii_img.header['pixdim'][1:4] = data_tpl['orig_spacing']
             else:
                 nii_img.header['pixdim'][1:4] = data_tpl['spacing']
-
-        print("saving to {}".format(out_file))
         nib.save(nii_img, out_file)
         return img.affine
 
@@ -437,7 +433,7 @@ class Ensemble_Seg(nn.Module):
         # self._load_UNet(self.seg_mp_high,self.seg_dev,res='high')
 
         self.preprocess_path = join(self.home, "preprocessed", self.data_name, self.preprocessed_name, "images")
-
+        print("Preprocessed data loaded from {}".format(self.preprocess_path))
         self.SegProcess = SegProcess(apply_small_component_removing=True, lb_classes=[1],
                                      volume_thresholds=volume_thresholds,
                                      remove_comps_by_volume=True,
@@ -449,6 +445,7 @@ class Ensemble_Seg(nn.Module):
 
         for i in range(len(self.Segment)):
             seg_ppdata = SegmentationData(None, False, i, preprocessed_path=split(self.preprocess_path)[0], **params_low)
+            print("Segmenting {}...".format(seg_ppdata))
             for j in range(len(seg_ppdata.val_ds)):
                 data_tpl = seg_ppdata.val_ds[j]
                 filename = data_tpl['scan'] + '.nii.gz'
