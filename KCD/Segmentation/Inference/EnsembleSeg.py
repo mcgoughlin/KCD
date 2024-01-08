@@ -466,7 +466,8 @@ class Ensemble_Seg(nn.Module):
                     if cont: pred_cont = pred_cont.cpu().numpy()
 
                 self.save_prediction(data_tpl, filename=data_tpl['scan'])
-                self.save_prediction_cont(data_tpl, filename=data_tpl['scan'])
+                if cont:
+                    self.save_prediction_cont(data_tpl, filename=data_tpl['scan'])
                 print("")
 
             print("Segmentations complete!\n")
