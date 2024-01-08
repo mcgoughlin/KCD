@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch
 import collections
 from scipy import stats
-import file_utils as fu
+import KCD.Detection.Preprocessing.AxialSlices.file_utils as fu
 import SimpleITK as sitk
 from skimage.measure import regionprops
 
