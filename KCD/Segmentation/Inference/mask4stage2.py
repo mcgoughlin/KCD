@@ -29,6 +29,8 @@ for npy_label in npy_label_list:
     label = np.load(os.path.join(npy_label_loc, npy_label))
     dilated_label = binary_dilation(label, iterations=10)
     image_data = image.get_fdata()
+    image_data = np.rot90(image_data, axes=(0, 1), k=3)
+    image_data = np.flip(np.flip(image_data, axis=-1), 1)
 
     if 'RCC' in npy_label:
         # interpolate label spacing from (4x4x4) to image spacing in the 'spacing' variable
@@ -36,10 +38,7 @@ for npy_label in npy_label_list:
         nn.functional.interpolate(torch.unsqueeze(torch.unsqueeze(torch.Tensor(dilated_label), dim=0), dim=0),
                                   mode='nearest', size=image_data.shape).numpy()[0, 0]
         print(label_expanded.shape, image_data.shape)
-        image_data = np.rot90(image_data, axes=(0, 1), k=3)
-        image_data = np.flip(np.flip(image_data, axis=-1),1)
         masked_image = np.where(label_expanded == 0, -500, image_data)
-        masked_image = np.flip(np.flip(np.rot90(masked_image, axes=(0, 1), k=3),axis=-1),1)
     else:
         # reshape so this is first axis - find the uncommon axis and move it to the front
         mode, counts = stats.mode(np.array(dilated_label.shape), axis=0)
