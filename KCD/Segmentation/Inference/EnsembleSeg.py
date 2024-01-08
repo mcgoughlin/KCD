@@ -439,7 +439,7 @@ class Ensemble_Seg(nn.Module):
                                      remove_comps_by_volume=True,
                                      use_fill_holes_3d=True)
         self.segmodel_parameters_low = np.load(join(self.seg_mp_low, "model_parameters.pkl"), allow_pickle=True)
-
+        print("Segmentation model parameters are {}".format(self.segmodel_parameters_low))
         params_low = self.segmodel_parameters_low['data'].copy()
         params_low['n_folds']=len(self.Segment)
 
