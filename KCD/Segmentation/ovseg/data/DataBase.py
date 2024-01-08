@@ -43,10 +43,10 @@ class DataBase():
         if exists(path_to_splits):
             # in this case a split of data is given
             print('Found existing data split')
-            print(self.splits)
 
             self.splits = io.load_pkl(path_to_splits)
             self.n_folds = len(self.splits)
+            print(self.splits)
         else:
             print('No data split found.')
             print('Computing new one..')
