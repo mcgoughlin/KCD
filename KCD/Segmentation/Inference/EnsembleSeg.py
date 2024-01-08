@@ -267,6 +267,8 @@ class Ensemble_Seg(nn.Module):
     def save_nii_from_data_tpl(self, data_tpl, out_file, key):
         arr = data_tpl[key]
 
+        print("arr shape", arr.shape)
+
         if not data_tpl['had_z_first']:
             arr = np.stack([arr[z] for z in range(arr.shape[0])], -1)
 
@@ -308,6 +310,7 @@ class Ensemble_Seg(nn.Module):
             else:
                 nii_img.header['pixdim'][1:4] = data_tpl['spacing']
 
+        print("saving to {}".format(out_file))
         nib.save(nii_img, out_file)
         return img.affine
 
