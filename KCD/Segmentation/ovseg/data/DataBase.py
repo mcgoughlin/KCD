@@ -11,7 +11,8 @@ class DataBase():
 
     def __init__(self, val_fold, preprocessed_path, keys, folders, n_folds=5,
                  fixed_shuffle=True, trn_dl_params={}, ds_params={},
-                 val_dl_params={}):
+                 val_dl_params={},ignore_split=False):
+        self.ignore_split = ignore_split
         '''
         DataBase(val_fold, preprocessed_path, n_folds=5, fixed_shuffle=True,
                  trn_dl_params={}, ds_params={}, val_dl_params={})
@@ -42,6 +43,8 @@ class DataBase():
         if exists(path_to_splits):
             # in this case a split of data is given
             print('Found existing data split')
+            print(self.splits)
+
             self.splits = io.load_pkl(path_to_splits)
             self.n_folds = len(self.splits)
         else:
