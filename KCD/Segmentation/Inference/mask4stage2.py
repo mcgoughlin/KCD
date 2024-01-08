@@ -53,7 +53,7 @@ for nii_label in npy_label_list:
     masked_image = np.where(dilated_label == 0, -500, image_data)
     spacing_vector = scale_factors * np.array([4,4,4])
 
-    # rearrange so that the non-modal axes are at the start of the array - use modal and non-modal of label calculated earlier
+    # rearrange so that the non-modal axes are at the end of the array - use modal and non-modal of label calculated earlier
     while masked_image.shape[-1] == shape_mode:
         if masked_image.shape[0] != shape_mode:
             masked_image = np.transpose(masked_image, (2,1,0))
