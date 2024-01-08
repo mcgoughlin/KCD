@@ -30,7 +30,9 @@ for npy_label in npy_label_list:
     dilated_label = binary_dilation(label, iterations=10)
     image_data = image.get_fdata()
     aff = image.affine
+    print(npy_label)
     print(aff)
+    print()
 
     if 'RCC' in npy_label:
         # interpolate label spacing from (4x4x4) to image spacing in the 'spacing' variable
