@@ -42,7 +42,7 @@ SegLoader, Segment, SegProcess = infer_network.get_3d_UNet, SlidingWindowPredict
 class Ensemble_Seg(nn.Module):
     def __init__(self, data_name: str = None,  ##seg preprocess args
                  seg_fp: str = None, spacing=np.array([3, 3, 3]),
-                 do_prep=False, do_infer=False,is_cect=False):  ##seg args
+                 do_prep=False, do_infer=False,is_cect=False,cont=False):  ##seg args
         super().__init__()
 
         print("")
@@ -55,6 +55,7 @@ class Ensemble_Seg(nn.Module):
         self.cases = [file for file in listdir(case_path) if file.endswith('.nii.gz') or file.endswith('.nii')]
         self.data_name = data_name
         self.is_cect = is_cect
+        self.cont = cont
 
         # ### SEG PREPROCESS ###
         self.preprocessed_name = str(spacing[0]) + ',' + str(spacing[1]) + ',' + str(spacing[2]) + "mm"
@@ -82,17 +83,18 @@ class Ensemble_Seg(nn.Module):
         if not exists(self.lrsv_fold_size):
             mkdir(self.lrsv_fold_size)
 
-        self.lrsv_fold_size_c = join(lrsv_fold, "{}mm_cont".format(self.spacing))
-        if not exists(self.lrsv_fold_size_c):
-            mkdir(self.lrsv_fold_size_c)
-
         self.sv_fold_size = join(self.seg_save_loc, self.data_name, '{}mm'.format(self.spacing))
         if not exists(self.sv_fold_size):
             mkdir(self.sv_fold_size)
 
-        self.sv_fold_size_c = join(self.seg_save_loc, self.data_name, '{}mm_cont'.format(self.spacing))
-        if not exists(self.sv_fold_size_c):
-            mkdir(self.sv_fold_size_c)
+        if cont:
+            self.lrsv_fold_size_c = join(lrsv_fold, "{}mm_cont".format(self.spacing))
+            if not exists(self.lrsv_fold_size_c):
+                mkdir(self.lrsv_fold_size_c)
+
+            self.sv_fold_size_c = join(self.seg_save_loc, self.data_name, '{}mm_cont'.format(self.spacing))
+            if not exists(self.sv_fold_size_c):
+                mkdir(self.sv_fold_size_c)
 
         if do_prep:
             self.Segmentation_Preparation(self.spacing, data_name=self.data_name)
@@ -101,7 +103,7 @@ class Ensemble_Seg(nn.Module):
         print("Conducting Segmentation.")
         self.seg_mp_low = seg_fp
         if do_infer:
-            self.Segment_CT()
+            self.Segment_CT(cont=self.cont)
         print("Segmentation complete!")
         print("")
         torch.cuda.empty_cache()

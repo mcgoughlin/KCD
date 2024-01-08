@@ -14,5 +14,6 @@ for data_name in data_names:
     test = Ensemble_Seg(data_name,
                         seg_fp=seg_fp,
                         spacing=np.array([2] * 3),
-                        do_prep=do_prep, do_infer=do_infer,is_cect=False)
+                        do_prep=do_prep, do_infer=do_infer,
+                        is_cect=False,cont=True)
 
