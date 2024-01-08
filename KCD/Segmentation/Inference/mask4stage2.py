@@ -11,9 +11,9 @@ from scipy import stats
 import sys
 from KCD.Detection.Preprocessing.AxialSlices import array_manipulation_utils as amu
 
-nii_label_loc ='/Users/mcgoug01/Downloads/inferences/niigz'# str(sys.argv[1]) # '/Users/mcgoug01/Downloads/inferences/[4 4 4]mm'
-nii_image_loc = '/Users/mcgoug01/Downloads/ims'# str(sys.argv[2]) # '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/coreg_ncct/images'
-save_loc = '/Users/mcgoug01/Downloads/masked_coreg_ncct/images' #str(sys.argv[3]) # '/Users/mcgoug01/Downloads/masked_coreg_ncct/images'
+nii_label_loc = str(sys.argv[1]) # '/Users/mcgoug01/Downloads/inferences/[4 4 4]mm'
+nii_image_loc = str(sys.argv[2]) # '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/coreg_ncct/images'
+save_loc =  str(sys.argv[3]) # '/Users/mcgoug01/Downloads/masked_coreg_ncct/images'
 npy_label_list = os.listdir(nii_label_loc)
 nii_image_list = os.listdir(nii_image_loc)
 
