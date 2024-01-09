@@ -216,11 +216,13 @@ class Ensemble_Seg(nn.Module):
 
             data_tpl['pred_cont'] = pred
 
+            data_tpl = self.SegProcess.postprocess_cont_data_tpl(data_tpl, 'pred_cont')
+
             if type(pred_holder) == type(None):
-                pred_holder = data_tpl['pred_orig_shape_cont']
+                pred_holder = data_tpl['pred_cont_orig_shape']
                 pred_lowres = data_tpl['pred_cont']
             else:
-                pred_holder += data_tpl['pred_orig_shape_cont']
+                pred_holder += data_tpl['pred_cont_orig_shape']
                 pred_lowres += data_tpl['pred_cont']
 
         print(im.dtype)
