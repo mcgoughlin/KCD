@@ -259,8 +259,8 @@ class Ensemble_Seg(nn.Module):
             # remove fileextension e.g. .nii.gz
             filename = filename.split('.')[0] + '.nii.gz'
 
-        key = 'pred_orig_shape_cont'
-        lr_key = 'pred_lowres_cont'
+        key = 'pred_cont_orig_shape'
+        lr_key = 'pred_cont'
         assert (key in data_tpl)
         assert (lr_key in data_tpl)
 
