@@ -212,15 +212,18 @@ class Ensemble_Seg(nn.Module):
         pred_holder = None
         pred_lowres = None
         for model in self.Segment:
+            print(im.dtype)
             pred = model(im)
-            data_tpl['pred'] = pred
+            print("cont pred median", pred.median())
+            print("cont pred max", pred.max())
+            data_tpl['pred_cont'] = pred
 
             if type(pred_holder) == type(None):
-                pred_holder = data_tpl['pred_orig_shape']
-                pred_lowres = data_tpl['pred']
+                pred_holder = data_tpl['pred_orig_shape_cont']
+                pred_lowres = data_tpl['pred_cont']
             else:
-                pred_holder += data_tpl['pred_orig_shape']
-                pred_lowres += data_tpl['pred']
+                pred_holder += data_tpl['pred_orig_shape_cont']
+                pred_lowres += data_tpl['pred_cont']
 
         print("pred_holder max", pred_holder.max())
         return pred_holder, pred_lowres
@@ -439,13 +442,11 @@ class Ensemble_Seg(nn.Module):
                                      remove_comps_by_volume=True,
                                      use_fill_holes_3d=True)
         self.segmodel_parameters_low = np.load(join(self.seg_mp_low, "model_parameters.pkl"), allow_pickle=True)
-        print("Segmentation model parameters are {}".format(self.segmodel_parameters_low))
         params_low = self.segmodel_parameters_low['data'].copy()
         params_low['n_folds']=len(self.Segment)
 
         for i in range(len(self.Segment)):
             seg_ppdata = SegmentationData(None, False, i, preprocessed_path=split(self.preprocess_path)[0], **params_low)
-            print("Segmenting {}...".format(seg_ppdata))
             for j in range(len(seg_ppdata.val_ds)):
                 data_tpl = seg_ppdata.val_ds[j]
                 filename = data_tpl['scan'] + '.nii.gz'

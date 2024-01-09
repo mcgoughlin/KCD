@@ -46,8 +46,6 @@ class DataBase():
 
             self.splits = io.load_pkl(path_to_splits)
             self.n_folds = len(self.splits)
-            print(self.splits)
-            print(self.n_folds)
         else:
             print('No data split found.')
             print('Computing new one..')
