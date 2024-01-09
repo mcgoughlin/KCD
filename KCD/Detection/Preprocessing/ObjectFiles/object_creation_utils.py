@@ -7,10 +7,10 @@ from scipy.spatial import distance
 from skimage.measure import regionprops,marching_cubes
 import scipy.ndimage as spim
 from scipy import stats
-import test_utils as tu
-import feature_extraction_utils as feu
-import graph_smoothing_utils as gmu
-import file_utils as fu
+from KCD.Detection.Preprocessing.ObjectFiles import test_utils as tu
+from KCD.Detection.Preprocessing.ObjectFiles import feature_extraction_utils as feu
+from KCD.Detection.Preprocessing.ObjectFiles import graph_smoothing_utils as gmu
+from KCD.Detection.Preprocessing.ObjectFiles import file_utils as fu
 import csv
 
 def nifti_2_correctarr(im_n):

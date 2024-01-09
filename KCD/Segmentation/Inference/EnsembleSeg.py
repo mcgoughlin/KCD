@@ -461,8 +461,8 @@ class Ensemble_Seg(nn.Module):
 
                 if cont:
                     pred_cont, pred_lowres_cont = self.seg_pred_cont(data_tpl)
-                    data_tpl['pred_orig_shape_cont'] = pred
-                    data_tpl['pred_lowres_cont'] = pred_lowres
+                    data_tpl['pred_cont_orig_shape'] = pred_cont
+                    data_tpl['pred_cont'] = pred_lowres_cont
 
                 if torch.is_tensor(pred):
                     pred = pred.cpu().numpy()
