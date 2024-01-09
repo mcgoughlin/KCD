@@ -18,7 +18,7 @@ cancer_gt = os.path.join(path, 'cancer_labels')
 kidney_infp = os.path.join(path, 'kid_inferences')
 
 confidence_thresholds = np.arange(0.05, 1, 0.05)
-size_thresholds = np.arange(100, 1000, 100)
+size_thresholds = np.arange(0, 2000, 200)
 
 results =[]
 
