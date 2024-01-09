@@ -212,10 +212,8 @@ class Ensemble_Seg(nn.Module):
         pred_holder = None
         pred_lowres = None
         for model in self.Segment:
-            print(im.dtype)
             pred = model(im)
-            print("cont pred median", pred.median())
-            print("cont pred max", pred.max())
+
             data_tpl['pred_cont'] = pred
 
             if type(pred_holder) == type(None):
@@ -225,6 +223,8 @@ class Ensemble_Seg(nn.Module):
                 pred_holder += data_tpl['pred_orig_shape_cont']
                 pred_lowres += data_tpl['pred_cont']
 
+        print(im.dtype)
+        print("cont pred median", pred_holder.median())
         print("pred_holder max", pred_holder.max())
         return pred_holder, pred_lowres
 
