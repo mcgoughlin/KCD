@@ -226,7 +226,7 @@ class Ensemble_Seg(nn.Module):
                 pred_lowres += data_tpl['pred_cont']
 
         print(im.dtype)
-        print("cont pred median", pred_holder.median())
+        print("cont pred median", torch.median(pred_holder))
         print("pred_holder max", pred_holder.max())
         return pred_holder, pred_lowres
 
