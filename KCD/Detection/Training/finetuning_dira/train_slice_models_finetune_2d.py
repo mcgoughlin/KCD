@@ -60,6 +60,7 @@ def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',datan
             ckpt = {k.replace("module.encoder_q.backbone.", ""): v for k, v in model_saved['state_dict'].items() if 'encoder_q.backbone' in k}
             model.load_state_dict(ckpt)
 
+            model = model.encoder
 
             print(model)
             assert(False)
