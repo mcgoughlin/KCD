@@ -11,7 +11,7 @@ import pandas as pd
 import KCD.Detection.Training.finetuning_dira.segmentation_models_pytorch as smp
 
 def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',dataname='coreg_ncct',
-                         splits:list=[0],folds=5,params:dict=None,epochs = None):
+                         splits:list=[0],folds=5,params:dict=None,epochs = None,train_save_path = '/bask/homes/r/ropj6012/KCD'):
     # Suppress warnings
     warnings.filterwarnings("ignore") #makes dgl stop complaining!
 
@@ -27,7 +27,7 @@ def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',datan
 
 
     # path for monitoring training
-    doc_path = os.path.join(os.getcwd(),'training_info')
+    doc_path = os.path.join(train_save_path,'training_info')
     if not os.path.exists(doc_path):os.mkdir(doc_path)
 
     save_dir = tu.init_training_home(home, dataname)
