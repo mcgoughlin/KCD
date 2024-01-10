@@ -17,8 +17,8 @@ cancer_infp = os.path.join(path, 'cancer_inferences')
 cancer_gt = os.path.join(path, 'cancer_labels')
 kidney_infp = os.path.join(path, 'kid_inferences')
 
-confidence_thresholds = np.arange(-0.05, 1.15, 0.1)
-size_thresholds = np.arange(0, 1000, 200)
+confidence_thresholds = np.arange(0.35, 0.65, 0.05)
+size_thresholds = np.arange(200, 700, 50)
 
 results =[]
 
@@ -113,7 +113,7 @@ for conf in confidence_thresholds:
 
 import pandas
 df = pandas.DataFrame(results)
-df.to_csv(os.path.join(path, 'results.csv'))
+df.to_csv(os.path.join(path, 'results_finer.csv'))
 
 # calculate aucs for each size threshold
 aucs = []
@@ -128,4 +128,4 @@ plt.plot(size_thresholds*8, aucs)
 plt.xlabel('size threshold / mm cubed')
 plt.ylabel('auc')
 plt.show()
-plt.savefig(os.path.join(path, 'aucs.png'))
+plt.savefig(os.path.join(path, 'aucs_finer.png'))
