@@ -2,101 +2,101 @@ from KCD.Detection.ModelGenerator.modifiedGAP import GlobalAttentionPoolingPMG
 from torchvision import models
 import torch
 import torch.nn as nn
-from dgl.nn import ChebConv
+# from dgl.nn import ChebConv
 import dgl
 import torch.nn.functional as F
 import copy
 import xgboost as xgb
-dgl.seed(2)
-
-class MLP_classifier(nn.Module):
-    def __init__(self,num_features, num_labels, enc1_size=256, enc1_layers=3,
-                 enc2_size=32, enc2_layers = 3, final_layers = 3,dev='cpu'):
-        super(MLP_classifier, self).__init__()
-
-
-        self.layer1 = nn.Linear(num_features,enc1_size,bias= False).to(dev)
-        
-        self.skip1 = nn.Linear(num_features,enc2_size,bias= False).to(dev)
-        self.layer2 = nn.Linear(enc1_size,enc2_size, bias= False).to(dev)
-        
-        self.skip2 = nn.Linear(num_features,num_labels,bias= False).to(dev)
-        self.layer3 = nn.Linear(enc2_size,num_labels,bias=False).to(dev)
-        self.actv = nn.ReLU()
-        self.final_actv = nn.Tanh()
-        self.dropout = nn.Dropout(0.4)
-        
-    def forward(self,x):
-        x = self.dropout(x)
-        layer1 = self.dropout(self.actv(self.layer1(x)))
-        layer2 = self.dropout(self.skip1(x) + self.actv(self.layer2(layer1)))
-        return self.final_actv(self.skip2(x) + self.actv(self.layer3(layer2)))
-
-class GNN_classifier(nn.Module):
-    def __init__(self, in_dim, hidden_dim_graph,n_classes,neighbours=10,layers_deep = 4,device='cpu'):
-        super(GNN_classifier, self).__init__()
-        # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want 
-        # multiple filters in parallel!
-        self.conv1 = ChebConv(in_dim, hidden_dim_graph, neighbours).to(device)
-        self.convs = nn.ModuleList([ChebConv(hidden_dim_graph, hidden_dim_graph, neighbours).to(device) for i in range(layers_deep-1)])
-        pooling_gate_nn = nn.Linear(hidden_dim_graph, 1).to(device)
-        self.layers_deep = layers_deep
-        
-        
-        self.pooling = GlobalAttentionPoolingPMG(pooling_gate_nn).to(device)
-        self.classify = nn.Linear(hidden_dim_graph,hidden_dim_graph).to(device)
-        self.classify2 = nn.Linear(hidden_dim_graph, n_classes).to(device)
-        self.hidden_dim_graph=hidden_dim_graph
-        
-        self.device=device
-        
-    def forward(self, g):
-        g = g.to(torch.device(self.device))
-        input_x = g.ndata['feat']
-        # Perform graph convolution and activation function.
-        h = F.relu(self.conv1(g, input_x))
-        for i in range(self.layers_deep-1):
-            h = F.relu(self.convs[i](g, h))
-            
-        # Calculate graph representation by averaging all the node representations.
-        #hg = dgl.mean_nodes(g, 'h')
-        [hg,g2] = self.pooling(g,h) 
-        
-        a2=self.classify(hg)
-        a3=self.classify2(a2)
-        return a3
-   
-class ShapeEnsemble(nn.Module):
-    def __init__(self, MLP:MLP_classifier,GNN:GNN_classifier,
-                 n1=128,n2=16,num_labels=2,device='cpu',dropout=0.8):
-        super(ShapeEnsemble, self).__init__()
-        # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want 
-        # multiple filters in parallel!
-        
-        self.MLP = MLP.to(device)
-        self.GNN = GNN.to(device)
-        
-        self.n1=n1
-        self.n2=n2
-        
-        # ensure all classifiers each output a vector of common dimensionality, dictated by n
-        self.GNN.classify2 = nn.Linear(self.GNN.hidden_dim_graph,n1).to(device)
-        self.MLP.layer3 = nn.Linear(self.MLP.layer3.in_features,n1).to(device)
-        self.MLP.skip2 = nn.Linear(self.MLP.skip2.in_features,n1).to(device)
-        
-        self.process1 = nn.Linear(n1,n2).to(device)
-        self.final = nn.Linear(n2,num_labels).to(device)
-        self.dropout = nn.Dropout(dropout)
-        self.actv = nn.ReLU()
-        self.device=device
-        
-    def forward(self, features,graph):
-        graph_enc = self.GNN(graph)
-        mlp_enc = self.MLP(features)
-        
-        common_16 = self.actv(self.dropout(self.process1(self.dropout(graph_enc+mlp_enc))))
-        
-        return self.final(common_16)
+# dgl.seed(2)
+#
+# class MLP_classifier(nn.Module):
+#     def __init__(self,num_features, num_labels, enc1_size=256, enc1_layers=3,
+#                  enc2_size=32, enc2_layers = 3, final_layers = 3,dev='cpu'):
+#         super(MLP_classifier, self).__init__()
+#
+#
+#         self.layer1 = nn.Linear(num_features,enc1_size,bias= False).to(dev)
+#
+#         self.skip1 = nn.Linear(num_features,enc2_size,bias= False).to(dev)
+#         self.layer2 = nn.Linear(enc1_size,enc2_size, bias= False).to(dev)
+#
+#         self.skip2 = nn.Linear(num_features,num_labels,bias= False).to(dev)
+#         self.layer3 = nn.Linear(enc2_size,num_labels,bias=False).to(dev)
+#         self.actv = nn.ReLU()
+#         self.final_actv = nn.Tanh()
+#         self.dropout = nn.Dropout(0.4)
+#
+#     def forward(self,x):
+#         x = self.dropout(x)
+#         layer1 = self.dropout(self.actv(self.layer1(x)))
+#         layer2 = self.dropout(self.skip1(x) + self.actv(self.layer2(layer1)))
+#         return self.final_actv(self.skip2(x) + self.actv(self.layer3(layer2)))
+#
+# class GNN_classifier(nn.Module):
+#     def __init__(self, in_dim, hidden_dim_graph,n_classes,neighbours=10,layers_deep = 4,device='cpu'):
+#         super(GNN_classifier, self).__init__()
+#         # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want
+#         # multiple filters in parallel!
+#         self.conv1 = ChebConv(in_dim, hidden_dim_graph, neighbours).to(device)
+#         self.convs = nn.ModuleList([ChebConv(hidden_dim_graph, hidden_dim_graph, neighbours).to(device) for i in range(layers_deep-1)])
+#         pooling_gate_nn = nn.Linear(hidden_dim_graph, 1).to(device)
+#         self.layers_deep = layers_deep
+#
+#
+#         self.pooling = GlobalAttentionPoolingPMG(pooling_gate_nn).to(device)
+#         self.classify = nn.Linear(hidden_dim_graph,hidden_dim_graph).to(device)
+#         self.classify2 = nn.Linear(hidden_dim_graph, n_classes).to(device)
+#         self.hidden_dim_graph=hidden_dim_graph
+#
+#         self.device=device
+#
+#     def forward(self, g):
+#         g = g.to(torch.device(self.device))
+#         input_x = g.ndata['feat']
+#         # Perform graph convolution and activation function.
+#         h = F.relu(self.conv1(g, input_x))
+#         for i in range(self.layers_deep-1):
+#             h = F.relu(self.convs[i](g, h))
+#
+#         # Calculate graph representation by averaging all the node representations.
+#         #hg = dgl.mean_nodes(g, 'h')
+#         [hg,g2] = self.pooling(g,h)
+#
+#         a2=self.classify(hg)
+#         a3=self.classify2(a2)
+#         return a3
+#
+# class ShapeEnsemble(nn.Module):
+#     def __init__(self, MLP:MLP_classifier,GNN:GNN_classifier,
+#                  n1=128,n2=16,num_labels=2,device='cpu',dropout=0.8):
+#         super(ShapeEnsemble, self).__init__()
+#         # Idea here is - a single ChebConv layer is like a single CNN layer with 1 filter of 10x10 width - we want
+#         # multiple filters in parallel!
+#
+#         self.MLP = MLP.to(device)
+#         self.GNN = GNN.to(device)
+#
+#         self.n1=n1
+#         self.n2=n2
+#
+#         # ensure all classifiers each output a vector of common dimensionality, dictated by n
+#         self.GNN.classify2 = nn.Linear(self.GNN.hidden_dim_graph,n1).to(device)
+#         self.MLP.layer3 = nn.Linear(self.MLP.layer3.in_features,n1).to(device)
+#         self.MLP.skip2 = nn.Linear(self.MLP.skip2.in_features,n1).to(device)
+#
+#         self.process1 = nn.Linear(n1,n2).to(device)
+#         self.final = nn.Linear(n2,num_labels).to(device)
+#         self.dropout = nn.Dropout(dropout)
+#         self.actv = nn.ReLU()
+#         self.device=device
+#
+#     def forward(self, features,graph):
+#         graph_enc = self.GNN(graph)
+#         mlp_enc = self.MLP(features)
+#
+#         common_16 = self.actv(self.dropout(self.process1(self.dropout(graph_enc+mlp_enc))))
+#
+#         return self.final(common_16)
 
 
 def return_efficientnet(size='small',dev='cpu',in_channels=6,out_channels=2):
@@ -419,10 +419,10 @@ def return_resnext3D(size='small',dev='cpu',in_channels=1,out_channels=3):
     return rnxt3d.to(dev)
 
 
-def return_MLP(num_features=28, num_labels=2, enc1_size=128, enc1_layers=1,
-             enc2_size=32, enc2_layers = 1, final_layers = 1,dev='cpu'):
-    return MLP_classifier(num_features, num_labels, enc1_size, enc1_layers,
-                 enc2_size, enc2_layers, final_layers,dev).to(dev)
+# def return_MLP(num_features=28, num_labels=2, enc1_size=128, enc1_layers=1,
+#              enc2_size=32, enc2_layers = 1, final_layers = 1,dev='cpu'):
+#     return MLP_classifier(num_features, num_labels, enc1_size, enc1_layers,
+#                  enc2_size, enc2_layers, final_layers,dev).to(dev)
 
 def return_xgb(scale_pos_weight=1,learning_rate=0.1,max_depth=3,n_estimators=100,subsample=0.8):
     return xgb.XGBClassifier(objective='binary:logitraw',random_state=42,
@@ -430,13 +430,13 @@ def return_xgb(scale_pos_weight=1,learning_rate=0.1,max_depth=3,n_estimators=100
                              max_depth=max_depth,n_estimators=n_estimators,n_jobs=1,
                              eval_metric='logloss',subsample=subsample)
 
-def return_GNN(num_features=4,hidden_dim=50,num_labels=2,layers_deep=8,neighbours=8,dev='cpu'):
-    return GNN_classifier(num_features,hidden_dim,num_labels,layers_deep,neighbours,dev).to(dev)
-
-
-def return_shapeensemble(MLP,GNN,n1=128,n2=16,num_labels=2,dev='cpu'):
-    return ShapeEnsemble(MLP,GNN,n1=n1,n2=n2,num_labels=num_labels,device=dev).to(dev)
-
+# def return_GNN(num_features=4,hidden_dim=50,num_labels=2,layers_deep=8,neighbours=8,dev='cpu'):
+#     return GNN_classifier(num_features,hidden_dim,num_labels,layers_deep,neighbours,dev).to(dev)
+#
+#
+# def return_shapeensemble(MLP,GNN,n1=128,n2=16,num_labels=2,dev='cpu'):
+#     return ShapeEnsemble(MLP,GNN,n1=n1,n2=n2,num_labels=num_labels,device=dev).to(dev)
+#
 
 if __name__ == '__main__':
     model = return_convnext(size='large',dev='cpu',in_channels=1,out_channels=3)
