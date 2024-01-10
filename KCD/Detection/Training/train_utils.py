@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import numpy as np
 import os
 import torch
-import dgl
+# import dgl
 import matplotlib.pyplot as plt
 
 
@@ -193,10 +193,10 @@ def init_training_home(home, dataname):
     return save_dir
         
 
-def shape_collate(samples, dev=initialize_device()):
-    features, graphs, labels = map(list, zip(*samples))
-    batched_graph = dgl.batch(graphs)
-    return torch.stack(features).to(dev), batched_graph.to(dev), torch.stack(labels).squeeze(dim=0).to(dev)
+# def shape_collate(samples, dev=initialize_device()):
+#     features, graphs, labels = map(list, zip(*samples))
+#     batched_graph = dgl.batch(graphs)
+#     return torch.stack(features).to(dev), batched_graph.to(dev), torch.stack(labels).squeeze(dim=0).to(dev)
 
 
 def check_params(params,template_params):
