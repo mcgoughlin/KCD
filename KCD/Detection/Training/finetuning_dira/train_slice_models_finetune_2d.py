@@ -1,6 +1,5 @@
 from KCD.Detection.Training import train_utils as tu
 import KCD.Detection.Evaluation.eval_scripts as eval_
-from KCD.Detection.ModelGenerator import model_generator
 from sklearn.model_selection import StratifiedKFold as kfold_strat
 import matplotlib.pyplot as plt
 import os
@@ -9,7 +8,6 @@ import torch.nn as nn
 import numpy as np
 import warnings
 import pandas as pd
-from torchvision import models
 import KCD.Detection.Training.finetuning_dira.segmentation_models_pytorch as smp
 
 def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',dataname='coreg_ncct',
@@ -58,9 +56,12 @@ def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',datan
 
             # model = torch.load('/bask/projects/p/phwq4930-renal-canc/KCD_data/Data/training_info/{}/split_0/fold_2/TileModel/model/TileModel_large_5_10_0.001'.format(pretrain_ds))
             model_saved = torch.load('/bask/projects/p/phwq4930-renal-canc/ChestXRay/checkpoint/DiRA_moco/dira/checkpoint.pth')
-            model = smp.Unet('resnet50',encoder_weights=None,num_classes=128,activation=None)
+            model = smp.Unet('resnet50',encoder_weights=None, num_classes=128, activation=None)
             ckpt = {k.replace("module.", ""): v for k, v in model_saved['state_dict'].items()}
             model.load_state_dict(ckpt)
+
+            print(model)
+            assert(False)
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
 
             dl,test_dl = tu.generate_dataloaders(slicedataset,test_slicedataset,cases[train_index],params['batch_size'])
