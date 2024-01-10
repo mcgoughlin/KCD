@@ -285,7 +285,7 @@ def train_model(dl, dev, epochs, loss_fnc, opt, model,
                 loss_w = loss.item()
             else:
                 prev_loss = loss_w
-                loss_w = weight * prev_loss[-1] + (1 - weight) * loss.item()
+                loss_w = weight * prev_loss + (1 - weight) * loss.item()
 
             if batch_count%save_freq==0:
                 weighted_losses.append(loss_w)
