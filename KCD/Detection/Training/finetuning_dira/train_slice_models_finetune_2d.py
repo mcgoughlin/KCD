@@ -26,6 +26,10 @@ def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',datan
         params['epochs'] = epochs
 
 
+    # path for monitoring training
+    doc_path = os.path.join(os.getcwd(),'training_info')
+    if not os.path.exists(doc_path):os.mkdir(doc_path)
+
     save_dir = tu.init_training_home(home, dataname)
     slicedataset, test_slicedataset = tu.get_slice_data(home, dataname, params['voxel_size'], params['cancthresh_r_mm'],params['kidthresh_r_mm'],params['depth_z'],params['boundary_z'],params['dilated'],device=dev)
     cases, is_ncct = tu.get_cases(slicedataset)
@@ -72,8 +76,10 @@ def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',datan
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
 
             dl,test_dl = tu.generate_dataloaders(slicedataset,test_slicedataset,cases[train_index],params['batch_size'])
-            model = tu.train_model(dl,dev,params['epochs'],loss_fnc,opt,model)
             model_name = 'dira_tilemodel_{}_{}_{}_{}_{}'.format(model_type,params['model_size'],params['epochs'],params['pred_window'],params['lr'])
+
+            model = tu.train_model(dl,dev,params['epochs'],loss_fnc,opt,model,
+                                   model_name,doc_path)
 
             if not os.path.exists(os.path.join(slice_path,'model')):
                 os.mkdir(os.path.join(slice_path,'model'))

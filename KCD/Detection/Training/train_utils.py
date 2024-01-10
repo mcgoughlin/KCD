@@ -244,9 +244,29 @@ def train_shape_ensemble(dl, dev, epochs, loss_fnc, opt, model):
             
     return model
 
+def update_doc(doc_path, model_name, losses,batch_count, loss):
+    with open(os.path.join(doc_path,'training.txt'),'a') as f:
+        f.write('batch {} loss: {}\n'.format(batch_count,loss.item()))
+    plt.plot(np.arange(len(losses))*100,losses)
+    plt.xlabel('Batch count')
+    plt.ylabel('Loss')
+    plt.savefig(os.path.join(doc_path,'training.png'))
+    plt.close()
 
-def train_model(dl, dev, epochs, loss_fnc, opt, model):
+
+def train_model(dl, dev, epochs, loss_fnc, opt, model,
+                model_name,doc_path,save_freq=100):
+
+    # document training in training.txt
+    # an ema of training loss in training.png
+    # all above will be saved in subdir in doc_path named model_name
+
+    model_doc_path = os.path.join(doc_path,model_name)
+    if not os.path.exists(model_doc_path):os.mkdir(model_doc_path)
+
     model.train()
+    batch_count=0
+    losses = []
     for i in range(epochs):
         print("\nEpoch {}".format(i))
         for features,label in dl:
@@ -256,7 +276,11 @@ def train_model(dl, dev, epochs, loss_fnc, opt, model):
             loss.backward()
             opt.step()
             opt.zero_grad()
-            
+
+            if batch_count%save_freq==0:
+                losses.append(loss.item())
+                update_doc(model_doc_path,model_name,losses,batch_count,loss)
+            batch_count += 1
     return model
 
 
