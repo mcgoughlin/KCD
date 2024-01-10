@@ -226,6 +226,8 @@ class Ensemble_Seg(nn.Module):
                 pred_lowres += data_tpl['pred_cont']
 
         print(im.dtype)
+        print(pred_holder.shape)
+        print(np.unique(pred_holder.squeeze()[20]))
         print("cont pred median", np.median(pred_holder))
         print("pred_holder max", pred_holder.max())
         return pred_holder, pred_lowres
@@ -384,6 +386,7 @@ class Ensemble_Seg(nn.Module):
                     if basename(data_tpl['raw_image_file']) in listdir(join(raw_path, imf)):
                         im_file.append(join(raw_path, imf, basename(data_tpl['raw_image_file'])))
 
+        arr = arr.squeeze()
         if im_file is not None:
             # if we have found a raw_image_file, we will use it to build the prediction nifti
             if isinstance(im_file, (list, tuple)):
