@@ -61,9 +61,6 @@ def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',datan
             model.load_state_dict(ckpt)
 
             model = nn.Sequential(model.encoder,nn.AdaptiveAvgPool2d(output_size=(1,1)),nn.Flatten(),nn.Linear(2048,3)).to(dev)
-
-            print(model)
-            assert(False)
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
 
             dl,test_dl = tu.generate_dataloaders(slicedataset,test_slicedataset,cases[train_index],params['batch_size'])
