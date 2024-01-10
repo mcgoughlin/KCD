@@ -62,7 +62,7 @@ class ResNetEncoder(ResNet, EncoderMixin):
             x = stages[i](x)
             features.append(x)
 
-        return features
+        return x
 
     def load_state_dict(self, state_dict, **kwargs):
         try:
