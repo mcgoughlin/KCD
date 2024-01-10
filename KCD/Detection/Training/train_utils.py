@@ -269,7 +269,7 @@ def train_model(dl, dev, epochs, loss_fnc, opt, model,
 
     model.train()
     batch_count=0
-    losses = []
+    weighted_losses = []
     weight = 1 - (1/save_freq)
     for i in range(epochs):
         print("\nEpoch {}".format(i))
@@ -280,11 +280,16 @@ def train_model(dl, dev, epochs, loss_fnc, opt, model,
             loss.backward()
             opt.step()
             opt.zero_grad()
-            if batch_count==0:losses.append(loss.item())
-            else:losses.append(weight*losses[-1]+(1-weight)*loss.item())
+
+            if batch_count == 0:
+                loss_w = loss.item()
+            else:
+                prev_loss = loss_w
+                loss_w = weight * prev_loss[-1] + (1 - weight) * loss.item()
 
             if batch_count%save_freq==0:
-                update_doc(model_doc_path,model_name,losses,batch_count,loss)
+                weighted_losses.append(loss_w)
+                update_doc(model_doc_path,model_name,weighted_losses,batch_count,loss)
             batch_count += 1
     return model
 
