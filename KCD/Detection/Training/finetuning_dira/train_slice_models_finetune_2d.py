@@ -60,7 +60,7 @@ def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',datan
             ckpt = {k.replace("module.encoder_q.backbone.", ""): v for k, v in model_saved['state_dict'].items() if 'encoder_q.backbone' in k}
             model.load_state_dict(ckpt)
 
-            model = nn.Sequential([model.encoder,nn.AdaptiveAvgPool2d(output_size=(1,1)),nn.Flatten(),nn.Linear(2048,3)]).to(dev)
+            model = nn.Sequential(model.encoder,nn.AdaptiveAvgPool2d(output_size=(1,1)),nn.Flatten(),nn.Linear(2048,3)).to(dev)
 
             print(model)
             assert(False)
