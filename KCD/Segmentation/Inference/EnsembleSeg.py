@@ -231,6 +231,7 @@ class Ensemble_Seg(nn.Module):
         print(np.unique(pred_holder.squeeze()[20]))
         print("cont pred median", np.median(pred_holder))
         print("pred_holder max", pred_holder.max())
+        assert False
         return pred_holder, pred_lowres
 
     def save_prediction(self, data_tpl, filename=None, key='pred_orig_shape',
