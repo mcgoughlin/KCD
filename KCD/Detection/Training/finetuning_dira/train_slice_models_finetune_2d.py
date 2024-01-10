@@ -57,10 +57,16 @@ def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',datan
             # model = torch.load('/bask/projects/p/phwq4930-renal-canc/KCD_data/Data/training_info/{}/split_0/fold_2/TileModel/model/TileModel_large_5_10_0.001'.format(pretrain_ds))
             model_saved = torch.load('/bask/projects/p/phwq4930-renal-canc/data/ChestXRay/checkpoint/DiRA_moco/dira/checkpoint.pth')
             model = smp.unet.model.Unet('resnet50')
-            #adjust the first layer to accept 1 channel
             ckpt = {k.replace("module.encoder_q.backbone.", ""): v for k, v in model_saved['state_dict'].items() if 'encoder_q.backbone' in k}
             model.load_state_dict(ckpt)
-            model.encoder.conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+            # adjust the first layer to accept 1 channel
+            # do this by averaging the weights of the first layer and then copying them to the new layer
+            # here is the evidence that - for some reason - the first layer is 3 channel, as DIRA chose to convert XRays to RGB...
+            # https://github.com/fhaghighi/DiRA/blob/main/data_loader.py#L13
+
+            new_conv = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+            new_conv.weight.data = torch.mean(model.encoder.conv1.weight.data, dim=1, keepdim=True)
+            model.encoder.conv1 = new_conv
 
             model = nn.Sequential(model.encoder,nn.AdaptiveAvgPool2d(output_size=(1,1)),nn.Flatten(),nn.Linear(2048,3)).to(dev)
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
