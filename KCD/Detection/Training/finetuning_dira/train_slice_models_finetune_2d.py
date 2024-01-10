@@ -58,9 +58,9 @@ def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',datan
             model_saved = torch.load('/bask/projects/p/phwq4930-renal-canc/data/ChestXRay/checkpoint/DiRA_moco/dira/checkpoint.pth')
             model = smp.unet.model.Unet('resnet50')
             #adjust the first layer to accept 1 channel
-            model.encoder.conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
             ckpt = {k.replace("module.encoder_q.backbone.", ""): v for k, v in model_saved['state_dict'].items() if 'encoder_q.backbone' in k}
             model.load_state_dict(ckpt)
+            model.encoder.conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
 
             model = nn.Sequential(model.encoder,nn.AdaptiveAvgPool2d(output_size=(1,1)),nn.Flatten(),nn.Linear(2048,3)).to(dev)
             opt = torch.optim.Adam(model.parameters(),lr=params['lr'])
