@@ -218,6 +218,7 @@ class Ensemble_Seg(nn.Module):
 
             data_tpl = self.SegProcess.postprocess_cont_data_tpl(data_tpl, 'pred_cont')
 
+            print(np.unique(data_tpl['pred_cont_orig_shape'].squeeze()[20]))
             if type(pred_holder) == type(None):
                 pred_holder = data_tpl['pred_cont_orig_shape']
                 pred_lowres = data_tpl['pred_cont']
