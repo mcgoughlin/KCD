@@ -245,6 +245,9 @@ def train_shape_ensemble(dl, dev, epochs, loss_fnc, opt, model):
     return model
 
 def update_doc(doc_path, model_name, losses,batch_count, loss):
+    # weighted rolling average of losses
+
+
     with open(os.path.join(doc_path,'training.txt'),'a') as f:
         f.write('batch {} loss: {}\n'.format(batch_count,loss.item()))
     plt.plot(np.arange(len(losses))*100,losses)
@@ -267,6 +270,7 @@ def train_model(dl, dev, epochs, loss_fnc, opt, model,
     model.train()
     batch_count=0
     losses = []
+    weight = 1 - (1/save_freq)
     for i in range(epochs):
         print("\nEpoch {}".format(i))
         for features,label in dl:
@@ -276,9 +280,10 @@ def train_model(dl, dev, epochs, loss_fnc, opt, model,
             loss.backward()
             opt.step()
             opt.zero_grad()
+            if batch_count==0:losses.append(loss.item())
+            else:losses.append(weight*losses[-1]+(1-weight)*loss.item())
 
             if batch_count%save_freq==0:
-                losses.append(loss.item())
                 update_doc(model_doc_path,model_name,losses,batch_count,loss)
             batch_count += 1
     return model
