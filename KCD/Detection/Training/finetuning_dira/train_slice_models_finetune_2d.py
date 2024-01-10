@@ -56,7 +56,7 @@ def train_cv_slice_model_2d(home = '/media/mcgoug01/nvme/SecondYear/Data/',datan
 
             # model = torch.load('/bask/projects/p/phwq4930-renal-canc/KCD_data/Data/training_info/{}/split_0/fold_2/TileModel/model/TileModel_large_5_10_0.001'.format(pretrain_ds))
             model_saved = torch.load('/bask/projects/p/phwq4930-renal-canc/data/ChestXRay/checkpoint/DiRA_moco/dira/checkpoint.pth')
-            model = smp.Unet('resnet50',encoder_weights=None, num_classes=128, activation=None)
+            model = smp.unet.model.Unet('resnet50')
             ckpt = {k.replace("module.", ""): v for k, v in model_saved['state_dict'].items()}
             model.load_state_dict(ckpt)
 
