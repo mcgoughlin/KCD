@@ -98,15 +98,15 @@ for conf in confidence_thresholds:
                     fp+=1
 
         entry = {'confidence_threshold': conf, 'size_threshold': vol, 'tp': tp, 'fp': fp, 'fn': fn, 'tn': tn}
-        sensitivity = tp/(tp+fn)
-        specificity = tn/(tn+fp)
-        precision = tp/(tp+fp)
+        sensitivity = tp/(tp+fn+1e-6)
+        specificity = tn/(tn+fp+1e-6)
+        precision = tp/(tp+fp+1e-6)
         accuracy = (tp+tn)/(tp+tn+fp+fn)
         entry['sensitivity'] = sensitivity
         entry['specificity'] = specificity
         entry['precision'] = precision
         entry['accuracy'] = accuracy
-        entry['dice'] = 2*tp/(2*tp+fp+fn)
+        entry['dice'] = 2*tp/(2*tp+fp+fn+1e-6)
 
         print(entry)
         results.append(entry)
