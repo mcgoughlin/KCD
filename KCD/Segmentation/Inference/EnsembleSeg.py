@@ -10,7 +10,10 @@ from scipy import ndimage
 import torch
 import nibabel as nib
 import torch.nn as nn
+from torch.nn.functional import softmax
 from os import *
+if __name__ == "__main__":
+    environ['OV_DATA_BASE'] = '/media/mcgoug01/nvme/2stage_replica/'
 
 from os.path import *
 import gc
@@ -212,27 +215,18 @@ class Ensemble_Seg(nn.Module):
         pred_holder = None
         pred_lowres = None
         for model in self.Segment:
-            pred = model(im)
-
-            data_tpl['pred_cont'] = pred
+            data_tpl['pred_cont'] = model(im)
 
             data_tpl = self.SegProcess.postprocess_cont_data_tpl(data_tpl, 'pred_cont')
 
-            print(np.unique(data_tpl['pred_cont_orig_shape'].squeeze()[20]))
             if type(pred_holder) == type(None):
-                pred_holder = data_tpl['pred_cont_orig_shape']
-                pred_lowres = data_tpl['pred_cont']
+                pred_holder = data_tpl['pred_cont_orig_shape'][1]
+                pred_lowres = data_tpl['pred_cont'][1]
             else:
-                pred_holder += data_tpl['pred_cont_orig_shape']
-                pred_lowres += data_tpl['pred_cont']
+                pred_holder += data_tpl['pred_cont_orig_shape'][1]
+                pred_lowres += data_tpl['pred_cont'][1]
 
-        print(im.dtype)
-        print(pred_holder.shape)
-        print(np.unique(pred_holder.squeeze()[20]))
-        print("cont pred median", np.median(pred_holder))
-        print("pred_holder max", pred_holder.max())
-        assert False
-        return pred_holder, pred_lowres
+        return pred_holder/5, pred_lowres/5
 
     def save_prediction(self, data_tpl, filename=None, key='pred_orig_shape',
                         save_npy=True):
@@ -253,7 +247,7 @@ class Ensemble_Seg(nn.Module):
         if save_npy:
             self.save_npy_from_data_tpl(data_tpl, join(self.lrsv_fold_size, filename[:-7]), lr_key, aff=im_aff)
 
-    def save_prediction_cont(self, data_tpl, filename=None, key='pred_orig_shape_cont',
+    def save_prediction_cont(self, data_tpl, filename=None,
                         save_npy=True):
 
         # find name of the file
@@ -459,15 +453,15 @@ class Ensemble_Seg(nn.Module):
                 filename = data_tpl['scan'] + '.nii.gz'
                 print("Segmenting {}...".format(data_tpl['scan']))
 
-                # predict from this datapoint
-                pred, pred_lowres = self.seg_pred(data_tpl)
-                data_tpl['pred_orig_shape'] = pred
-                data_tpl['pred_lowres'] = pred_lowres
-
                 if cont:
                     pred_cont, pred_lowres_cont = self.seg_pred_cont(data_tpl)
                     data_tpl['pred_cont_orig_shape'] = pred_cont
                     data_tpl['pred_cont'] = pred_lowres_cont
+
+                # predict from this datapoint
+                pred, pred_lowres = self.seg_pred(data_tpl)
+                data_tpl['pred_orig_shape'] = pred
+                data_tpl['pred_lowres'] = pred_lowres
 
                 if torch.is_tensor(pred):
                     pred = pred.cpu().numpy()
@@ -479,3 +473,16 @@ class Ensemble_Seg(nn.Module):
                 print("")
 
             print("Segmentations complete!\n")
+
+
+if __name__ == "__main__":
+    data_name = 'masked_test_set'
+    seg_fp = join(environ['OV_DATA_BASE'], 'trained_models', 'masked_coreg_ncct',
+                  '2mm_binary', '6,3x3x3,32_finetune_fromkits23no_detection')
+    spacing = np.array([2,2,2])
+    do_prep = False
+    do_infer = True
+    is_cect = False
+    cont = True
+    Ensemble_Seg(data_name=data_name, seg_fp=seg_fp, spacing=spacing, do_prep=do_prep, do_infer=do_infer,
+                 is_cect=is_cect, cont=cont)
