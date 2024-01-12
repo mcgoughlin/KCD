@@ -12,7 +12,7 @@ from skimage.segmentation import watershed
 # and the optimum size threshold for determining the presence of a cancerous region
 # we will do this by finding the threshold that maximises the dice score on a dataset
 
-path = '/Users/mcgoug01/Downloads/test_data'
+path = '/Users/mcgoug01/Downloads/validation_data'
 cancer_infp = os.path.join(path, 'cancer_inferences')
 cancer_gt = os.path.join(path, 'cancer_labels')
 kidney_infp = os.path.join(path, 'kid_inferences')
@@ -82,6 +82,7 @@ for conf in confidence_thresholds:
                 label_region = label_voxels[region.coords[:,0],region.coords[:,1],region.coords[:,2]]
                 if label_region.max() < 1:
                     fp+=1
+                    break
             # loop through all cancerous labels - checking if true or false positive
             for region in regionprops(spim.label(label_voxels==2)[0]):
                 prediction_region = cancer_voxels[region.coords[:,0],region.coords[:,1],region.coords[:,2]]

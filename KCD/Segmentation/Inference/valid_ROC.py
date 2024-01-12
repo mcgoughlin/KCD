@@ -12,12 +12,13 @@ from skimage.segmentation import watershed
 # and the optimum size threshold for determining the presence of a cancerous region
 # we will do this by finding the threshold that maximises the dice score on a dataset
 
-path = '/Users/mcgoug01/Downloads/test_data'
+path = '/Users/mcgoug01/Downloads/validation_data'
 cancer_infp = os.path.join(path, 'cancer_inferences')
 cancer_gt = os.path.join(path, 'cancer_labels')
 kidney_infp = os.path.join(path, 'kid_inferences')
 
-confidence_thresholds = np.arange(0, 1, 0.02)
+confidence_thresholds = np.append(np.arange(0,0.1,0.02),np.arange(0.1, 0.9, 0.1))
+confidence_thresholds = np.append(confidence_thresholds,np.arange(0.9,1.01,0.01))
 vol = 400
 
 results =[]
@@ -110,6 +111,30 @@ for conf in confidence_thresholds:
     print(entry)
     results.append(entry)
 
-import pandas
-df = pandas.DataFrame(results)
+import pandas as pd
+import matplotlib.pyplot as plt
+df = pd.DataFrame(results)
 df.to_csv(os.path.join(path, 'results_400_validation.csv'))
+
+path_to_results = '/Users/mcgoug01/Downloads/test_data/results_finer.csv'
+df = pd.read_csv(path_to_results)
+
+fpr = 100*(1-df['specificity'])
+sens = 100*df['sensitivity']
+fpr = np.append(fpr,0)
+sens = np.append(sens,0)
+
+AUC = np.abs(np.trapz(sens,fpr)/1e4)
+print(AUC)
+
+#append (0,0) and (100,100) to x and y
+
+# plot ROC curve
+plt.figure()
+plt.plot(fpr,sens,label='Validation (area = %0.3f)' % AUC)
+plt.ylabel('Sensitivity (%)')
+plt.xlabel('1 - Specificity (%)')
+plt.title('2-Stage Segmentation-based Detection Validation ROC')
+plt.legend(loc="lower right")
+plt.savefig(os.path.join(path, 'roc_validation.png'))
+plt.show()
