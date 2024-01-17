@@ -19,7 +19,9 @@ cancer_label = os.path.join(path, 'cancer_labels')
 # confidence_thresholds = np.append(np.arange(0,0.1,0.02),np.arange(0.1, 0.9, 0.1))
 # confidence_thresholds = np.append(confidence_thresholds,np.arange(0.9,1.01,0.01))
 
-confidence_thresholds = [0.5]
+# confidence_thresholds = [0.5]
+confidence_thresholds = np.linspace(0,1,1000)
+
 print(confidence_thresholds)
 vol = 400
 
