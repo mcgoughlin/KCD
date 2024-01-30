@@ -16,11 +16,9 @@ path = '/Users/mcgoug01/Downloads/test_data'
 cancer_infp = os.path.join(path, 'cancer_inferences')
 kidney_infp = os.path.join(path, 'kidney_inferences')
 cancer_label = os.path.join(path, 'cancer_labels')
-# confidence_thresholds = np.append(np.arange(0,0.1,0.02),np.arange(0.1, 0.9, 0.1))
-# confidence_thresholds = np.append(confidence_thresholds,np.arange(0.9,1.01,0.01))
-
-# confidence_thresholds = [0.5]
-confidence_thresholds = np.linspace(0,1,1000)
+confidence_thresholds = np.append(np.arange(0,0.1,0.02),np.arange(0.1, 0.9, 0.1))
+confidence_thresholds = np.append(confidence_thresholds,np.arange(0.9,0.98,0.02))
+confidence_thresholds = np.append(confidence_thresholds,np.arange(0.98,1.005,0.005))
 
 print(confidence_thresholds)
 vol = 400
@@ -99,6 +97,7 @@ for conf in confidence_thresholds:
     stp, sfn = 0, 0 # for small cancers (vol < 33510mm cubed, or 4189 voxels)
     for file in [path for path in os.listdir(cancer_infp) if path.endswith('.nii.gz')]:
         if file == 'Rcc_036.nii.gz': continue
+        case_positive_counted = False
         cancer_inf = nib.load(os.path.join(cancer_infp, file))
         kidney_inf = nib.load(os.path.join(kidney_infp, file))
         cancer_lb = nib.load(os.path.join(cancer_label, file))
@@ -164,43 +163,28 @@ for conf in confidence_thresholds:
         for pos,lb,region in zip(positions,ordered_positions,regionprops(spim.label(kidney_inf == 1)[0])):
             prediction_region = cancer_voxels[region.coords[:, 0], region.coords[:, 1], region.coords[:, 2]]
 
-
             if prediction_region.max() < 2:
                 if lb == 0:
                     tn += 1
                 else:
                     fn += 1
                     if small_cancer: sfn += 1
-                    else:
-                        print(file, pos, lb, 'fn', (cancer_lb==1).sum())
-                        # plot everything
-                        # find slice of maximum cancerous voxel
-                        slice = region.centroid[2].astype(int)
-                        import matplotlib.pyplot as plt
-
-                        plt.switch_backend('TKAgg')
-                        fig = plt.figure()
-                        ax1 = fig.add_subplot(1, 3, 1)
-
-                        ax1.imshow(ct_im[:, :, slice], cmap='gray', vmax=200, vmin=-200)
-                        ax1.scatter(region.centroid[1], region.centroid[0], c='r')
-                        ax1.set_title('CT Image')
-                        ax2 = fig.add_subplot(1, 3, 2)
-                        ax1.imshow(ct_im[:, :, slice], cmap='gray', vmax=200, vmin=-200)
-                        ax2.imshow(kidney_inf[:, :, slice], cmap='gray', alpha=0.5)
-                        ax2.set_title('Kidney Inference')
-                        ax3 = fig.add_subplot(1, 3, 3)
-                        ax1.imshow(ct_im[:, :, slice], cmap='gray', vmax=200, vmin=-200)
-                        ax3.imshow(cancer_inf[:, :, slice], cmap='gray', alpha=0.5)
-                        ax3.set_title('Cancer Inference')
-                        fig.suptitle('{}, {}, {}'.format(file, pos, lb))
-                        plt.show(block=True)
             else:
+                # there can only be one true positive region per case -
+                # if there are two positive labels, that is a result of incorrect labelling that happens
+                # in the event of a false-positive KIDNEY infernece - ie: a bit of the liver has been labelled
+                # as kidney, then the kidney on the liver side is also cancerous, so both the erroneous liver section
+                # and the cancerous kidney are labelled as cancerous. in this case, we only want to count maximum
+                # one true positive, so we only count the first one we find. anything else, we count as a false positive
                 if lb == 0:
                     fp += 1
                 else:
-                    tp += 1
-                    if small_cancer: stp += 1
+                    if not case_positive_counted:
+                        tp += 1
+                        if small_cancer: stp += 1
+                        case_positive_counted = True
+                    else:
+                        fp += 1
 
     entry = {'confidence_threshold': conf, 'size_threshold': vol, 'tp': tp, 'fp': fp, 'fn': fn, 'tn': tn,
              'small_tp': stp, 'small_fn': sfn}
@@ -218,7 +202,7 @@ for conf in confidence_thresholds:
     entry['dice'] = 2*tp/(2*tp+fp+fn+1e-6)
     entry['small_dice'] = 2*stp/(2*stp+fp+sfn+1e-6)
 
-    # print(entry)
+    print(entry)
     results.append(entry)
 
 import pandas
@@ -232,20 +216,18 @@ sens = 100*df['sensitivity'].copy()
 fpr = np.append(fpr,0)
 sens = np.append(sens,0)
 
-sfpr = 100*(1-df['small_specificity']).copy()
-ssens = 100*df['sensitivity'].copy()
-sfpr = np.append(sfpr,0)
+ssens = 100*df['small_sensitivity'].copy()
 ssens = np.append(ssens,0)
 
 AUC = np.abs(np.trapz(sens,fpr)/1e4)
 print('All cancer AUC: {}'.format(AUC))
-sAUC = np.abs(np.trapz(ssens,sfpr)/1e4)
+sAUC = np.abs(np.trapz(ssens,fpr)/1e4)
 print('Small cancer AUC: {}'.format(sAUC))
 
 # plot ROC curve
 plt.figure()
 plt.plot(fpr,sens,label='test (area = %0.3f)' % AUC)
-plt.plot(sfpr,ssens,label='test small cancers (area = %0.3f)' % sAUC)
+plt.plot(fpr,ssens,label='test small cancers (area = %0.3f)' % sAUC)
 plt.ylabel('Sensitivity (%)')
 plt.xlabel('1 - Specificity (%)')
 plt.title('2-Stage Segmentation-based Detection Test ROC')

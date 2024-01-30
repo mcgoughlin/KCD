@@ -363,3 +363,61 @@ def get_model_params_3d_from_preprocessed_folder(data_name,
 
     return get_model_params_3d_nnUNet(patch_size, n_2d_convs, use_prg_trn=use_prg_trn,
                                       n_fg_classes=n_fg_classes, fp32=fp32)
+
+
+def get_model_params_3d_swinunetr(patch_size, z_to_xy_ratio, use_prg_trn=False,
+                                          n_fg_classes=1, fp32=False, out_shape=None,
+                                          larger_res_encoder=False):
+    model_params = get_model_params_3d_nnUNet(patch_size, n_2d_convs=0, use_prg_trn=use_prg_trn,
+                                              n_fg_classes=n_fg_classes, fp32=fp32)
+    if out_shape is None and use_prg_trn:
+        raise ValueError('Specify the out_shapes when using progressive training')
+
+    del model_params['network']
+    model_params['network'] = {}
+    model_params['architecture'] = 'swinunetr'
+    model_params['network']['if_transskip'] = True
+    model_params['network']['if_convskip'] = True
+
+    model_params['network']['in_chans'] = 1
+    model_params['network']['embed_dim'] = 48
+    model_params['network']['out_channels'] = n_fg_classes+ 1
+    model_params['network']['depths'] = (2, 2, 4, 2)
+    model_params['network']['num_heads'] = (4, 4, 4, 4)
+
+    model_params['network']['mlp_ratio'] = 4
+    model_params['network']['pat_merg_rf'] = 4
+    model_params['network']['qkv_bias'] = False
+    model_params['network']['drop_rate'] = 0
+    model_params['network']['drop_path_rate'] = 0.3
+    model_params['network']['patch_norm'] = True
+    model_params['network']['use_checkpoint'] = False
+    model_params['network']['out_indices'] = (0, 1, 2, 3)
+
+    model_params['network']['patch_size'] = 2
+    model_params['network']['img_size'] = (64, 64, 64)
+
+    model_params['network']['window_size'] = (4, 4, 4)
+
+    if use_prg_trn:
+        prg_trn_sizes = np.array(out_shape)
+        prg_trn_sizes[:, 1:] *= 2
+        c = 4
+        prg_trn_aug_params = {}
+        prg_trn_aug_params['mm_var_noise'] = np.array([[0, 0.1 / c], [0, 0.1]])
+        prg_trn_aug_params['mm_sigma_blur'] = np.array([[0.5 / c, 0.5 + 1 / c], [0.5, 1.5]])
+        prg_trn_aug_params['mm_bright'] = np.array([[1 - 0.3 / c, 1 + 0.3 / c], [0.7, 1.3]])
+        prg_trn_aug_params['mm_contr'] = np.array([[1 - 0.35 / c, 1 + 0.5 / c], [0.65, 1.5]])
+        prg_trn_aug_params['mm_low_res'] = np.array([[1, 1 + 1 / c], [1, 2]])
+        prg_trn_aug_params['mm_gamma'] = np.array([[1 - 0.3 / c, 1 + 0.5 / c], [0.7, 1.5]])
+        prg_trn_aug_params['out_shape'] = out_shape
+        model_params['training']['prg_trn_sizes'] = prg_trn_sizes
+        model_params['training']['prg_trn_aug_params'] = prg_trn_aug_params
+        model_params['training']['prg_trn_resize_on_the_fly'] = False
+    model_params['training']['lr_schedule'] = 'lin_ascent_cos_decay'
+    model_params['training']['lr_params'] = {'n_warmup_epochs': 50, 'lr_max': 0.02}
+    model_params['training']['opt_params'] = {'momentum': 0.99,
+                                              'weight_decay': 3e-5,
+                                              'nesterov': True,
+                                              'lr': 2 * 10 ** -2}
+    return model_params

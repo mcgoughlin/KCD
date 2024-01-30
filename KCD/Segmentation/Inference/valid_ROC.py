@@ -18,8 +18,11 @@ cancer_gt = os.path.join(path, 'cancer_labels')
 kidney_infp = os.path.join(path, 'kid_inferences')
 
 confidence_thresholds = np.append(np.arange(0,0.1,0.02),np.arange(0.1, 0.9, 0.1))
-confidence_thresholds = np.append(confidence_thresholds,np.arange(0.9,1.02,0.02))
+confidence_thresholds = np.append(confidence_thresholds,np.arange(0.9,0.98,0.02))
+confidence_thresholds = np.append(confidence_thresholds,np.arange(0.98,1.005,0.005))
 size_thresholds = np.arange(0, 1000, 200)
+
+print(confidence_thresholds)
 
 results =[]
 
@@ -74,12 +77,13 @@ for vol in size_thresholds:
                     if region.area > 20:
                         label_voxels[region.coords[:,0],region.coords[:,1],region.coords[:,2]] = label
 
-            # loop through all cancer predicted regions without a corresponding ground truth label - if they
-            # predict cancer, its a false positive
-            for region in regionprops(spim.label(cancer_voxels==2)[0]):
-                label_region = label_voxels[region.coords[:,0],region.coords[:,1],region.coords[:,2]]
-                if label_region.max() < 1:
-                    fp+=1
+            # loop through all cancer predicted regions without a corresponding kidney label,
+            # and add a false positive
+            for region in regionprops(spim.label(cancer_voxels == 2)[0]):
+                kid_reg = cancer_label[0,0,region.coords[:, 0], region.coords[:, 1], region.coords[:, 2]]
+                if kid_reg.max() == 0:
+                    fp += 1
+
             # loop through all cancerous labels - checking if true or false positive
             for region in regionprops(spim.label(label_voxels==2)[0]):
                 prediction_region = cancer_voxels[region.coords[:,0],region.coords[:,1],region.coords[:,2]]
@@ -111,28 +115,32 @@ for vol in size_thresholds:
 
 import pandas as pd
 import matplotlib.pyplot as plt
+plt.switch_backend('TkAgg')
 df = pd.DataFrame(results)
 df.to_csv(os.path.join(path, 'results_all_validation.csv'))
 
-path_to_results = '/Users/mcgoug01/Downloads/test_data/results.csv'
+path_to_results = os.path.join(path, 'results_all_validation.csv')
 df = pd.read_csv(path_to_results)
-
-fpr = 100*(1-df['specificity'])
-sens = 100*df['sensitivity']
-fpr = np.append(fpr,0)
-sens = np.append(sens,0)
-
-AUC = np.abs(np.trapz(sens,fpr)/1e4)
-print(AUC)
-
-#append (0,0) and (100,100) to x and y
-
-# plot ROC curve
 plt.figure()
-plt.plot(fpr,sens,label='Validation (area = %0.3f)' % AUC)
-plt.ylabel('Sensitivity (%)')
-plt.xlabel('1 - Specificity (%)')
-plt.title('2-Stage Segmentation-based Detection Validation ROC')
-plt.legend(loc="lower right")
+
+for size in size_thresholds:
+    df_size = df[df['size_threshold']==size]
+
+    fpr = 100*(1-df_size['specificity'])
+    sens = 100*df_size['sensitivity']
+    fpr = np.append(fpr,0)
+    sens = np.append(sens,0)
+
+    AUC = np.abs(np.trapz(sens,fpr)/1e4)
+    print(AUC)
+
+    #append (0,0) and (100,100) to x and y
+
+    # plot ROC curve
+    plt.plot(fpr,sens,label='{} (area = {:.3f})'.format(size,AUC))
+    plt.ylabel('Sensitivity (%)')
+    plt.xlabel('1 - Specificity (%)')
+    plt.title('2-Stage Segmentation-based Detection Validation ROC')
+    plt.legend(loc="lower right")
 plt.savefig(os.path.join(path, 'roc_validation.png'))
 plt.show()

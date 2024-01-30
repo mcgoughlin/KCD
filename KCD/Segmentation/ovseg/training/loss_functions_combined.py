@@ -83,6 +83,7 @@ def downsample_yb(logs_list, yb):
     f = F.adaptive_max_pool3d if len(yb.shape) == 5 else F.adaptive_max_pool2d
     
     # target downsampled to same size as logits
+    # print the shape of everything in the logs_list
     return [f(yb, logs.shape[2:]) for logs in logs_list]
     
 
