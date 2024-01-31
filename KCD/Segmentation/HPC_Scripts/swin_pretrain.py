@@ -1,5 +1,6 @@
 import os
-os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
+# os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
+os.environ['OV_DATA_BASE'] = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_swinunetr
 import gc
@@ -7,15 +8,15 @@ import torch
 import sys
 
 
-data_name = 'kits23_nooverlap'
+data_name = 'coreg_ncct'
 spacing = 4
-fold = int(sys.argv[1])
+# fold = int(sys.argv[1])
+fold = 0
 
-pretrain_name = 'kits23_nooverlap'
 # preprocessed_name = '4mm_binary'
 preprocessed_name = '4mm_binary'
 # preprocessed_name='4mm_binary_test'
-model_name = 'swinpretrain_noSSL'
+model_name = 'swinpretrain_noSSL_longer'
 
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 vfs = [fold]
@@ -41,13 +42,13 @@ lr=0.0001
 
 model_params['data']['folders'] = ['images', 'labels']
 model_params['data']['keys'] = ['image', 'label']
-model_params['training']['num_epochs'] = 100
+model_params['training']['num_epochs'] = 500 #100
 model_params['training']['opt_name'] = 'ADAM'
 model_params['training']['opt_params'] = {'lr': lr,
                                             'betas': (0.95, 0.9),
                                             'eps': 1e-08}
-model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.0005}
-model_params['data']['trn_dl_params']['epoch_len']=250
+model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.001} #0.0005
+model_params['data']['trn_dl_params']['epoch_len']=500 #250
 model_params['data']['trn_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['data']['val_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['training']['lr_schedule'] = 'lin_ascent_log_decay'
@@ -73,6 +74,6 @@ for vf in vfs:
     #     if key in model.network.state_dict().keys():
     #         print(key)
     #         model.network.state_dict()[key].copy_(pretrained_model['state_dict'][key])
-
+    assert False
     model.training.train()
     model.eval_validation_set()
