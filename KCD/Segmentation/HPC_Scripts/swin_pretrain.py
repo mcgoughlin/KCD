@@ -1,6 +1,6 @@
 import os
-# os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
-os.environ['OV_DATA_BASE'] = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data"
+os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
+# os.environ['OV_DATA_BASE'] = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_swinunetr
 import gc
@@ -8,10 +8,10 @@ import torch
 import sys
 
 
-data_name = 'coreg_ncct'
+data_name = 'kits23_nooverlap'
 spacing = 4
-# fold = int(sys.argv[1])
-fold = 0
+fold = int(sys.argv[1])
+# fold = 0
 
 # preprocessed_name = '4mm_binary'
 preprocessed_name = '4mm_binary'
