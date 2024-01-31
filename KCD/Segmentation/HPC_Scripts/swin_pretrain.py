@@ -74,6 +74,5 @@ for vf in vfs:
     #     if key in model.network.state_dict().keys():
     #         print(key)
     #         model.network.state_dict()[key].copy_(pretrained_model['state_dict'][key])
-    assert False
     model.training.train()
     model.eval_validation_set()
