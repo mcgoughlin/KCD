@@ -193,7 +193,6 @@ class NetworkTraining(TrainingBase):
             self.opt.param_groups[0]['lr'] = lr
             if step == -1:
                 self.print_and_log('Learning rate now: {:.4e}'.format(lr))
-                
 
     def save_checkpoint(self, path=None):
         if path is None:
@@ -279,6 +278,8 @@ class NetworkTraining(TrainingBase):
 
         self.zero_grad()
         self.update_lr(step)
+
+
         if self.fp32:
             loss = self.compute_batch_loss(batch)
             loss.backward()
@@ -290,6 +291,7 @@ class NetworkTraining(TrainingBase):
             self.scaler.unscale_(self.opt)
             torch.nn.utils.clip_grad_norm_(self.network.parameters(), 12)
             self.scaler.step(self.opt)
+            self.opt.step()
             self.scaler.update()
 
         l = loss.detach().item()

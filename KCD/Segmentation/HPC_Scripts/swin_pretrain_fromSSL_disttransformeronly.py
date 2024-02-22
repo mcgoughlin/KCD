@@ -1,7 +1,5 @@
 import os
 os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data"
-import torch
-
 # os.environ['OV_DATA_BASE'] = "/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_swinunetr
@@ -16,9 +14,9 @@ fold = int(sys.argv[1])
 # fold = 0
 
 # preprocessed_name = '4mm_binary'
-preprocessed_name = '4mm_alllabel'
+preprocessed_name = '4mm_binary'
 # preprocessed_name='4mm_binary_test'
-model_name = 'swinpretrain_{}_superlongpretrain_wholeunet'.format(SSL_model_name)
+model_name = 'swinpretrain_fromSSL-{}_superlongpretrain_long'.format(SSL_model_name)
 
 print(torch.cuda.is_available(), torch.cuda.device_count())
 print(torch.version.cuda)
@@ -27,44 +25,41 @@ dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(dev)
 vfs = [fold]
 
-patch_size = [64,64,64]
-#patch dimension must be divisible by respective (((kernel_dimension+1)//2)^depth)/2
-#Patch size dictates input size to CNN: input dim (metres) = patch_size*target_spacing/1000
-#finally, depth and conv kernel size dictate attentive area - importantly different to input size:
+patch_size = [64, 64, 64]
+# patch dimension must be divisible by respective (((kernel_dimension+1)//2)^depth)/2
+# Patch size dictates input size to CNN: input dim (metres) = patch_size*target_spacing/1000
+# finally, depth and conv kernel size dictate attentive area - importantly different to input size:
 # attentive_area (in each dimension, metres) = input size / bottom encoder spatial dim
 #                                           = ((((kernel_dimension+1)//2)^depth)/2)*target_spacing/1000
 z_to_xy_ratio = 1
 larger_res_encoder = True
-n_fg_classes = 3
-    
-
+n_fg_classes = 1
 
 model_params = get_model_params_3d_swinunetr(patch_size,
-                                                     z_to_xy_ratio=z_to_xy_ratio,
-                                                     n_fg_classes=n_fg_classes,
-                                                     use_prg_trn=False,
-                                                     fp32=True)
+                                             z_to_xy_ratio=z_to_xy_ratio,
+                                             n_fg_classes=n_fg_classes,
+                                             use_prg_trn=False,
+                                             fp32=True)
 
-lr=0.0001
+lr = 0.0001
 
 model_params['data']['folders'] = ['images', 'labels']
 model_params['data']['keys'] = ['image', 'label']
-model_params['training']['num_epochs'] = 100 #100
+model_params['training']['num_epochs'] = 500  # 100
 model_params['training']['opt_name'] = 'ADAM'
 model_params['training']['opt_params'] = {'lr': lr,
-                                            'betas': (0.95, 0.9),
-                                            'eps': 1e-08}
+                                          'betas': (0.95, 0.9),
+                                          'eps': 1e-08}
 del model_params['training']['loss_params']
 
-model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.0005} #0.0005
-model_params['data']['trn_dl_params']['epoch_len']=250 #250
-model_params['data']['trn_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
-model_params['data']['val_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
+model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.001}  # 0.0005
+model_params['data']['trn_dl_params']['epoch_len'] = 1000  # 250
+model_params['data']['trn_dl_params']['padded_patch_size'] = [2 * patch_size[0]] * 3
+model_params['data']['val_dl_params']['padded_patch_size'] = [2 * patch_size[0]] * 3
 model_params['training']['lr_schedule'] = 'lin_ascent_log_decay'
 model_params['training']['lr_exponent'] = 3
-model_params['data']['trn_dl_params']['batch_size']=16
-model_params['data']['val_dl_params']['epoch_len']=50
-
+model_params['data']['trn_dl_params']['batch_size'] = 16
+model_params['data']['val_dl_params']['epoch_len'] = 50
 
 for vf in vfs:
     model = SegmentationModel(val_fold=vf,
@@ -80,11 +75,12 @@ for vf in vfs:
     for key in pretrained_model['state_dict'].keys():
 
         correct_key = key.replace('module.', '')
-        if (correct_key in model.network.state_dict().keys()) and not (('logit' in key) or ('out' in key)):
+        if (correct_key in model.network.state_dict().keys()) and ('transformer' in key):
             print(correct_key)
             source_params = pretrained_model['state_dict'][key]
             model.network.state_dict()[correct_key].copy_(source_params)
 
             assert torch.equal(model.network.state_dict()[correct_key], source_params)
+
     model.training.train()
     model.eval_validation_set()

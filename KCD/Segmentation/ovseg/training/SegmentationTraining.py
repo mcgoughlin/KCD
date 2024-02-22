@@ -338,6 +338,6 @@ class resize(nn.Module):
 
 class SegmentationTrainingV2(SegmentationTraining):
     def initialise_loss(self,include_voxsim=False):
-        self.loss_fctn = weighted_combined_pyramid_loss(**self.loss_params)
+        self.loss_fctn = CE_dice_pyramid_loss(**self.loss_params)
         if include_voxsim:
             self.is_voxsim = True

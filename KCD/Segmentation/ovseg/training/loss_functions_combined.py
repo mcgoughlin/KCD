@@ -15,9 +15,12 @@ def to_one_hot_encoding(yb, n_ch):
 class CE_dice_loss(nn.Module):
     # weighted sum of the two losses
     # this functions is just here for historic reason
-    def __init__(self, eps=1e-5, ce_weight=1.0, dice_weight=1.0):
+    def __init__(self, eps=1e-5, ce_weight=1.0, dice_weight=1.0,class_weights=None):
         super().__init__()
-        self.ce_loss = cross_entropy()
+        if class_weights is not None:
+            self.ce_loss = cross_entropy(torch.Tensor(class_weights).to('cuda'))
+        else:
+            self.ce_loss = cross_entropy()
         self.dice_loss = dice_loss(eps)
         self.dice_weight = dice_weight
         self.ce_weight = ce_weight
@@ -141,9 +144,9 @@ def downsample_yb_old(logs_list, yb):
 class CE_dice_pyramid_loss(nn.Module):
 
     def __init__(self, eps=1e-5, ce_weight=1.0, dice_weight=1.0,
-                 pyramid_weight=0.5):
+                 pyramid_weight=0.5,class_weights=None):
         super().__init__()
-        self.ce_dice_loss = CE_dice_loss(eps, ce_weight, dice_weight)
+        self.ce_dice_loss = CE_dice_loss(eps, ce_weight, dice_weight,class_weights)
         self.pyramid_weight = pyramid_weight
 
     def forward(self, logs_list, yb, mask=None):

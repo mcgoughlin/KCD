@@ -82,9 +82,9 @@ class CE_dice_pyramid_loss(nn.Module):
     
 class cross_entropy(nn.Module):
 
-    def __init__(self):
+    def __init__(self,weight:torch.Tensor = None):
         super().__init__()
-        self.loss = torch.nn.CrossEntropyLoss(reduction='none')
+        self.loss = torch.nn.CrossEntropyLoss(weight=weight,reduction='none')
 
     def forward(self, logs, yb_oh, mask=None):
         assert logs.shape == yb_oh.shape
