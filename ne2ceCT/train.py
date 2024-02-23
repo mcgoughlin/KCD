@@ -23,7 +23,7 @@ spacing = 4
 epochs = 100
 home_path = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/'
 dataset_ne_path = os.path.join(home_path,'preprocessed', 'coltea','coltea_nat','coltea_nat_{}'.format(spacing))
-dataset_ce_path = os.path.join(home_path,'preprocessed', 'coltea' 'coltea_art','coltea_art_{}'.format(spacing))
+dataset_ce_path = os.path.join(home_path,'preprocessed', 'coltea', 'coltea_art','coltea_art_{}'.format(spacing))
 
 assert os.path.exists(dataset_ne_path) and os.path.exists(dataset_ce_path)
 ne2ceCT_path = os.path.join(home_path, 'ne2ceCT','coltea_{}'.format(spacing))
