@@ -86,7 +86,7 @@ for epoch in range(epochs):
         scheduler.step()
     train_string = f'Epoch [{epoch + 1}/{epochs}], Step [{i + 1}/{len(dataloader)}], Loss: {running_loss:.4E}, LR: {scheduler.get_last_lr()[0]:.4E}\n'
     with open(log_path, 'a') as f:
-        f.write(string)
+        f.write(train_string)
 
     dataloader.dataset.is_train = False
     with torch.no_grad():
