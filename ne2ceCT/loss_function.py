@@ -6,7 +6,11 @@ import torch.nn.functional as F
 class LatentSimilarityLoss(nn.Module):
     def __init__(self):
         super(LatentSimilarityLoss, self).__init__()
-        self.similarity_loss = nn.MSELoss()
+        self.mse = nn.MSELoss()
+        self.cos = nn.CosineSimilarity(dim=-1)
+        self.cce = nn.CrossEntropyLoss()
+        self.softmax = nn.Softmax(dim=-1)
+        self.temperature = 0.2
 
     def normalize(self, z):
         mag = torch.linalg.vector_norm(z, dim=-1, keepdim=True)
@@ -14,7 +18,13 @@ class LatentSimilarityLoss(nn.Module):
 
     def forward(self, z1, z2):
         b,d,x,y,z = z1.shape
-        return self.similarity_loss(self.normalize(z1.view(b,d,-1)), self.normalize(z2.view(b,d,-1)))
+
+        sharpened_z1 = self.softmax(z1.view(b,d,-1).swapaxes(1,2)/self.temperature)
+        sharpened_z2 = self.softmax(z2.view(b,d,-1).swapaxes(1,2)/self.temperature)
+
+        symmetric_cce = self.cce(sharpened_z1, sharpened_z2) + self.cce(sharpened_z2, sharpened_z1)
+
+        return symmetric_cce/(x*y*z)
 
 class PyramidalLatentSimilarityLoss(nn.Module):
     def __init__(self):

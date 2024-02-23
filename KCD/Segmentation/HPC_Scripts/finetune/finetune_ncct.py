@@ -1,5 +1,5 @@
 import os
-os.environ['OV_DATA_BASE'] = "/home/wcm23/rds/hpc-work/FineTuningKITS23"
+os.environ['OV_DATA_BASE'] = "/media/mcgoug01/nvme/SecondYear/Segmentation/Transformer_Test/"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
 import gc
@@ -9,13 +9,12 @@ import sys
 
 data_name = 'coreg_ncct'
 spacing = 4
-fold = int(sys.argv[1])
+fold = 0
 
-pretrain_name = 'all_cect'
 # preprocessed_name = '4mm_binary'
-preprocessed_name = '4mm_binary'
+preprocessed_name = '4mm_allbinary'
 # preprocessed_name='4mm_binary_test'
-model_name = '6,3x3x3,32_finetune_fromallcect'
+model_name = '6,3x3x3,32_finetune_from_ne2ceCT'
 
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 vfs = [fold]
@@ -48,6 +47,7 @@ del model_params['network']['block']
 del model_params['network']['z_to_xy_ratio']
 del model_params['network']['n_blocks_list']
 del model_params['network']['stochdepth_rate']
+del model_params['training']['loss_params']
 
 lr=0.0001
 model_params['data']['folders'] = ['images', 'labels']
@@ -68,8 +68,8 @@ model_params['data']['val_dl_params']['epoch_len']=50
 
 
 for vf in vfs:
-    path_to_model = '{}/trained_models/{}/4mm_binary/{}/fold_3/network_weights'.format(os.environ['OV_DATA_BASE'],
-                                                                                         pretrain_name, model_name.split('_')[0])
+    # path_to_model = '/media/mcgoug01/Crucial X6/seg_model/fold_1/network_weights'
+    path_to_model = '/media/mcgoug01/Crucial X6/ovseg_test/ne2ceCT/coltea_4/network_weights'
     model = SegmentationModel(val_fold=vf,
                                 data_name=data_name,
                                 preprocessed_name=preprocessed_name, 
