@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import os
-os.environ['OV_DATA_BASE'] = '/media/mcgoug01/Crucial X6/ovseg_test'
+os.environ['OV_DATA_BASE'] ='/bask/projects/p/phwq4930-renal-canc/data/seg_data/'
 import numpy as np
 import pandas as pd
 from torch.utils.data import Dataset, DataLoader
