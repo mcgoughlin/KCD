@@ -82,6 +82,9 @@ class CrossPhaseDataset(Dataset):
 
         return tensor1.clip(mn, mx), tensor2
 
+    def reset_patch_count(self):
+        self.case_patch_count = {case: 0 for case in self.cases}
+
     def _get_random_patch_indices(self, image1,image2, patch_size):
         '''
 
@@ -101,7 +104,7 @@ class CrossPhaseDataset(Dataset):
         for dim in range(1,4):
             assert (image1.shape[dim] - image2.shape[dim])<4
         # get the shape of the image
-        shape = image1.shape
+        shape = [min(image1.shape[dim], image2.shape[dim]) for dim in range(4)]
         # pad the image to the size of the patch if the image is smaller than the patch - use torch padding
         padding = []
         for dim in range(1,4):
@@ -113,7 +116,8 @@ class CrossPhaseDataset(Dataset):
 
         image1 = torch.nn.functional.pad(image1, tuple(padding[::-1]),'constant',-3.15)
         image2 = torch.nn.functional.pad(image2, tuple(padding[::-1]),'constant',-3.15)
-        shape = image1.shape
+        shape = [min(image1.shape[dim], image2.shape[dim]) for dim in range(4)]
+
 
         # get the random indices to take the patch from
         xyz = []
@@ -131,7 +135,7 @@ class CrossPhaseDataset(Dataset):
             transforms = [self._blur, self._add_noise, self._rotate, self._rotate, self._rotate,
                           self._flip, self._flip,self._flip, self._contrast]
             # possible cases are those in the training cases that have not yet had 10 patches taken
-            possible_cases = [case for case in self.train_cases if self.case_patch_count[case] < self.patches_per_case]
+            possible_cases = [case for case in self.train_cases if self.case_patch_count[case] <= self.patches_per_case]
             case = possible_cases[idx % len(possible_cases)]
             self.case_patch_count[case] += 1
         else:
@@ -152,7 +156,8 @@ class CrossPhaseDataset(Dataset):
             for transform in transforms:
                 ne_patch,ce_patch = transform(ne_patch,ce_patch)
 
-        return ne_patch, ce_patch
+
+        return ne_patch.unsqueeze(0), ce_patch.unsqueeze(0)
 
 
 if __name__ == '__main__':

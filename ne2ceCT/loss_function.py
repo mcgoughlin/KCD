@@ -9,24 +9,22 @@ class LatentSimilarityLoss(nn.Module):
         self.similarity_loss = nn.MSELoss()
 
     def normalize(self, z):
-        mag = torch.linalg.vector_norm(z, dim=1, keepdim=True)
+        mag = torch.linalg.vector_norm(z, dim=-1, keepdim=True)
         return z / mag
 
     def forward(self, z1, z2):
-        return self.similarity_loss(self.normalize(z1), self.normalize(z2))
+        b,d,x,y,z = z1.shape
+        return self.similarity_loss(self.normalize(z1.view(b,d,-1)), self.normalize(z2.view(b,d,-1)))
 
 class PyramidalLatentSimilarityLoss(nn.Module):
     def __init__(self):
         super(PyramidalLatentSimilarityLoss, self).__init__()
         self.similarity_loss = LatentSimilarityLoss()
-        self.weighting = 8
 
     def forward(self, feature_list1, feature_list2):
-        weight_decrease = self.weighting
         loss = 0
         for i in range(len(feature_list1)):
-            print(weight_decrease**i)
-            loss += self.similarity_loss(feature_list1[i], feature_list2[i]) /  (weight_decrease**i)
+            loss += self.similarity_loss(feature_list1[i], feature_list2[i])
         return loss
 
 
