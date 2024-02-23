@@ -20,10 +20,17 @@ def get_3d_featureoutput_unet(in_channels, out_channels, n_stages,filters=32, fi
     return infer_network.UNet_featureoutput(in_channels, out_channels, kernel_sizes, False, filters_max=filters_max, filters=filters, )
 
 spacing = 4
+<<<<<<< HEAD
 epochs = 2000
 home_path = '/media/mcgoug01/Crucial X6/ovseg_test/'
 dataset_ne_path = os.path.join(home_path,'preprocessed', 'coltea_nat','coltea_nat_{}'.format(spacing))
 dataset_ce_path = os.path.join(home_path,'preprocessed', 'coltea_art','coltea_art_{}'.format(spacing))
+=======
+epochs = 100
+home_path = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/'
+dataset_ne_path = os.path.join(home_path,'preprocessed', 'coltea','coltea_nat','coltea_nat_{}'.format(spacing))
+dataset_ce_path = os.path.join(home_path,'preprocessed', 'coltea', 'coltea_art','coltea_art_{}'.format(spacing))
+>>>>>>> 956a2df42192f2e9ce89737b5c48c823ef8891f5
 
 assert os.path.exists(dataset_ne_path) and os.path.exists(dataset_ce_path)
 ne2ceCT_path = os.path.join(home_path, 'ne2ceCT','coltea_{}'.format(spacing))
