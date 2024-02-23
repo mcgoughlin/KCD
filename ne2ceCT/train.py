@@ -98,7 +98,6 @@ for epoch in range(epochs):
             S = model_S(ne)
             loss = loss_func(T, S)
             running_val_loss = weight * running_val_loss + (1 - weight) * loss.item()
-            losses.append(running_val_loss)
 
     val_string = f'Val Loss: {running_val_loss:.4E}\n'
     with open(log_path, 'a') as f:
