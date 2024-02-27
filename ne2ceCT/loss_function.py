@@ -10,7 +10,8 @@ class LatentSimilarityLoss(nn.Module):
         self.cos = nn.CosineSimilarity(dim=-1)
         self.cce = nn.CrossEntropyLoss()
         self.softmax = nn.Softmax(dim=-1)
-        self.temperature = 0.2
+        self.temperature = 0.07
+        self.mse_weight = 0.2
 
     def normalize(self, z):
         mag = torch.linalg.vector_norm(z, dim=-1, keepdim=True)
@@ -19,12 +20,22 @@ class LatentSimilarityLoss(nn.Module):
     def forward(self, z1, z2):
         b,d,x,y,z = z1.shape
 
-        sharpened_z1 = self.softmax(z1.view(b,d,-1).swapaxes(1,2)/self.temperature)
-        sharpened_z2 = self.softmax(z2.view(b,d,-1).swapaxes(1,2)/self.temperature)
+        # sharpened_z1 = self.softmax(z1.view(b,d,-1).swapaxes(1,2)/self.temperature)
+        # sharpened_z2 = self.softmax(z2.view(b,d,-1).swapaxes(1,2)/self.temperature)
+        #
+        # symmetric_cce = self.cce(sharpened_z1, sharpened_z2) + self.cce(sharpened_z2, sharpened_z1)
+        if d != 2:
+            mse = self.mse(z1, z2).mean()
+            cos = self.cos(z1.view(b,d,-1), z2.view(b,d,-1)).mean()
+            return mse + (1 - cos)
+        else:
+            # this is a 2D latent space, so we can use the cross entropy loss
+            argmax_z1 = torch.argmax(z1, dim=1)
+            argmax_z2 = torch.argmax(z2, dim=1)
+            cce = self.cce(z1, argmax_z2) + self.cce(z2, argmax_z1)
+            return cce
 
-        symmetric_cce = self.cce(sharpened_z1, sharpened_z2) + self.cce(sharpened_z2, sharpened_z1)
 
-        return symmetric_cce/(x*y*z)
 
 class PyramidalLatentSimilarityLoss(nn.Module):
     def __init__(self):

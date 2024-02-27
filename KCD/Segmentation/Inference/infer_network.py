@@ -602,6 +602,8 @@ class UNet_featureoutput(nn.Module):
             del xb_list[i]
             xb = self.blocks_up[i](xb)
             feature_list.append(xb)
+            logs = self.all_logits[i](xb)
+            feature_list.append(logs)
 
         return feature_list[::-1]
 

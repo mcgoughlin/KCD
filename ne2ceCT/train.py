@@ -20,17 +20,14 @@ def get_3d_featureoutput_unet(in_channels, out_channels, n_stages,filters=32, fi
     return infer_network.UNet_featureoutput(in_channels, out_channels, kernel_sizes, False, filters_max=filters_max, filters=filters, )
 
 spacing = 4
-<<<<<<< HEAD
-epochs = 2000
+batch_size = 8
+lr_start = 0.0002
+epochs = 500
+coltea = True
 home_path = '/media/mcgoug01/Crucial X6/ovseg_test/'
+
 dataset_ne_path = os.path.join(home_path,'preprocessed', 'coltea_nat','coltea_nat_{}'.format(spacing))
 dataset_ce_path = os.path.join(home_path,'preprocessed', 'coltea_art','coltea_art_{}'.format(spacing))
-=======
-epochs = 100
-home_path = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/'
-dataset_ne_path = os.path.join(home_path,'preprocessed', 'coltea','coltea_nat','coltea_nat_{}'.format(spacing))
-dataset_ce_path = os.path.join(home_path,'preprocessed', 'coltea', 'coltea_art','coltea_art_{}'.format(spacing))
->>>>>>> 956a2df42192f2e9ce89737b5c48c823ef8891f5
 
 assert os.path.exists(dataset_ne_path) and os.path.exists(dataset_ce_path)
 ne2ceCT_path = os.path.join(home_path, 'ne2ceCT','coltea_{}'.format(spacing))
@@ -50,7 +47,7 @@ dataset = CrossPhaseDataset(os.path.join(dataset_ne_path,'images'), os.path.join
                             is_train=True,patches_per_case=20)
 
 dataset.apply_foldsplit(split_ratio=0.9)
-dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 
 model_T = get_3d_featureoutput_unet(1, 2, 6,  filters=32, filters_max=1024).to(dev)
@@ -61,14 +58,14 @@ model_S.load_state_dict(torch.load('/media/mcgoug01/Crucial X6/seg_model/fold_1/
 model_T.eval()
 model_S.train()
 
-optimizer = torch.optim.Adam(model_S.parameters(), lr=0.001)
-scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.9998)
+optimizer = torch.optim.Adam(model_S.parameters(), lr=lr_start, betas=(0.95, 0.9), eps=1e-08, weight_decay=0.0001)
+scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.9999)
 loss_func = PyramidalLatentSimilarityLoss()
 losses = []
 weight = 0.9
 running_loss = None
 running_val_loss = None
-min_val_loss = 1
+min_val_loss = 1e6
 for epoch in range(epochs):
     dataloader.dataset.is_train = True
     model_S.train()
