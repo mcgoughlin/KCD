@@ -55,7 +55,7 @@ class CrossPhaseDataset(Dataset):
     def _add_noise(self, tensor1, tensor2, p=0.3, noise_strength=0.3):
         if random() > p: return tensor1, tensor2
         random_noise_stdev = random() * noise_strength
-        noise = torch.randn(tensor1.shape, device=self.device) * random_noise_stdev
+        noise = torch.randn(tensor1.shape) * random_noise_stdev
         return tensor1 + noise, tensor2
 
     def _rotate(self, tensor1, tensor2, p=0.3):
@@ -141,15 +141,15 @@ class CrossPhaseDataset(Dataset):
             self.case_patch_count[case] += 1
         else:
             transforms = None
-            case = self.test_cases[idx]
+            case = self.test_cases[idx % (len(self.test_cases)-1)]
 
 
         ne = torch.Tensor(np.load(os.path.join(self.ne_path, case)))
         ce = torch.Tensor(np.load(os.path.join(self.ce_path, case)))
         # get random patch indices
         ne,ce,indices = self._get_random_patch_indices(ne,ce, self.patch_size)
-        ne_patch = ne[0, indices[0]:indices[0]+self.patch_size, indices[1]:indices[1]+self.patch_size, indices[2]:indices[2]+self.patch_size].to(self.device)
-        ce_patch = ce[0, indices[0]:indices[0]+self.patch_size, indices[1]:indices[1]+self.patch_size, indices[2]:indices[2]+self.patch_size].to(self.device)
+        ne_patch = ne[0, indices[0]:indices[0]+self.patch_size, indices[1]:indices[1]+self.patch_size, indices[2]:indices[2]+self.patch_size]
+        ce_patch = ce[0, indices[0]:indices[0]+self.patch_size, indices[1]:indices[1]+self.patch_size, indices[2]:indices[2]+self.patch_size]
 
         if self.is_train:
             if transforms:
