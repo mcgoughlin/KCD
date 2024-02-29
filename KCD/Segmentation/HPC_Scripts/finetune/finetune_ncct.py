@@ -1,5 +1,5 @@
 import os
-os.environ['OV_DATA_BASE'] = "/media/mcgoug01/nvme/SecondYear/Segmentation/Transformer_Test/"
+os.environ['OV_DATA_BASE'] = "/media/mcgoug01/Crucial X6/ovseg_test/"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
 import gc
@@ -7,14 +7,15 @@ import torch
 import sys
 
 
-data_name = 'coreg_ncct'
-spacing = 4
+data_name = 'large_coreg_ncct'
+spacing = 2
 fold = 0
 
 # preprocessed_name = '4mm_binary'
-preprocessed_name = '4mm_allbinary'
+preprocessed_name = 'large_coreg_ncct_2'
 # preprocessed_name='4mm_binary_test'
-model_name = '6,3x3x3,32_finetune_from_ne2ceCT'
+model_name = '6,3x3x3,32_finetune_fromne2cect'
+# model_name = 'del'
 
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 vfs = [fold]
@@ -27,7 +28,7 @@ patch_size = [64,64,64]
 #                                           = ((((kernel_dimension+1)//2)^depth)/2)*target_spacing/1000
 z_to_xy_ratio = 1
 larger_res_encoder = True
-n_fg_classes = 1
+n_fg_classes = 3
     
 
 
@@ -68,8 +69,9 @@ model_params['data']['val_dl_params']['epoch_len']=50
 
 
 for vf in vfs:
-    # path_to_model = '/media/mcgoug01/Crucial X6/seg_model/fold_1/network_weights'
-    path_to_model = '/media/mcgoug01/Crucial X6/ovseg_test/ne2ceCT/coltea_4/network_weights'
+    # path_to_model = '/media/mcgoug01/Crucial X6/seg_model/2mm_alllabel/network_weights'
+    # path_to_model = '/media/mcgoug01/Crucial X6/ovseg_test/ne2ceCT/coltea_4_legacy_outs/network_weights'
+    path_to_model = '/media/mcgoug01/Crucial X6/ovseg_test/ne2ceCT/small_coreg_alllabel_2_logitsonly/network_weights'
     model = SegmentationModel(val_fold=vf,
                                 data_name=data_name,
                                 preprocessed_name=preprocessed_name, 

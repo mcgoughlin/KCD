@@ -2,16 +2,27 @@ import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn, einsum
+import numpy as np
+
 
 class LatentSimilarityLoss(nn.Module):
-    def __init__(self):
+    def __init__(self, return_l2_latent=False, return_l1_latent=False,
+                 return_symmetric_cce=False):
         super(LatentSimilarityLoss, self).__init__()
         self.mse = nn.MSELoss()
         self.cos = nn.CosineSimilarity(dim=-1)
         self.cce = nn.CrossEntropyLoss()
-        self.softmax = nn.Softmax(dim=-1)
-        self.temperature = 0.07
-        self.mse_weight = 0.2
+        self.softmax = nn.Softmax(dim=1)
+        self.temperature = np.exp(0.07)
+        self.mse_weight = 0.01
+        self.cos_weight = 1
+        self.huber = nn.SmoothL1Loss()
+        self.l2 = nn.MSELoss()
+        self.kld = nn.KLDivLoss()
+        self.return_l2_latent = return_l2_latent
+        self.return_l1_latent = return_l1_latent
+        self.return_symmetric_cce = return_symmetric_cce
 
     def normalize(self, z):
         mag = torch.linalg.vector_norm(z, dim=-1, keepdim=True)
@@ -20,27 +31,42 @@ class LatentSimilarityLoss(nn.Module):
     def forward(self, z1, z2):
         b,d,x,y,z = z1.shape
 
-        # sharpened_z1 = self.softmax(z1.view(b,d,-1).swapaxes(1,2)/self.temperature)
-        # sharpened_z2 = self.softmax(z2.view(b,d,-1).swapaxes(1,2)/self.temperature)
+        # reshaped_z1 = z1.view(b,d,-1).swapaxes(1,2)
+        # reshaped_z2 = z2.view(b,d,-1).swapaxes(1,2)
         #
-        # symmetric_cce = self.cce(sharpened_z1, sharpened_z2) + self.cce(sharpened_z2, sharpened_z1)
-        if d != 2:
-            mse = self.mse(z1, z2).mean()
-            cos = self.cos(z1.view(b,d,-1), z2.view(b,d,-1)).mean()
-            return mse + (1 - cos)
+        # s_ptd = self.softmax(reshaped_z1)
+        # t_ptd = self.softmax(reshaped_z2)
+        # self.symmetric_cce = (self.cce(s_ptd, t_ptd) + self.cce(t_ptd, s_ptd))/2
+        #
+        # return self.symmetric_cce/(x*y*z)
+
+        reshaped_z1 = z1.view(b, d, -1)
+        reshaped_z2 = z2.view(b, d, -1)
+
+        if d == 4:
+            if self.return_symmetric_cce:
+                amax_z1 = torch.argmax(reshaped_z1, dim=1)
+                amax_z2 = torch.argmax(reshaped_z2, dim=1)
+                symm_cce = (self.cce(reshaped_z1, amax_z2) + self.cce(reshaped_z2, amax_z1)) / 2
+                return symm_cce #* ((x**3)/(64*64*64)) # scales down loss with depth (cubed)
+            else:
+                return 0
         else:
-            # this is a 2D latent space, so we can use the cross entropy loss
-            argmax_z1 = torch.argmax(z1, dim=1)
-            argmax_z2 = torch.argmax(z2, dim=1)
-            cce = self.cce(z1, argmax_z2) + self.cce(z2, argmax_z1)
-            return cce
+            if self.return_l2_latent:
+                return self.l2(reshaped_z1, reshaped_z2) * (1e3/(d**3))
+            elif self.return_l1_latent:
+                return self.huber(reshaped_z1, reshaped_z2) * (1e3/(d**3))
+            else:
+                return 0
+
 
 
 
 class PyramidalLatentSimilarityLoss(nn.Module):
-    def __init__(self):
+    def __init__(self, return_l2_latent=False, return_l1_latent=False, return_symmetric_cce=True):
         super(PyramidalLatentSimilarityLoss, self).__init__()
-        self.similarity_loss = LatentSimilarityLoss()
+        self.similarity_loss = LatentSimilarityLoss(return_l2_latent=return_l2_latent, return_l1_latent=return_l1_latent,
+                                                    return_symmetric_cce=return_symmetric_cce)
 
     def forward(self, feature_list1, feature_list2):
         loss = 0

@@ -19,18 +19,23 @@ def get_3d_featureoutput_unet(in_channels, out_channels, n_stages,filters=32, fi
 
     return infer_network.UNet_featureoutput(in_channels, out_channels, kernel_sizes, False, filters_max=filters_max, filters=filters, )
 
-spacing = 4
-batch_size = 8
-lr_start = 0.0002
-epochs = 500
-coltea = True
+spacing = 2
+batch_size = 32
+lr_start = 0.00005
+epochs = 1000
+return_l2_latent = False
+return_l1_latent = False
+return_symmetric_cce = True
 home_path = '/media/mcgoug01/Crucial X6/ovseg_test/'
 
-dataset_ne_path = os.path.join(home_path,'preprocessed', 'coltea_nat','coltea_nat_{}'.format(spacing))
-dataset_ce_path = os.path.join(home_path,'preprocessed', 'coltea_art','coltea_art_{}'.format(spacing))
+dataset_ne_path = os.path.join(os.environ['OV_DATA_BASE'],'preprocessed/small_coreg_ncct/small_coreg_ncct_{}/'.format(spacing))
+dataset_ce_path = os.path.join(os.environ['OV_DATA_BASE'],('preprocessed/add_cect/add_cect_{}/'.format(spacing)))
+
+# dataset_ne_path = os.path.join(home_path,'preprocessed', 'small_coreg_ncct','{}mm_allbinary'.format(spacing))
+# dataset_ce_path = os.path.join(home_path,'preprocessed', 'small_coreg_ncct','{}mm_allbinary'.format(spacing))
 
 assert os.path.exists(dataset_ne_path) and os.path.exists(dataset_ce_path)
-ne2ceCT_path = os.path.join(home_path, 'ne2ceCT','coltea_{}'.format(spacing))
+ne2ceCT_path = os.path.join(home_path, 'ne2ceCT','small_coreg_alllabel_{}_again'.format(spacing))
 dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 log_path = os.path.join(ne2ceCT_path, 'logs.txt')
 
@@ -44,25 +49,26 @@ if os.path.exists(log_path):
 
 dataset = CrossPhaseDataset(os.path.join(dataset_ne_path,'images'), os.path.join(dataset_ce_path,'images'),
                             device=dev,
-                            is_train=True,patches_per_case=20)
+                            is_train=True,patches_per_case=40)
 
 dataset.apply_foldsplit(split_ratio=0.9)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 
-model_T = get_3d_featureoutput_unet(1, 2, 6,  filters=32, filters_max=1024).to(dev)
-model_T.load_state_dict(torch.load('/media/mcgoug01/Crucial X6/seg_model/fold_1/network_weights'))
-model_S = get_3d_featureoutput_unet(1, 2, 6,  filters=32, filters_max=1024).to(dev)
-model_S.load_state_dict(torch.load('/media/mcgoug01/Crucial X6/seg_model/fold_1/network_weights'))
+model_T = get_3d_featureoutput_unet(1, 4, 6,  filters=32, filters_max=1024).to(dev)
+model_T.load_state_dict(torch.load('/media/mcgoug01/Crucial X6/seg_model/2mm_alllabel/network_weights'))
+model_S = get_3d_featureoutput_unet(1, 4, 6,  filters=32, filters_max=1024).to(dev)
+model_S.load_state_dict(torch.load('/media/mcgoug01/Crucial X6/seg_model/2mm_alllabel/network_weights'))
 
 model_T.eval()
 model_S.train()
 
 optimizer = torch.optim.Adam(model_S.parameters(), lr=lr_start, betas=(0.95, 0.9), eps=1e-08, weight_decay=0.0001)
 scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.9999)
-loss_func = PyramidalLatentSimilarityLoss()
+loss_func = PyramidalLatentSimilarityLoss(return_l2_latent=return_l2_latent, return_l1_latent=return_l1_latent,
+                                          return_symmetric_cce=return_symmetric_cce).to(dev)
 losses = []
-weight = 0.9
+weight = 0.95
 running_loss = None
 running_val_loss = None
 min_val_loss = 1e6

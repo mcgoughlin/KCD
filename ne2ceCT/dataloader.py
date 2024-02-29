@@ -31,6 +31,7 @@ class CrossPhaseDataset(Dataset):
         self.blur_kernel = blur_kernel
         self.patches_per_case = patches_per_case
         self.case_patch_count = {case: 0 for case in self.cases}
+        self.patch_per_val_case=10
 
 
     def apply_foldsplit(self, split_ratio=0.8, train_cases=None):
@@ -48,7 +49,7 @@ class CrossPhaseDataset(Dataset):
         if self.is_train:
             return len(self.train_cases)*self.patches_per_case
         else:
-            return len(self.test_cases)
+            return len(self.test_cases) * self.patch_per_val_case
 
 
     def _add_noise(self, tensor1, tensor2, p=0.3, noise_strength=0.3):
@@ -142,6 +143,7 @@ class CrossPhaseDataset(Dataset):
             transforms = None
             case = self.test_cases[idx]
 
+
         ne = torch.Tensor(np.load(os.path.join(self.ne_path, case)))
         ce = torch.Tensor(np.load(os.path.join(self.ce_path, case)))
         # get random patch indices
@@ -149,13 +151,12 @@ class CrossPhaseDataset(Dataset):
         ne_patch = ne[0, indices[0]:indices[0]+self.patch_size, indices[1]:indices[1]+self.patch_size, indices[2]:indices[2]+self.patch_size].to(self.device)
         ce_patch = ce[0, indices[0]:indices[0]+self.patch_size, indices[1]:indices[1]+self.patch_size, indices[2]:indices[2]+self.patch_size].to(self.device)
 
-
-        if transforms:
-            # shuffles order of transforms every time
-            np.random.shuffle(transforms)
-            for transform in transforms:
-                ne_patch,ce_patch = transform(ne_patch,ce_patch)
-
+        if self.is_train:
+            if transforms:
+                # shuffles order of transforms every time
+                np.random.shuffle(transforms)
+                for transform in transforms:
+                    ne_patch,ce_patch = transform(ne_patch,ce_patch)
 
         return ne_patch.unsqueeze(0), ce_patch.unsqueeze(0)
 
@@ -163,17 +164,23 @@ class CrossPhaseDataset(Dataset):
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     plt.switch_backend('TkAgg')
+    dataset_ne_path = os.path.join(
+        '/media/mcgoug01/Crucial X6/ovseg_test/preprocessed/small_coreg_ncct/small_coreg_ncct_2/images')
+    dataset_ce_path = os.path.join('/media/mcgoug01/Crucial X6/ovseg_test/preprocessed/add_cect/add_cect_2/images')
     # test the dataset
-    ce_path = '/media/mcgoug01/Crucial X6/ovseg_test/preprocessed/coltea_art/coltea_art_4/images/'
-    ne_path = '/media/mcgoug01/Crucial X6/ovseg_test/preprocessed/coltea_nat/coltea_nat_4/images/'
+    # ce_path = '/media/mcgoug01/Crucial X6/ovseg_test/preprocessed/coltea_art/coltea_art_2/images/'
+    # ne_path = '/media/mcgoug01/Crucial X6/ovseg_test/preprocessed/coltea_nat/coltea_nat_2/images/'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    dataset = CrossPhaseDataset(ne_path, ce_path, device=device, is_train=True)
+    device='cpu'
+    dataset = CrossPhaseDataset(dataset_ne_path, dataset_ce_path, device=device, is_train=True)
 
     dataset.apply_foldsplit()
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
     for i, (ne, ce) in enumerate(dataloader):
-        fig, ax = plt.subplots(1, 2)
-        ax[0].imshow(ne[0, :, :, 32].cpu().detach().numpy())
-        ax[1].imshow(ce[0, :, :, 32].cpu().detach().numpy())
+        fig, ax = plt.subplots(2, 2)
+        ax[0,0].imshow(ne[0, 0, 63, ].cpu().detach().numpy())
+        ax[0,1].imshow(ce[0, 0, 63, ].cpu().detach().numpy())
+        ax[1,0].imshow(ne[0, 0, 0,].cpu().detach().numpy())
+        ax[1,1].imshow(ce[0, 0, 0,].cpu().detach().numpy())
         plt.show(block=True)
 
