@@ -14,12 +14,12 @@ np.random.seed(0)
 
 data_name = 'large_coreg_ncct'
 spacing = 2
-fold = 0
+fold = int(sys.argv[1])
 
 # preprocessed_name = '4mm_binary'
-preprocessed_name = 'large_coreg_ncct_2'
+preprocessed_name = '2mm_binary'
 # preprocessed_name='4mm_binary_test'
-ne2ceCT = str(sys.argv[1])
+ne2ceCT = str(sys.argv[2])
 model_name = '6,3x3x3,32_finetune_from_'+ne2ceCT
 # model_name = '6,3x3x3,32_finetune_from_cect'
 

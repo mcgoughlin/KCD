@@ -23,22 +23,22 @@ def get_3d_featureoutput_unet(in_channels, out_channels, n_stages,filters=32, fi
 spacing = 2
 batch_size = 40
 epochs = int(sys.argv[1])
-return_l1_latent = bool(int(sys.argv[2]))
-return_l2_latent = bool(int(sys.argv[3]))
+return_l2_latent = bool(int(sys.argv[2]))
+return_l1_latent = bool(int(sys.argv[3]))
 return_symmetric_cce = bool(int(sys.argv[4]))
 lr_start = float(sys.argv[5])
 loss_gamma = float(sys.argv[6])
 
 if __name__ == '__main__':
 
-    dataset_ne_path = os.path.join(os.environ['OV_DATA_BASE'],'preprocessed/small_coreg_ncct/small_coreg_ncct_{}/'.format(spacing))
-    dataset_ce_path = os.path.join(os.environ['OV_DATA_BASE'],('preprocessed/add_cect/add_cect_{}/'.format(spacing)))
+    dataset_ne_path = os.path.join(os.environ['OV_DATA_BASE'],'preprocessed/coltea_add_ncct/coltea_add_ncct_{}/'.format(spacing))
+    dataset_ce_path = os.path.join(os.environ['OV_DATA_BASE'],('preprocessed/coltea_add_cect/coltea_add_cect_{}/'.format(spacing)))
 
     # dataset_ne_path = os.path.join(home_path,'preprocessed', 'small_coreg_ncct','{}mm_allbinary'.format(spacing))
     # dataset_ce_path = os.path.join(home_path,'preprocessed', 'small_coreg_ncct','{}mm_allbinary'.format(spacing))
 
     assert os.path.exists(dataset_ne_path) and os.path.exists(dataset_ce_path)
-    ne2ceCT_path = os.path.join(os.environ['OV_DATA_BASE'], 'ne2ceCT','small_coreg_alllabel_{}_l1{}_l2{}_cce{}_{}lr_{}lg_{}bs_{}ep'.format(spacing,
+    ne2ceCT_path = os.path.join(os.environ['OV_DATA_BASE'], 'ne2ceCT','coltea_add_alllabel_{}_l1{}_l2{}_cce{}_{}lr_{}lg_{}bs_{}ep'.format(spacing,
                                                                                                                        return_l1_latent,
                                                                                                                   return_l2_latent,
                                                                                                                   return_symmetric_cce,

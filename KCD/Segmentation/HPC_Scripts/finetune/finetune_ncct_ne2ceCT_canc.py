@@ -14,14 +14,14 @@ np.random.seed(0)
 
 data_name = 'large_coreg_ncct'
 spacing = 2
-fold = 0
+fold = int(sys.argv[1])
 
 # preprocessed_name = '4mm_binary'
-preprocessed_name = 'large_coreg_ncct_2'
+preprocessed_name = '2mm_binary'
 # preprocessed_name='4mm_binary_test'
-ne2ceCT = str(sys.argv[1])
-model_name = '6,3x3x3,32_finetune_from_'+ne2ceCT
-# model_name = '6,3x3x3,32_finetune_from_cect'
+# ne2ceCT = str(sys.argv[2])
+# model_name = '6,3x3x3,32_finetune_from_'+ne2ceCT
+model_name = '6,3x3x3,32_finetune_from_cect'
 
 # model_name = 'del'
 
@@ -78,9 +78,9 @@ model_params['data']['val_dl_params']['epoch_len']=50
 
 for vf in vfs:
 
-    # path_to_model = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/kits23_nooverlap/2mm_alllabel/alllabel_long/fold_0/network_weights'
+    path_to_model = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/kits23_nooverlap/2mm_alllabel/alllabel_long/fold_0/network_weights'
     # path_to_model = '/media/mcgoug01/Crucial X6/ovseg_test/ne2ceCT/coltea_4_legacy_outs/network_weights'
-    path_to_model = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/ne2ceCT/{}/network_weights'.format(ne2ceCT)
+    # path_to_model = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/ne2ceCT/{}/network_weights'.format(ne2ceCT)
     model = SegmentationModel(val_fold=vf,
                                 data_name=data_name,
                                 preprocessed_name=preprocessed_name, 
