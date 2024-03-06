@@ -31,13 +31,3 @@ class LinearWarmupExponentialDecayScheduler(LRScheduler):
             return [base_lr * self.decay_rate ** (self.last_epoch - self.warmup_epochs)
                     for base_lr in self.base_lrs]
 
-
-# Example usage
-model = ...  # your model
-optimizer = torch.optim.Adam(model.parameters(), lr=0)  # start with lr=0
-scheduler = LinearWarmupExponentialDecayScheduler(optimizer, warmup_epochs=20, total_epochs=100, lr_max=0.01, decay_rate=0.9999)
-
-for epoch in range(100):
-    # Train your model
-    ...
-    scheduler.step()  # Update the learning rate

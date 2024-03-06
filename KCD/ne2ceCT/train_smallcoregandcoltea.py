@@ -23,8 +23,10 @@ l1_weight = float(sys.argv[2])
 l2_weight = float(sys.argv[3])
 cce_weight = float(sys.argv[4])
 cos_weight = float(sys.argv[5])
-lr_max = float(sys.argv[6])
-loss_gamma = float(sys.argv[7])
+var_loss_weight = float(sys.argv[6])
+cov_loss_weight = float(sys.argv[7])
+lr_max = float(sys.argv[8])
+loss_gamma = float(sys.argv[9])
 
 if __name__ == '__main__':
 
@@ -77,7 +79,8 @@ if __name__ == '__main__':
     # scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=loss_gamma)
 
     loss_func = PyramidalLatentSimilarityLoss(l1_weight=l1_weight, l2_weight=l2_weight,
-                                              cce_weight=cce_weight, cos_weight=cos_weight).to(dev)
+                                              cce_weight=cce_weight, cos_weight=cos_weight,
+                                              var_loss_weight=var_loss_weight,cov_loss_weight=cov_loss_weight).to(dev)
     losses = []
     weight = 0.95
     running_loss = None

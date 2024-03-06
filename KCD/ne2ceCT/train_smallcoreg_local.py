@@ -1,6 +1,6 @@
 import torch
 import os
-os.environ['OV_DATA_BASE'] ='/bask/projects/p/phwq4930-renal-canc/data/seg_data'
+os.environ['OV_DATA_BASE'] ='/media/mcgoug01/Crucial X6/ovseg_test/'
 from torch.utils.data import DataLoader
 
 from KCD.ne2ceCT.dataloader import CrossPhaseDataset
@@ -17,16 +17,16 @@ def get_3d_featureoutput_unet(in_channels, out_channels, n_stages,filters=32, fi
     return infer_network.UNet_featureoutput(in_channels, out_channels, kernel_sizes, False, filters_max=filters_max, filters=filters, )
 
 spacing = 2
-batch_size = 40
-epochs = int(sys.argv[1])
-l1_weight = float(sys.argv[2])
-l2_weight = float(sys.argv[3])
-cce_weight = float(sys.argv[4])
-cos_weight = float(sys.argv[5])
-var_loss_weight = float(sys.argv[6])
-cov_loss_weight = float(sys.argv[7])
-lr_max = float(sys.argv[8])
-loss_gamma = float(sys.argv[9])
+batch_size = 10
+epochs = 10000
+l1_weight = 0
+l2_weight = 10
+cce_weight = 0
+cos_weight = 0
+var_loss_weight = 0.1
+cov_loss_weight = 10
+lr_max = 2e-5
+loss_gamma = 0.999999
 
 if __name__ == '__main__':
 
@@ -61,13 +61,13 @@ if __name__ == '__main__':
                                 is_train=True,patches_per_case=40)
 
     dataset.apply_foldsplit(split_ratio=0.9)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=5)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=20)
 
 
     model_T = get_3d_featureoutput_unet(1, 4, 6,  filters=32, filters_max=1024).to(dev)
-    model_T.load_state_dict(torch.load('/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/kits23_nooverlap/2mm_alllabel/alllabel_long/fold_0/network_weights'))
+    model_T.load_state_dict(torch.load('/media/mcgoug01/Crucial X6/seg_model/2mm_alllabel/network_weights'))
     model_S = get_3d_featureoutput_unet(1, 4, 6,  filters=32, filters_max=1024).to(dev)
-    model_S.load_state_dict(torch.load('/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/kits23_nooverlap/2mm_alllabel/alllabel_long/fold_0/network_weights'))
+    model_S.load_state_dict(torch.load('/media/mcgoug01/Crucial X6/seg_model/2mm_alllabel/network_weights'))
 
     model_T.eval()
     model_S.train()
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     loss_func = PyramidalLatentSimilarityLoss(l1_weight=l1_weight, l2_weight=l2_weight,
                                               cce_weight=cce_weight, cos_weight=cos_weight,
-                                              var_loss_weight=var_loss_weight,cov_loss_weight=cov_loss_weight).to(dev)
+                                              cov_loss_weight=cov_loss_weight,var_loss_weight=var_loss_weight).to(dev)
     losses = []
     weight = 0.95
     running_loss = None
@@ -106,7 +106,7 @@ if __name__ == '__main__':
             else:
                 running_loss = weight * running_loss + (1 - weight) * loss.item()
 
-            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(epoch+1, epochs, i+1, len(dataloader), loss.item()))
+            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, LR: {:.7f}'.format(epoch+1, epochs, i+1, len(dataloader), loss.item(), scheduler.get_last_lr()[0]))
             #print like above but with line replacement
 
             losses.append(running_loss)
