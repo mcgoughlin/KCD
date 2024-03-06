@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from KCD.ne2ceCT.dataloader import CrossPhaseDataset
 from KCD.ne2ceCT.loss_function import PyramidalLatentSimilarityLoss
 from KCD.Segmentation.Inference import infer_network
+from KCD.ne2ceCT.lr_scheduler import LinearWarmupExponentialDecayScheduler
 import matplotlib.pyplot as plt
 import torch.optim.lr_scheduler as lr_scheduler
 import sys
@@ -22,7 +23,7 @@ l1_weight = float(sys.argv[2])
 l2_weight = float(sys.argv[3])
 cce_weight = float(sys.argv[4])
 cos_weight = float(sys.argv[5])
-lr_start = float(sys.argv[6])
+lr_max = float(sys.argv[6])
 loss_gamma = float(sys.argv[7])
 
 if __name__ == '__main__':
@@ -38,7 +39,7 @@ if __name__ == '__main__':
                                                                                                                   l2_weight,
                                                                                                                   cce_weight,
                                                                                                                   cos_weight,
-                                                                                                                  lr_start,
+                                                                                                                  lr_max,
                                                                                                                   loss_gamma,
                                                                                                                   batch_size,
                                                                                                                   epochs))
@@ -69,8 +70,12 @@ if __name__ == '__main__':
     model_T.eval()
     model_S.train()
 
-    optimizer = torch.optim.Adam(model_S.parameters(), lr=lr_start, betas=(0.95, 0.9), eps=1e-08, weight_decay=0.0001)
-    scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=loss_gamma)
+    optimizer = torch.optim.Adam(model_S.parameters(), lr=lr_max/20, betas=(0.95, 0.9), eps=1e-08, weight_decay=0.0001)
+    scheduler = LinearWarmupExponentialDecayScheduler(optimizer, warmup_epochs=500, lr_max=lr_max,
+                                                      decay_rate=loss_gamma)
+
+    # scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=loss_gamma)
+
     loss_func = PyramidalLatentSimilarityLoss(l1_weight=l1_weight, l2_weight=l2_weight,
                                               cce_weight=cce_weight, cos_weight=cos_weight).to(dev)
     losses = []
