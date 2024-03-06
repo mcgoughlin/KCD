@@ -7,8 +7,7 @@ import numpy as np
 
 
 class LatentSimilarityLoss(nn.Module):
-    def __init__(self, return_l2_latent=False, return_l1_latent=False,
-                 return_symmetric_cce=False):
+    def __init__(self, l2_weight = 1, l1_weight = 1, cce_weight = 1, cos_weight = 1):
         super(LatentSimilarityLoss, self).__init__()
         self.mse = nn.MSELoss()
         self.cos = nn.CosineSimilarity(dim=-1)
@@ -20,9 +19,10 @@ class LatentSimilarityLoss(nn.Module):
         self.huber = nn.SmoothL1Loss()
         self.l2 = nn.MSELoss()
         self.kld = nn.KLDivLoss()
-        self.return_l2_latent = return_l2_latent
-        self.return_l1_latent = return_l1_latent
-        self.return_symmetric_cce = return_symmetric_cce
+        self.l2_weight = l2_weight
+        self.l1_weight = l1_weight
+        self.cce_weight = cce_weight
+        self.cos_weight = cos_weight
 
     def normalize(self, z):
         mag = torch.linalg.vector_norm(z, dim=-1, keepdim=True)
@@ -43,30 +43,36 @@ class LatentSimilarityLoss(nn.Module):
         reshaped_z1 = z1.view(b, d, -1)
         reshaped_z2 = z2.view(b, d, -1)
 
+        loss = 0
+
         if d == 4:
-            if self.return_symmetric_cce:
+            if self.cce_weight>0:
                 amax_z1 = torch.argmax(reshaped_z1, dim=1)
                 amax_z2 = torch.argmax(reshaped_z2, dim=1)
                 symm_cce = (self.cce(reshaped_z1, amax_z2) + self.cce(reshaped_z2, amax_z1)) / 2
-                return symm_cce #* ((x**3)/(64*64*64)) # scales down loss with depth (cubed)
-            else:
-                return 0
+                loss += symm_cce*self.cce_weight
         else:
-            if self.return_l2_latent:
-                return self.l2(reshaped_z1, reshaped_z2) * (1e3/(d**3))
-            elif self.return_l1_latent:
-                return self.huber(reshaped_z1, reshaped_z2) * (1e3/(d**3))
-            else:
-                return 0
+            if self.l2_weight>0:
+                loss += self.l2(reshaped_z1, reshaped_z2) * (1e3/(d**3))*self.l2_weight
+            if self.l1_weight>0:
+                loss += self.huber(reshaped_z1, reshaped_z2) * (1e3/(d**3))*self.l1_weight
+            if self.cos_weight>0:
+                loss += (1 - self.cos(self.normalize(reshaped_z1), self.normalize(reshaped_z2)))*self.cos_weight
+
+        return loss
 
 
 
 
 class PyramidalLatentSimilarityLoss(nn.Module):
-    def __init__(self, return_l2_latent=False, return_l1_latent=False, return_symmetric_cce=True):
+    def __init__(self, l2_weight = 0, l1_weight = 0, cce_weight = 0, cos_weight = 0):
         super(PyramidalLatentSimilarityLoss, self).__init__()
-        self.similarity_loss = LatentSimilarityLoss(return_l2_latent=return_l2_latent, return_l1_latent=return_l1_latent,
-                                                    return_symmetric_cce=return_symmetric_cce)
+        self.similarity_loss = LatentSimilarityLoss(
+            l2_weight = l2_weight,
+            l1_weight = l1_weight,
+            cce_weight = cce_weight,
+            cos_weight = cos_weight
+        )
 
     def forward(self, feature_list1, feature_list2):
         loss = 0

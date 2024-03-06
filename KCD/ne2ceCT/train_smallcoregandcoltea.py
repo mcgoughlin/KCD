@@ -1,15 +1,10 @@
 import torch
-import torch.nn as nn
 import os
 os.environ['OV_DATA_BASE'] ='/bask/projects/p/phwq4930-renal-canc/data/seg_data'
-import numpy as np
-import pandas as pd
-from torch.utils.data import Dataset, DataLoader
-import torchvision
-from random import random
+from torch.utils.data import DataLoader
 
-from ne2ceCT.dataloader import CrossPhaseDataset
-from ne2ceCT.loss_function import PyramidalLatentSimilarityLoss
+from KCD.ne2ceCT.dataloader import CrossPhaseDataset
+from KCD.ne2ceCT.loss_function import PyramidalLatentSimilarityLoss
 from KCD.Segmentation.Inference import infer_network
 import matplotlib.pyplot as plt
 import torch.optim.lr_scheduler as lr_scheduler
@@ -23,29 +18,30 @@ def get_3d_featureoutput_unet(in_channels, out_channels, n_stages,filters=32, fi
 spacing = 2
 batch_size = 40
 epochs = int(sys.argv[1])
-return_l1_latent = bool(int(sys.argv[2]))
-return_l2_latent = bool(int(sys.argv[3]))
-return_symmetric_cce = bool(int(sys.argv[4]))
-lr_start = float(sys.argv[5])
-loss_gamma = float(sys.argv[6])
+l1_weight = float(sys.argv[2])
+l2_weight = float(sys.argv[3])
+cce_weight = float(sys.argv[4])
+cos_weight = float(sys.argv[5])
+lr_start = float(sys.argv[6])
+loss_gamma = float(sys.argv[7])
 
 if __name__ == '__main__':
 
-    dataset_ne_path = os.path.join(os.environ['OV_DATA_BASE'],'preprocessed/small_coreg_ncct/small_coreg_ncct_{}/'.format(spacing))
-    dataset_ce_path = os.path.join(os.environ['OV_DATA_BASE'],('preprocessed/add_cect/add_cect_{}/'.format(spacing)))
+    dataset_ne_path = os.path.join(os.environ['OV_DATA_BASE'],'preprocessed/coltea_add_ncct/coltea_add_ncct_{}/'.format(spacing))
+    dataset_ce_path = os.path.join(os.environ['OV_DATA_BASE'],('preprocessed/coltea_add_cect/coltea_add_cect_{}/'.format(spacing)))
 
     # dataset_ne_path = os.path.join(home_path,'preprocessed', 'small_coreg_ncct','{}mm_allbinary'.format(spacing))
     # dataset_ce_path = os.path.join(home_path,'preprocessed', 'small_coreg_ncct','{}mm_allbinary'.format(spacing))
 
     assert os.path.exists(dataset_ne_path) and os.path.exists(dataset_ce_path)
-    ne2ceCT_path = os.path.join(os.environ['OV_DATA_BASE'], 'ne2ceCT','small_coreg_alllabel_{}_l1{}_l2{}_cce{}_{}lr_{}lg_{}bs_{}ep'.format(spacing,
-                                                                                                                       return_l1_latent,
-                                                                                                                  return_l2_latent,
-                                                                                                                  return_symmetric_cce,
-                                                                                                                          lr_start,
-                                                                                                                          loss_gamma,
-                                                                                                                                    batch_size,
-                                                                                                                                    epochs))
+    ne2ceCT_path = os.path.join(os.environ['OV_DATA_BASE'], 'ne2ceCT','coltea_add_alllabel_{}'.format(spacing), 'l1{}_l2{}_cce{}_cos{}_{}lr_{}lg_{}bs_{}ep'.format(l1_weight,
+                                                                                                                  l2_weight,
+                                                                                                                  cce_weight,
+                                                                                                                  cos_weight,
+                                                                                                                  lr_start,
+                                                                                                                  loss_gamma,
+                                                                                                                  batch_size,
+                                                                                                                  epochs))
     dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     log_path = os.path.join(ne2ceCT_path, 'logs.txt')
 
@@ -75,8 +71,8 @@ if __name__ == '__main__':
 
     optimizer = torch.optim.Adam(model_S.parameters(), lr=lr_start, betas=(0.95, 0.9), eps=1e-08, weight_decay=0.0001)
     scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=loss_gamma)
-    loss_func = PyramidalLatentSimilarityLoss(return_l2_latent=return_l2_latent, return_l1_latent=return_l1_latent,
-                                              return_symmetric_cce=return_symmetric_cce).to(dev)
+    loss_func = PyramidalLatentSimilarityLoss(l1_weight=l1_weight, l2_weight=l2_weight,
+                                              cce_weight=cce_weight, cos_weight=cos_weight).to(dev)
     losses = []
     weight = 0.95
     running_loss = None

@@ -1,5 +1,4 @@
 import dicom2nifti # to convert DICOM files to the NIftI format
-import nibabel as nib # nibabel to handle nifti files
 
 import compressed_dicom
 
@@ -16,7 +15,7 @@ import logging
 import dicom2nifti.common as common
 import dicom2nifti.convert_dicom as convert_dicom
 import dicom2nifti.settings
-import torch
+
 logger = logging.getLogger(__name__)
 
 
