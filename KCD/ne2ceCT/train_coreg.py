@@ -17,7 +17,7 @@ def get_3d_featureoutput_unet(in_channels, out_channels, n_stages,filters=32, fi
     return infer_network.UNet_featureoutput(in_channels, out_channels, kernel_sizes, False, filters_max=filters_max, filters=filters, )
 
 spacing = 2
-batch_size = 80
+batch_size = 40
 epochs = int(sys.argv[1])
 l1_weight = float(sys.argv[2])
 l2_weight = float(sys.argv[3])
@@ -30,14 +30,14 @@ loss_gamma = float(sys.argv[9])
 
 if __name__ == '__main__':
 
-    dataset_ne_path = os.path.join(os.environ['OV_DATA_BASE'],'preprocessed/coltea_add_ncct/coltea_add_ncct_{}/'.format(spacing))
-    dataset_ce_path = os.path.join(os.environ['OV_DATA_BASE'],('preprocessed/coltea_add_cect/coltea_add_cect_{}/'.format(spacing)))
+    dataset_ne_path = os.path.join(os.environ['OV_DATA_BASE'],'preprocessed/small_coreg_ncct/small_coreg_ncct_{}/'.format(spacing))
+    dataset_ce_path = os.path.join(os.environ['OV_DATA_BASE'],('preprocessed/add_cect/add_cect_{}/'.format(spacing)))
 
     # dataset_ne_path = os.path.join(home_path,'preprocessed', 'small_coreg_ncct','{}mm_allbinary'.format(spacing))
     # dataset_ce_path = os.path.join(home_path,'preprocessed', 'small_coreg_ncct','{}mm_allbinary'.format(spacing))
 
     assert os.path.exists(dataset_ne_path) and os.path.exists(dataset_ce_path)
-    ne2ceCT_path = os.path.join(os.environ['OV_DATA_BASE'], 'ne2ceCT','coltea_add_alllabel_{}'.format(spacing), 'l1{}_l2{}_cce{}_cos{}_{}lr_{}lg_{}bs_{}ep'.format(l1_weight,
+    ne2ceCT_path = os.path.join(os.environ['OV_DATA_BASE'], 'ne2ceCT','small_coreg_alllabel_{}'.format(spacing), 'l1{}_l2{}_cce{}_cos{}_{}lr_{}lg_{}bs_{}ep'.format(l1_weight,
                                                                                                                   l2_weight,
                                                                                                                   cce_weight,
                                                                                                                   cos_weight,
@@ -61,7 +61,7 @@ if __name__ == '__main__':
                                 is_train=True,patches_per_case=40)
 
     dataset.apply_foldsplit(split_ratio=0.9)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=10)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=5)
 
 
     model_T = get_3d_featureoutput_unet(1, 4, 6,  filters=32, filters_max=1024).to(dev)
@@ -73,10 +73,10 @@ if __name__ == '__main__':
     model_S.train()
 
     optimizer = torch.optim.Adam(model_S.parameters(), lr=lr_max/20, betas=(0.95, 0.9), eps=1e-08, weight_decay=0.0001)
+    # scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=loss_gamma)
+
     scheduler = LinearWarmupExponentialDecayScheduler(optimizer, warmup_epochs=500, lr_max=lr_max,
                                                       decay_rate=loss_gamma)
-
-    # scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=loss_gamma)
 
     loss_func = PyramidalLatentSimilarityLoss(l1_weight=l1_weight, l2_weight=l2_weight,
                                               cce_weight=cce_weight, cos_weight=cos_weight,

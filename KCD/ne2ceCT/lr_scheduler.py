@@ -1,9 +1,9 @@
 import numpy as np
 import torch
-from torch.optim.lr_scheduler import LRScheduler
+from torch.optim.lr_scheduler import _LRScheduler
 
 
-class LinearWarmupExponentialDecayScheduler(LRScheduler):
+class LinearWarmupExponentialDecayScheduler(_LRScheduler):
     def __init__(self, optimizer, warmup_epochs, lr_max, decay_rate, last_epoch=-1):
         self.warmup_epochs = warmup_epochs
         self.lr_max = lr_max
