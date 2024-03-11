@@ -105,8 +105,8 @@ def bspline_coreg(moving, fixed, initial_transform=None,
     registration_method.SetOptimizerScalesFromPhysicalShift()
 
     # Setup for the multi-resolution framework.
-    registration_method.SetShrinkFactorsPerLevel(shrinkFactors=[2,1])
-    registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[1,0])
+    registration_method.SetShrinkFactorsPerLevel(shrinkFactors=[1])
+    registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[0])
     registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
 
     if moving_mask :
