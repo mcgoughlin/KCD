@@ -2,10 +2,10 @@ import os
 os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data/"
 from KCD.Segmentation.ovseg.preprocessing.SegmentationPreprocessing import SegmentationPreprocessing
 
-data_name = 'large_coreg_ncct'
+data_name = 'coreg_ncct'
 spacing = 2
 
-preprocessed_name = '2mm_binary'
+preprocessed_name = '2mm_binarycancer'
 
 lb_classes = [2]
 

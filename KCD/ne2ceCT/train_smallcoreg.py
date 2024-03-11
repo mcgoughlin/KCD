@@ -18,6 +18,7 @@ def get_3d_featureoutput_unet(in_channels, out_channels, n_stages,filters=32, fi
 
 spacing = 2
 batch_size = 40
+out_dim = 2
 epochs = int(sys.argv[1])
 l1_weight = float(sys.argv[2])
 l2_weight = float(sys.argv[3])
@@ -65,9 +66,9 @@ if __name__ == '__main__':
 
 
     model_T = get_3d_featureoutput_unet(1, 4, 6,  filters=32, filters_max=1024).to(dev)
-    model_T.load_state_dict(torch.load('/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/kits23_nooverlap/2mm_alllabel/alllabel_long/fold_0/network_weights'))
+    model_T.load_state_dict(torch.load('/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/kits23_nooverlap/2mm_binary_canceronly/6,3x3x3,32_justcancer/fold_1/network_weights'))
     model_S = get_3d_featureoutput_unet(1, 4, 6,  filters=32, filters_max=1024).to(dev)
-    model_S.load_state_dict(torch.load('/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/kits23_nooverlap/2mm_alllabel/alllabel_long/fold_0/network_weights'))
+    model_S.load_state_dict(torch.load('/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/kits23_nooverlap/2mm_binary_canceronly/6,3x3x3,32_justcancer/fold_1/network_weights'))
 
     model_T.eval()
     model_S.train()
@@ -80,7 +81,8 @@ if __name__ == '__main__':
 
     loss_func = PyramidalLatentSimilarityLoss(l1_weight=l1_weight, l2_weight=l2_weight,
                                               cce_weight=cce_weight, cos_weight=cos_weight,
-                                              var_loss_weight=var_loss_weight,cov_loss_weight=cov_loss_weight).to(dev)
+                                              var_loss_weight=var_loss_weight,cov_loss_weight=cov_loss_weight,
+                                              out_dim=out_dim).to(dev)
     losses = []
     weight = 0.95
     running_loss = None
