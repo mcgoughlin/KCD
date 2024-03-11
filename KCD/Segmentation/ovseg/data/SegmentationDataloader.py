@@ -94,6 +94,7 @@ class SegmentationBatchDataset(object):
                 im = np.load(path_dict[self.image_key]).astype(self.dtype)
                 im = maybe_add_channel_dim(im)
                 self.data.append((im, labels))
+            print(self.data)
                     
         # store coords in ram
         if self.store_coords_in_ram:
