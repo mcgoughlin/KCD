@@ -101,7 +101,7 @@ def bspline_coreg(moving, fixed, initial_transform=None,
 
     # Optimizer settings.
     registration_method.SetOptimizerAsGradientDescent(learningRate=0.1, numberOfIterations=2000,
-                                                      convergenceMinimumValue=1e-6, convergenceWindowSize=20)
+                                                      convergenceMinimumValue=1e-7, convergenceWindowSize=20)
     registration_method.SetOptimizerScalesFromPhysicalShift()
 
     # Setup for the multi-resolution framework.
