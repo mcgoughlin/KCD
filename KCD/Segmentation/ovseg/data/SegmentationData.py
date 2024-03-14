@@ -51,10 +51,9 @@ class SegmentationData_trainontest(DataBase):
     def initialise_dataloader(self, is_train):
         if is_train:
             print('Initialise training dataloader')
-            train_path_dict = self.trn_ds.path_dict
-            test_path_dict = self.val_ds.path_dict
-            self.trn_ds.path_dict = train_path_dict.update(test_path_dict)
-            print(train_path_dict.update(test_path_dict))
+            train_path_dict = self.trn_ds.path_dicts
+            test_path_dict = self.val_ds.path_dicts
+            self.trn_ds.path_dicts = train_path_dict + test_path_dict
 
             if self.use_double_bias:
                 raise NotImplementedError

@@ -14,7 +14,7 @@ spacing = 2
 fold = int(sys.argv[1])
 
 preprocessed_name = '2mm_binary_canceronly'
-model_name = '6,3x3x3,32_justcancer'
+model_name = '6,3x3x3,32_justcancer_trainontest'
 
 vfs = [fold]
 

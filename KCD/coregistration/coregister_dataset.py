@@ -128,9 +128,9 @@ if __name__ == '__main__':
 
 
 
-    ncct_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/unseen'
-    cect_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits23_nooverlap/images'
-    save_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/registered'
+    ncct_dir = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/kits_ncct/unseen'
+    cect_dir = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/kits23_nooverlap/images'
+    save_dir = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/kits_ncct/registered'
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)

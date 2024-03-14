@@ -12,7 +12,7 @@ torch.manual_seed(0)
 np.random.seed(0)
 
 
-data_name = 'large_coreg_ncct'
+data_name = 'masked_coreg_ncct'
 spacing = 2
 fold = int(sys.argv[1])
 
