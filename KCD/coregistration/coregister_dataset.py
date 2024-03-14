@@ -70,8 +70,8 @@ def nonlinear_coreg(moving,fixed,
     # Settings for metric sampling, usage of a mask is optional. When given a mask the sample points will be
     # generated inside that region. Also, this implicitly speeds things up as the mask is smaller than the
     # whole image.
-    registration_method.SetMetricSamplingStrategy(registration_method.RANDOM)
-    registration_method.SetMetricSamplingPercentage(0.05)
+    registration_method.SetMetricSamplingStrategy(registration_method.REGULAR)
+    registration_method.SetMetricSamplingPercentage(0.2)
 
     if moving_mask:
         mmask = sitk.Cast(sitk.IntensityWindowing(moving, windowMinimum=-100, windowMaximum=300),sitk.sitkInt16)
@@ -115,8 +115,8 @@ def nonlinear_coreg(moving,fixed,
     registration_method.AddCommand(sitk.sitkIterationEvent, lambda: plot_values(registration_method))
 
     registration_method.SetInterpolator(sitk.sitkLinear)
-    registration_method.SetOptimizerAsGradientDescent(learningRate=1, numberOfIterations=100,
-                                                      convergenceMinimumValue=1e-6, convergenceWindowSize=5,
+    registration_method.SetOptimizerAsGradientDescent(learningRate=1, numberOfIterations=500,
+                                                      convergenceMinimumValue=1e-6, convergenceWindowSize=20,
                                                       estimateLearningRate=registration_method.EachIteration)
 
     final_transform = registration_method.Execute(fixed_image, moving)
@@ -128,9 +128,9 @@ if __name__ == '__main__':
 
 
 
-    ncct_dir = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/kits_ncct/unseen'
-    cect_dir = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/kits23/images'
-    save_dir = '/Users/mcgoug01/Library/CloudStorage/OneDrive-CRUKCambridgeInstitute/SecondYear/Segmentation/seg_data/raw_data/kits23/registered'
+    ncct_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/unseen'
+    cect_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits23_nooverlap/images'
+    save_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/registered'
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
