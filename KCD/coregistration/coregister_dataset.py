@@ -23,7 +23,7 @@ def linear_coreg(moving,fixed,initial_transform,
 
     # Setup for the multi-resolution framework.
     registration_method.SetShrinkFactorsPerLevel(shrinkFactors=[4,2, 1,])
-    registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[2,1, 0])
+    registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[2, 1, 0])
     registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
 
     if moving_mask :
@@ -89,8 +89,8 @@ def nonlinear_coreg(moving,fixed,
     registration_method.AddCommand(sitk.sitkIterationEvent, lambda: plot_values(registration_method))
 
     registration_method.SetInterpolator(sitk.sitkLinear)
-    registration_method.SetOptimizerAsGradientDescent(learningRate=0.3, numberOfIterations=100,
-                                                      convergenceMinimumValue=1e-7, convergenceWindowSize=20)
+    registration_method.SetOptimizerAsGradientDescent(learningRate=1, numberOfIterations=100,
+                                                      convergenceMinimumValue=1e-7, convergenceWindowSize=10)
 
     final_transform = registration_method.Execute(fixed_image, moving)
 
@@ -101,9 +101,9 @@ if __name__ == '__main__':
 
 
 
-    ncct_dir = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/kits_ncct/unseen'
-    cect_dir = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/kits23_nooverlap/images'
-    save_dir = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/kits_ncct/registered_bonesandsofttissue'
+    ncct_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/unseen'
+    cect_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits23_nooverlap/images'
+    save_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/registered_1e6'
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -158,4 +158,5 @@ if __name__ == '__main__':
         save_fp = os.path.join(save_dir, ncct_image)
         print(f'Saving the registered image to {save_fp}')
         sitk.WriteImage(resampled_moving, save_fp)
+        assert False
 
