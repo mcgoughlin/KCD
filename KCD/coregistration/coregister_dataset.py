@@ -158,5 +158,3 @@ if __name__ == '__main__':
         save_fp = os.path.join(save_dir, ncct_image)
         print(f'Saving the registered image to {save_fp}')
         sitk.WriteImage(resampled_moving, save_fp)
-        assert False
-
