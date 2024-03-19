@@ -18,7 +18,7 @@ def linear_coreg(moving,fixed,initial_transform,
 
     # Optimizer settings.
     registration_method.SetOptimizerAsGradientDescent(learningRate=1, numberOfIterations=1000,
-                                                      convergenceMinimumValue=1e-7, convergenceWindowSize=30)
+                                                      convergenceMinimumValue=1e-8, convergenceWindowSize=30)
     registration_method.SetOptimizerScalesFromPhysicalShift()
 
     # Setup for the multi-resolution framework.
@@ -27,12 +27,11 @@ def linear_coreg(moving,fixed,initial_transform,
     registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
 
     if moving_mask :
-        # mask image using intensity thresholding
-        mmask = sitk.IntensityWindowing(moving, windowMinimum=-200, windowMaximum=300)
-        registration_method.SetMetricMovingMask( mmask>0)
+        mmask = sitk.Cast(sitk.IntensityWindowing(moving, windowMinimum=-100, windowMaximum=300),sitk.sitkUInt8)
+        registration_method.SetMetricMovingMask(mmask)
     if fixed_mask:
-        fmask = sitk.IntensityWindowing(fixed, windowMinimum=-200, windowMaximum=300)
-        registration_method.SetMetricFixedMask( fmask>0)
+        fmask = sitk.Cast(sitk.IntensityWindowing(fixed, windowMinimum=-100, windowMaximum=300),sitk.sitkUInt8)
+        registration_method.SetMetricFixedMask(fmask)
 
     # Don't optimize in-place, we would possibly like to run this cell multiple times.
     registration_method.SetInitialTransform(initial_transform, inPlace=False)
@@ -47,63 +46,13 @@ def linear_coreg(moving,fixed,initial_transform,
 
     return final_transform, registration_method
 
-def nonlinear_coreg(moving,fixed,
-                    moving_mask=True,fixed_mask=True):
-    registration_method = sitk.ImageRegistrationMethod()
-
-    # Determine the number of BSpline control points using the physical spacing we want for the control grid.
-    grid_physical_spacing = [20.0, 20.0, 20.0]  # A control point every 20mm
-    image_physical_size = [size * spacing for size, spacing in zip(fixed_image.GetSize(), fixed_image.GetSpacing())]
-    mesh_size = [int(image_size / grid_spacing + 0.5) \
-                 for image_size, grid_spacing in zip(image_physical_size, grid_physical_spacing)]
-
-    initial_transform = sitk.BSplineTransformInitializer(image1=fixed_image,
-                                                         transformDomainMeshSize=mesh_size, order=3)
-
-
-    registration_method.SetInitialTransform(initial_transform)
-
-    registration_method.SetMetricAsMeanSquares()
-    # Settings for metric sampling, usage of a mask is optional. When given a mask the sample points will be
-    # generated inside that region. Also, this implicitly speeds things up as the mask is smaller than the
-    # whole image.
-    registration_method.SetMetricSamplingStrategy(registration_method.NONE)
-
-    if moving_mask :
-        # mask image using intensity thresholding
-        mmask = sitk.IntensityWindowing(moving, windowMinimum=-200, windowMaximum=300)
-        registration_method.SetMetricMovingMask( mmask>0)
-    if fixed_mask:
-        fmask = sitk.IntensityWindowing(fixed, windowMinimum=-200, windowMaximum=300)
-        registration_method.SetMetricFixedMask( fmask>0)
-
-
-    # Multi-resolution framework.
-    registration_method.SetShrinkFactorsPerLevel(shrinkFactors=[1])
-    registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[0])
-    registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
-
-    registration_method.AddCommand(sitk.sitkStartEvent, start_plot)
-    registration_method.AddCommand(sitk.sitkEndEvent, end_plot)
-    registration_method.AddCommand(sitk.sitkMultiResolutionIterationEvent, update_multires_iterations)
-    registration_method.AddCommand(sitk.sitkIterationEvent, lambda: plot_values(registration_method))
-
-    registration_method.SetInterpolator(sitk.sitkLinear)
-    registration_method.SetOptimizerAsGradientDescent(learningRate=0.3, numberOfIterations=100,
-                                                      convergenceMinimumValue=1e-7, convergenceWindowSize=20)
-
-    final_transform = registration_method.Execute(fixed_image, moving)
-
-    return final_transform, registration_method
-
-
 if __name__ == '__main__':
 
 
 
     ncct_dir = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/kits_ncct/unseen'
     cect_dir = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/kits23_nooverlap/images'
-    save_dir = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/kits_ncct/registered_bonesandsofttissue'
+    save_dir = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/kits_ncct/registered_nondeform'
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -145,17 +94,9 @@ if __name__ == '__main__':
         moving_resampled = sitk.Resample(moving_image, fixed_image, linear_transform, sitk.sitkLinear, -1000.0,
                                          moving_image.GetPixelID())
 
-        # apply nonlinear coregistration
-        nonlinear_transform, reg_method = nonlinear_coreg(moving_resampled,fixed_image)
-
-        print('Final metric value: {0}'.format(reg_method.GetMetricValue()))
-        print('Optimizer\'s stopping condition, {0}'.format(reg_method.GetOptimizerStopConditionDescription()))
-
-        resampled_moving = sitk.Resample(moving_resampled, fixed_image, nonlinear_transform, sitk.sitkLinear, -1000.0,
-                                         moving_resampled.GetPixelID())
 
         # save the moving image
         save_fp = os.path.join(save_dir, ncct_image)
         print(f'Saving the registered image to {save_fp}')
-        sitk.WriteImage(resampled_moving, save_fp)
+        sitk.WriteImage(moving_resampled, save_fp)
 

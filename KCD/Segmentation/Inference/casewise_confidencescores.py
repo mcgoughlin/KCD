@@ -12,11 +12,10 @@ from skimage.segmentation import watershed
 # and the optimum size threshold for determining the presence of a cancerous region
 # we will do this by finding the threshold that maximises the dice score on a dataset
 
-path = '/Users/mcgoug01/Downloads/test_data'
-cancer_infp = os.path.join(path, 'cancer_inferences')
-kidney_infp = os.path.join(path, 'kidney_inferences')
-cancer_label = os.path.join(path, 'cancer_labels')
-confidence_thresholds = np.append(np.arange(0,0.1,0.02),np.arange(0.1, 0.9, 0.1))
+cancer_infp = os.path.join('/bask/projects/p/phwq4930-renal-canc/data/seg_data/predictions_nii/masked_test_set/[2 2 2]mm_cont')
+kidney_infp = os.path.join('/bask/projects/p/phwq4930-renal-canc/data/seg_data/predictions_nii/test_set/[4 4 4]mm')
+cancer_label = os.path.join('/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/test_set/cect_labels')
+confidence_thresholds = np.append(np.arange(0,0.1,0.01),np.arange(0.1, 0.9, 0.1))
 confidence_thresholds = np.append(confidence_thresholds,np.arange(0.9,1.01,0.01))
 
 # confidence_thresholds = [0.5]
@@ -97,8 +96,6 @@ for file in [path for path in os.listdir(cancer_infp) if path.endswith('.nii.gz'
     cancer_inf = nib.load(os.path.join(cancer_infp, file))
     kidney_inf = nib.load(os.path.join(kidney_infp, file))
     cancer_lb = nib.load(os.path.join(cancer_label, file))
-    ct_im = nib.load(os.path.join('/Users/mcgoug01/Downloads/test_data/images', file))
-
 
     left_label,right_label = test_labels[file]
     # #find spacing
@@ -152,8 +149,7 @@ for file in [path for path in os.listdir(cancer_infp) if path.endswith('.nii.gz'
 
 
 import pandas
-
 # group by file, position, label - find max confidence for each
 df = pandas.DataFrame(results)
 df = df.groupby(['file','position','label']).max().reset_index()
-df.to_csv(os.path.join(path, 'casewise_confidences.csv'))
+df.to_csv(os.path.join('/bask/projects/p/phwq4930-renal-canc/data', 'casewise_confidences.csv'))

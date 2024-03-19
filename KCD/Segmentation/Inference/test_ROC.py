@@ -12,12 +12,11 @@ from skimage.segmentation import watershed
 # and the optimum size threshold for determining the presence of a cancerous region
 # we will do this by finding the threshold that maximises the dice score on a dataset
 
-path = '/Users/mcgoug01/Downloads/test_data'
-cancer_infp = os.path.join(path, 'cancer_inferences')
-kidney_infp = os.path.join(path, 'kidney_inferences')
-cancer_label = os.path.join(path, 'cancer_labels')
-confidence_thresholds = np.append(np.arange(0,0.1,0.02),np.arange(0.1, 0.9, 0.1))
-confidence_thresholds = np.append(confidence_thresholds,np.arange(0.9,0.98,0.02))
+cancer_infp = os.path.join('/bask/projects/p/phwq4930-renal-canc/data/seg_data/predictions_nii/masked_test_set/[2 2 2]mm_cont')
+kidney_infp = os.path.join('/bask/projects/p/phwq4930-renal-canc/data/seg_data/predictions_nii/test_set/[4 4 4]mm')
+cancer_label = os.path.join('/bask/projects/p/phwq4930-renal-canc/data/seg_data/raw_data/test_set/cect_labels')
+confidence_thresholds = np.append(np.arange(0,0.1,0.01),np.arange(0.1, 0.9, 0.1))
+confidence_thresholds = np.append(confidence_thresholds,np.arange(0.9,0.98,0.01))
 confidence_thresholds = np.append(confidence_thresholds,np.arange(0.98,1.005,0.005))
 
 print(confidence_thresholds)
@@ -101,7 +100,6 @@ for conf in confidence_thresholds:
         cancer_inf = nib.load(os.path.join(cancer_infp, file))
         kidney_inf = nib.load(os.path.join(kidney_infp, file))
         cancer_lb = nib.load(os.path.join(cancer_label, file))
-        ct_im = nib.load(os.path.join('/Users/mcgoug01/Downloads/test_data/images', file))
 
 
         left_label,right_label = test_labels[file]
@@ -112,11 +110,9 @@ for conf in confidence_thresholds:
         cancer_inf = torch.from_numpy(cancer_inf.get_fdata()).unsqueeze(0).unsqueeze(0)/1000
         kidney_inf = torch.from_numpy(kidney_inf.get_fdata()).unsqueeze(0).unsqueeze(0)
         cancer_lb = torch.from_numpy(cancer_lb.get_fdata()).unsqueeze(0).unsqueeze(0)
-        ct_im = torch.from_numpy(ct_im.get_fdata()).unsqueeze(0).unsqueeze(0)
         cancer_inf = torch.nn.functional.interpolate(cancer_inf, scale_factor=tuple(spacing/2), mode='trilinear').squeeze()
         kidney_inf = torch.nn.functional.interpolate(kidney_inf, scale_factor=tuple(spacing/2), mode='nearest').squeeze()
         cancer_lb = torch.nn.functional.interpolate(cancer_lb, scale_factor=tuple(spacing/2), mode='nearest').squeeze()
-        ct_im = torch.nn.functional.interpolate(ct_im, scale_factor=tuple(spacing/2), mode='trilinear').squeeze()
         # print(kidney_inf.shape)
         kidney_inf = torch.flip(kidney_inf, dims=[2])
 
@@ -207,6 +203,7 @@ for conf in confidence_thresholds:
 
 import pandas
 import matplotlib.pyplot as plt
+path = '/bask/projects/p/phwq4930-renal-canc/data'
 
 df = pandas.DataFrame(results)
 df.to_csv(os.path.join(path, 'results_400_test.csv'))
