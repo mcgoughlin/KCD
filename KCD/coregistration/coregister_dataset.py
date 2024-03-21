@@ -99,8 +99,6 @@ def nonlinear_coreg(moving,fixed,
 
 if __name__ == '__main__':
 
-
-
     ncct_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/unseen'
     cect_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits23_nooverlap/images'
     save_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/registered'
@@ -123,7 +121,9 @@ if __name__ == '__main__':
                 matching_images[ncct_image] = cect_image
 
     # order ncct images by file size low to high - time efficient to register smaller images first
-    ncct_images = sorted(ncct_images, key=lambda x: os.path.getsize(os.path.join(ncct_dir, x)))
+    # file size should be the max size between it and the corresponding cect image
+    ncct_images.sort(key=lambda x: max(os.path.getsize(os.path.join(ncct_dir, x)),
+                                       os.path.getsize(os.path.join(cect_dir, matching_images[x]))))
 
     for ncct_image in ncct_images:
         cect_image = matching_images[ncct_image]
@@ -143,10 +143,7 @@ if __name__ == '__main__':
                                                               moving_image,
                                                               sitk.Euler3DTransform(),
                                                               sitk.CenteredTransformInitializerFilter.GEOMETRY)
-        #
-        # moving_resampled = sitk.Resample(moving_image, fixed_image, initial_transform, sitk.sitkLinear, 0.0,
-        #                                  moving_image.GetPixelID())
-        #
+
         linear_transform, reg_method = linear_coreg(moving_image,fixed_image,initial_transform)
         print('Final metric value: {0}'.format(reg_method.GetMetricValue()))
         print('Optimizer\'s stopping condition, {0}'.format(reg_method.GetOptimizerStopConditionDescription()))
