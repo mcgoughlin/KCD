@@ -52,7 +52,7 @@ def nonlinear_coreg(moving,fixed,
     registration_method = sitk.ImageRegistrationMethod()
 
     # Determine the number of BSpline control points using the physical spacing we want for the control grid.
-    grid_physical_spacing = [20.0, 20.0, 20.0]  # A control point every 20mm
+    grid_physical_spacing = [10.0, 10.0, 10.0]  # A control point every 20mm
     image_physical_size = [size * spacing for size, spacing in zip(fixed_image.GetSize(), fixed_image.GetSpacing())]
     mesh_size = [int(image_size / grid_spacing + 0.5) \
                  for image_size, grid_spacing in zip(image_physical_size, grid_physical_spacing)]
@@ -72,10 +72,10 @@ def nonlinear_coreg(moving,fixed,
     if moving_mask :
         # mask image using intensity thresholding
         mmask = sitk.IntensityWindowing(moving, windowMinimum=-200, windowMaximum=300)
-        registration_method.SetMetricMovingMask( mmask>0)
+        registration_method.SetMetricMovingMask( (mmask>0) & (mmask<250))
     if fixed_mask:
         fmask = sitk.IntensityWindowing(fixed, windowMinimum=-200, windowMaximum=300)
-        registration_method.SetMetricFixedMask( fmask>0)
+        registration_method.SetMetricFixedMask( (fmask>0) & (fmask<250))
 
 
     # Multi-resolution framework.
@@ -90,7 +90,7 @@ def nonlinear_coreg(moving,fixed,
 
     registration_method.SetInterpolator(sitk.sitkLinear)
     registration_method.SetOptimizerAsGradientDescent(learningRate=1, numberOfIterations=100,
-                                                      convergenceMinimumValue=1e-7, convergenceWindowSize=10)
+                                                      convergenceMinimumValue=1e-7, convergenceWindowSize=5)
 
     final_transform = registration_method.Execute(fixed_image, moving)
 
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     ncct_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/unseen'
     cect_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits23_nooverlap/images'
-    save_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/registered'
+    save_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/registered_fine'
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -122,18 +122,18 @@ if __name__ == '__main__':
             if ncct_image[5:10] == cect_image[5:10]:
                 matching_images[ncct_image] = cect_image
 
-    # order ncct images by file size low to high - time efficient to register smaller images first
-    ncct_images = sorted(ncct_images, key=lambda x: os.path.getsize(os.path.join(ncct_dir, x)))
-
+    #find file sizes of ncct images
+    ncct_im_sizes = {}
     for ncct_image in ncct_images:
+        nc_fp = os.path.join(ncct_dir, ncct_image)
+        ncct_im_sizes[ncct_image] = os.path.getsize(nc_fp)
+
+
+    # loop through ncct images in order of lowest to highest file size
+    for ncct_image in sorted(ncct_im_sizes, key=ncct_im_sizes.get):
         cect_image = matching_images[ncct_image]
         nc_fp = os.path.join(ncct_dir, ncct_image)
         ce_fp = os.path.join(cect_dir, cect_image)
-
-        save_fp = os.path.join(save_dir, ncct_image)
-        if os.path.exists(save_fp):
-            print(f'{save_fp} already exists, skipping')
-            continue
 
         # Read the images
         fixed_image = sitk.ReadImage(ce_fp, sitk.sitkFloat32)
@@ -164,5 +164,6 @@ if __name__ == '__main__':
                                          moving_resampled.GetPixelID())
 
         # save the moving image
+        save_fp = os.path.join(save_dir, ncct_image)
         print(f'Saving the registered image to {save_fp}')
         sitk.WriteImage(resampled_moving, save_fp)
