@@ -524,6 +524,9 @@ class SegmentationPreprocessing(object):
                 spacings.append(spacing)
                 shapes.append(im.shape)
                 if lb.max() > 0:
+                    print(data_tpl['scan'])
+                    print(im.shape)
+                    print(lb.shape)
                     if self.num_additional_channels>0:
                         fg_cval = im[0][lb > 0].astype(float)
                     else:

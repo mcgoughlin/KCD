@@ -34,9 +34,9 @@ for nii_label in npy_label_list:
     spacing_mode, _ = stats.mode(np.array(label_spacing), axis=0)
     non_modal_spacing = label_spacing[np.array(label_spacing) != spacing_mode]
     non_modal_shape = np.array(label_data.shape)[np.array(label_data.shape) != shape_mode]
-
+    print(label_data.shape)
     #compute scale_factor to resize label to 4x4x4mm voxels based on the shape of the label
-    scale_factors = np.array([spacing_mode / 4 if shape == shape_mode else non_modal_spacing[0] / 4 for shape in label_data.shape])
+    scale_factors = np.array([float(spacing_mode / 4) if shape == shape_mode else float(non_modal_spacing[0] / 4) for shape in label_data.shape])
 
     #resize voxels to 4x4x4mm and dilate label by 10x10x10 voxels
     label_4 = \
@@ -67,4 +67,8 @@ for nii_label in npy_label_list:
 
     # create masked nifti image and save
     masked_nifti = nib.Nifti1Image(np.rot90(masked_image,3), affine=affine)
+
+    #reshape back into original shape
+    masked_nifti = nib.as_closest_canonical(masked_nifti)
+    print(masked_nifti.shape)
     nib.save(masked_nifti, os.path.join(save_loc, nii_label))
