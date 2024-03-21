@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     ncct_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/unseen'
     cect_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits23_nooverlap/images'
-    save_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/registered_1e6'
+    save_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/registered'
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -158,5 +158,3 @@ if __name__ == '__main__':
         save_fp = os.path.join(save_dir, ncct_image)
         print(f'Saving the registered image to {save_fp}')
         sitk.WriteImage(resampled_moving, save_fp)
-        assert False
-
