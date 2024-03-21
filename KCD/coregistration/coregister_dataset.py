@@ -122,7 +122,11 @@ if __name__ == '__main__':
             if ncct_image[5:10] == cect_image[5:10]:
                 matching_images[ncct_image] = cect_image
 
-    for ncct_image, cect_image in matching_images.items():
+    # order ncct images by file size low to high
+    ncct_images = sorted(ncct_images, key=lambda x: os.path.getsize(os.path.join(ncct_dir, x)))
+
+    for ncct_image in ncct_images:
+        cect_image = matching_images[ncct_image]
         nc_fp = os.path.join(ncct_dir, ncct_image)
         ce_fp = os.path.join(cect_dir, cect_image)
 
