@@ -1,6 +1,6 @@
 import dicom2nifti # to convert DICOM files to the NIftI format
 
-import compressed_dicom
+from KCD.utils import compressed_dicom
 
 import gc
 import os

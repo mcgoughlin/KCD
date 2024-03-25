@@ -99,9 +99,9 @@ def nonlinear_coreg(moving,fixed,
 
 if __name__ == '__main__':
 
-    ncct_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/unseen'
-    cect_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits23_nooverlap/images'
-    save_dir = '/home/wcm23/rds/hpc-work/FineTuningKITS23/raw_data/kits_ncct/registered'
+    ncct_dir = '/Users/mcgoug01/Downloads/TCIA/ncct_nii'
+    cect_dir = '/Users/mcgoug01/Downloads/TCIA/cect_nii'
+    save_dir = '/Users/mcgoug01/Downloads/TCIA/ncct_registered'
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -110,27 +110,19 @@ if __name__ == '__main__':
     # where XXXXX is the case number - matching case numbers correspond to the same patient
 
     # identify the matching ncct and cect images
-    ncct_images = [f for f in os.listdir(ncct_dir) if f.endswith('.nii.gz')]
-    cect_images = [f for f in os.listdir(cect_dir) if f.endswith('.nii.gz')]
-
-    # create a dictionary to store the matching ncct and cect images
-    matching_images = {}
-    for ncct_image in ncct_images:
-        for cect_image in cect_images:
-            if ncct_image[5:10] == cect_image[5:10]:
-                matching_images[ncct_image] = cect_image
+    images = [f for f in os.listdir(ncct_dir) if f.endswith('.nii.gz')]
 
     # order ncct images by file size low to high - time efficient to register smaller images first
     # file size should be the max size between it and the corresponding cect image
-    ncct_images.sort(key=lambda x: max(os.path.getsize(os.path.join(ncct_dir, x)),
-                                       os.path.getsize(os.path.join(cect_dir, matching_images[x]))))
+    images.sort(key=lambda x: max(os.path.getsize(os.path.join(ncct_dir, x)),
+                                       os.path.getsize(os.path.join(cect_dir, x))), reverse=False)
 
-    for ncct_image in ncct_images:
-        cect_image = matching_images[ncct_image]
-        nc_fp = os.path.join(ncct_dir, ncct_image)
-        ce_fp = os.path.join(cect_dir, cect_image)
+    for image in images:
+        nc_fp = os.path.join(ncct_dir, image)
+        ce_fp = os.path.join(cect_dir, image)
+        print('file sizes:', os.path.getsize(nc_fp)/1e6, os.path.getsize(ce_fp)/1e6)
 
-        save_fp = os.path.join(save_dir, ncct_image)
+        save_fp = os.path.join(save_dir, image)
         if os.path.exists(save_fp):
             print(f'{save_fp} already exists, skipping')
             continue
@@ -138,6 +130,7 @@ if __name__ == '__main__':
         # Read the images
         fixed_image = sitk.ReadImage(ce_fp, sitk.sitkFloat32)
         moving_image = sitk.ReadImage(nc_fp, sitk.sitkFloat32)
+
 
         initial_transform = sitk.CenteredTransformInitializer(fixed_image,
                                                               moving_image,
