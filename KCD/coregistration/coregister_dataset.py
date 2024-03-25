@@ -22,16 +22,16 @@ def linear_coreg(moving,fixed,initial_transform,
     registration_method.SetOptimizerScalesFromPhysicalShift()
 
     # Setup for the multi-resolution framework.
-    registration_method.SetShrinkFactorsPerLevel(shrinkFactors=[4,2, 1,])
+    registration_method.SetShrinkFactorsPerLevel(shrinkFactors=[4, 2, 1,])
     registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[2, 1, 0])
     registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
 
     if moving_mask :
         # mask image using intensity thresholding
-        mmask = sitk.IntensityWindowing(moving, windowMinimum=-200, windowMaximum=300)
+        mmask = sitk.IntensityWindowing(moving, windowMinimum=-900, windowMaximum=1000)
         registration_method.SetMetricMovingMask( mmask>0)
     if fixed_mask:
-        fmask = sitk.IntensityWindowing(fixed, windowMinimum=-200, windowMaximum=300)
+        fmask = sitk.IntensityWindowing(fixed, windowMinimum=-900, windowMaximum=1000)
         registration_method.SetMetricFixedMask( fmask>0)
 
     # Don't optimize in-place, we would possibly like to run this cell multiple times.
@@ -52,7 +52,7 @@ def nonlinear_coreg(moving,fixed,
     registration_method = sitk.ImageRegistrationMethod()
 
     # Determine the number of BSpline control points using the physical spacing we want for the control grid.
-    grid_physical_spacing = [20.0, 20.0, 20.0]  # A control point every 20mm
+    grid_physical_spacing = [15.0, 15.0, 15.0]  # A control point every 20mm
     image_physical_size = [size * spacing for size, spacing in zip(fixed_image.GetSize(), fixed_image.GetSpacing())]
     mesh_size = [int(image_size / grid_spacing + 0.5) \
                  for image_size, grid_spacing in zip(image_physical_size, grid_physical_spacing)]
@@ -71,10 +71,10 @@ def nonlinear_coreg(moving,fixed,
 
     if moving_mask :
         # mask image using intensity thresholding
-        mmask = sitk.IntensityWindowing(moving, windowMinimum=-200, windowMaximum=300)
+        mmask = sitk.IntensityWindowing(moving, windowMinimum=-900, windowMaximum=1000)
         registration_method.SetMetricMovingMask( mmask>0)
     if fixed_mask:
-        fmask = sitk.IntensityWindowing(fixed, windowMinimum=-200, windowMaximum=300)
+        fmask = sitk.IntensityWindowing(fixed, windowMinimum=-900, windowMaximum=1000)
         registration_method.SetMetricFixedMask( fmask>0)
 
 
