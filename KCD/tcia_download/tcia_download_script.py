@@ -6,7 +6,7 @@ collections = nbia.getCollections()
 
 CT_series_list = []
 
-save_home = '/Users/mcgoug01/Downloads/TCIA'
+save_home = '/bask/projects/p/phwq4930-renal-canc/data/TCIA'
 
 # tutorial on how to use the NBIA API: https://github.com/kirbyju/TCIA_Notebooks/blob/main/TCIA_REST_API_Downloads.ipynb
 
@@ -78,8 +78,12 @@ for coldict in collections:
                     if not os.path.exists(pat_save):
                         os.makedirs(pat_save)
                     else:continue
-                    nbia.downloadSeries(series,number=5,path=pat_save,input_type='df')
-                    CT_series_list.append(series)
+                    try:
+                        nbia.downloadSeries(series,number=5,path=pat_save,input_type='df')
+                        CT_series_list.append(series)
+                    except:
+                        print('Failed to download series: ' + str(series_desc))
+                        continue
     print()
 
 CT_all = pd.concat(CT_series_list,axis=0)
