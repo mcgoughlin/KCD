@@ -99,9 +99,9 @@ def nonlinear_coreg(moving,fixed,
 
 if __name__ == '__main__':
 
-    ncct_dir = '/Users/mcgoug01/Downloads/TCIA/ncct_nii'
-    cect_dir = '/Users/mcgoug01/Downloads/TCIA/cect_nii'
-    save_dir = '/Users/mcgoug01/Downloads/TCIA/ncct_registered'
+    ncct_dir = '/bask/projects/p/phwq4930-renal-canc/data/TCIA/ncct_nii'
+    cect_dir = '/bask/projects/p/phwq4930-renal-canc/data/TCIA/cect_nii'
+    save_dir = '/bask/projects/p/phwq4930-renal-canc/data/TCIA/ncct_registered'
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
