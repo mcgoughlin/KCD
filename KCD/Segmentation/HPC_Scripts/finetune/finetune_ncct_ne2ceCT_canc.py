@@ -19,10 +19,10 @@ fold = int(sys.argv[1])
 # preprocessed_name = '4mm_binary'
 preprocessed_name = '2mm_binary'
 # preprocessed_name='4mm_binary_test'
-pretrain_ds = str(sys.argv[2])
-ne2ceCT = str(sys.argv[3])
-model_name = '6,3x3x3,32_finetune_from_'+pretrain_ds+'_'+ne2ceCT
-# model_name = '6,3x3x3,32_finetune_from_cect'
+# pretrain_ds = str(sys.argv[2])
+# ne2ceCT = str(sys.argv[3])
+# model_name = '6,3x3x3,32_finetune_from_'+pretrain_ds+'_'+ne2ceCT
+model_name = '6,3x3x3,32_finetune_from_all_2_l125.0_l20.0_var0.1_cov10.0_5e-05lr_0.99998lg_80bs_5000ep'
 
 # model_name = 'del'
 
@@ -81,13 +81,12 @@ for vf in vfs:
     # path_to_model = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/kits23_nooverlap/2mm_alllabel/alllabel_long/fold_0/network_weights'
     # path_to_model = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/kits23_nooverlap/2mm_binary_canceronly/6,3x3x3,32_justcancer/fold_1/network_weights'
     # path_to_model = '/media/mcgoug01/Crucial X6/ovseg_test/ne2ceCT/coltea_4_legacy_outs/network_weights'
-    path_to_model = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/ne2ceCT/{}/{}/network_weights'.format(pretrain_ds,ne2ceCT)
+    # path_to_model = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/ne2ceCT/{}/{}/network_weights'.format(pretrain_ds,ne2ceCT)
 
     model = SegmentationModel(val_fold=vf,
                                         data_name=data_name,
                                         preprocessed_name=preprocessed_name,
                                         model_name=model_name,
                                         model_parameters=model_params)
-    model.network.load_state_dict(torch.load(path_to_model,map_location=dev))
     model.training.train()
-    model.eval_validation_set()
+    model.eval_validation_set(continuous=True)

@@ -183,4 +183,3 @@ if __name__ == '__main__':
         ax[1,0].imshow(ne[0, 0, 0,].cpu().detach().numpy())
         ax[1,1].imshow(ce[0, 0, 0,].cpu().detach().numpy())
         plt.show(block=True)
-

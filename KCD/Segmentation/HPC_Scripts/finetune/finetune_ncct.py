@@ -1,5 +1,5 @@
 import os
-os.environ['OV_DATA_BASE'] = "/media/mcgoug01/Crucial X6/ovseg_test/"
+os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data/"
 from KCD.Segmentation.ovseg.model.SegmentationModel import SegmentationModel
 from KCD.Segmentation.ovseg.model.model_parameters_segmentation import get_model_params_3d_res_encoder_U_Net
 import gc
@@ -7,14 +7,14 @@ import torch
 import sys
 
 
-data_name = 'large_coreg_ncct'
+data_name = 'masked_coreg_ncct'
 spacing = 2
-fold = 0
+fold = int(sys.argv[1])
 
 # preprocessed_name = '4mm_binary'
-preprocessed_name = 'large_coreg_ncct_2'
+preprocessed_name = '2mm_binary'
 # preprocessed_name='4mm_binary_test'
-model_name = '6,3x3x3,32_finetune_fromne2cect'
+model_name = '6,3x3x3,32_finetune_fromkits23_cect'
 # model_name = 'del'
 
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -28,7 +28,7 @@ patch_size = [64,64,64]
 #                                           = ((((kernel_dimension+1)//2)^depth)/2)*target_spacing/1000
 z_to_xy_ratio = 1
 larger_res_encoder = True
-n_fg_classes = 3
+n_fg_classes = 1
     
 
 
@@ -50,7 +50,7 @@ del model_params['network']['n_blocks_list']
 del model_params['network']['stochdepth_rate']
 del model_params['training']['loss_params']
 
-lr=0.0001
+lr=0.00001
 model_params['data']['folders'] = ['images', 'labels']
 model_params['data']['keys'] = ['image', 'label']
 model_params['training']['num_epochs'] = 100
@@ -58,20 +58,21 @@ model_params['training']['opt_name'] = 'ADAM'
 model_params['training']['opt_params'] = {'lr': lr,
                                             'betas': (0.95, 0.9),
                                             'eps': 1e-08}
-model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.0005}
+model_params['training']['lr_params'] = {'n_warmup_epochs': 15, 'lr_max': 0.0001}
 model_params['data']['trn_dl_params']['epoch_len']=250
 model_params['data']['trn_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['data']['val_dl_params']['padded_patch_size']=[2*patch_size[0]]*3
 model_params['training']['lr_schedule'] = 'lin_ascent_log_decay'
 model_params['training']['lr_exponent'] = 3
-model_params['data']['trn_dl_params']['batch_size']=12
+model_params['data']['trn_dl_params']['batch_size']=32
 model_params['data']['val_dl_params']['epoch_len']=50
 
 
 for vf in vfs:
-    # path_to_model = '/media/mcgoug01/Crucial X6/seg_model/2mm_alllabel/network_weights'
+    path_to_model = '/bask/projects/p/phwq4930-renal-canc/data/seg_data/trained_models/kits23_nooverlap/2mm_binary_canceronly/6,3x3x3,32_justcancer/fold_0/network_weights'
     # path_to_model = '/media/mcgoug01/Crucial X6/ovseg_test/ne2ceCT/coltea_4_legacy_outs/network_weights'
-    path_to_model = '/media/mcgoug01/Crucial X6/ovseg_test/ne2ceCT/small_coreg_alllabel_2_logitsonly/network_weights'
+    # path_to_model = '/media/mcgoug01/Crucial X6/ovseg_test/ne2ceCT/small_coreg_alllabel_2_logitsonly/network_weights'
+
     model = SegmentationModel(val_fold=vf,
                                 data_name=data_name,
                                 preprocessed_name=preprocessed_name, 
@@ -80,4 +81,4 @@ for vf in vfs:
     model.network.load_state_dict(torch.load(path_to_model,map_location=dev))
 
     model.training.train()
-    model.eval_validation_set()
+    model.eval_validation_set(continuous=True)
