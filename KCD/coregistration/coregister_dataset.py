@@ -52,7 +52,7 @@ def nonlinear_coreg(moving,fixed,
     registration_method = sitk.ImageRegistrationMethod()
 
     # Determine the number of BSpline control points using the physical spacing we want for the control grid.
-    grid_physical_spacing = [15.0, 15.0, 15.0]  # A control point every 20mm
+    grid_physical_spacing = [20., 20., 20.]  # A control point every 20mm
     image_physical_size = [size * spacing for size, spacing in zip(fixed_image.GetSize(), fixed_image.GetSpacing())]
     mesh_size = [int(image_size / grid_spacing + 0.5) \
                  for image_size, grid_spacing in zip(image_physical_size, grid_physical_spacing)]
@@ -99,9 +99,9 @@ def nonlinear_coreg(moving,fixed,
 
 if __name__ == '__main__':
 
-    ncct_dir = '/bask/projects/p/phwq4930-renal-canc/data/TCIA/ncct_nii'
-    cect_dir = '/bask/projects/p/phwq4930-renal-canc/data/TCIA/cect_nii'
-    save_dir = '/bask/projects/p/phwq4930-renal-canc/data/TCIA/ncct_registered'
+    ncct_dir = '/home/wcm23/rds/hpc-work/TCIA/ncct_nii'
+    cect_dir = '/home/wcm23/rds/hpc-work/TCIA/cect_nii'
+    save_dir = '/home/wcm23/rds/hpc-work/TCIA/ncct_registered'
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
