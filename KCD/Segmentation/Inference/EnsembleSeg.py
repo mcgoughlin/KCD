@@ -310,6 +310,8 @@ class Ensemble_Seg(nn.Module):
                 nii_img.header['pixdim'][1:4] = data_tpl['orig_spacing']
             else:
                 nii_img.header['pixdim'][1:4] = data_tpl['spacing']
+
+        nib.as_closest_canonical(nii_img)
         nib.save(nii_img, out_file)
         return img.affine
 
@@ -356,7 +358,7 @@ class Ensemble_Seg(nn.Module):
                 nii_img.header['pixdim'][1:4] = data_tpl['orig_spacing']
             else:
                 nii_img.header['pixdim'][1:4] = data_tpl['spacing']
-
+        nib.as_closest_canonical(nii_img)
         nib.save(nii_img, out_file)
         return img.affine
 
@@ -396,7 +398,7 @@ class Ensemble_Seg(nn.Module):
                 nii_img.header['pixdim'][1:4] = data_tpl['orig_spacing']
             else:
                 nii_img.header['pixdim'][1:4] = data_tpl['spacing']
-
+        nib.as_closest_canonical(nii_img)
         nib.save(nii_img, out_file)
         return img.affine
 

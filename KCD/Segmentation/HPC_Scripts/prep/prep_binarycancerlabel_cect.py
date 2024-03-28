@@ -3,9 +3,9 @@ os.environ['OV_DATA_BASE'] = "/bask/projects/p/phwq4930-renal-canc/data/seg_data
 from KCD.Segmentation.ovseg.preprocessing.SegmentationPreprocessing import SegmentationPreprocessing
 
 data_name = 'masked_kits23_nooverlap'
-spacing = 2
+spacing = 1
 
-preprocessed_name = '2mm_binary_canceronly'
+preprocessed_name = '1mm_binary_canceronly'
 
 lb_classes = [2]
 target_spacing=[spacing]*3

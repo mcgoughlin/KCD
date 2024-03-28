@@ -22,11 +22,17 @@ if not os.path.exists(save_loc):
 
 #we want to dilate label 40x40x40mm, so 10x10x10 voxels
 for nii_label in npy_label_list:
+# for nii_label in nii_image_list:
     print(nii_label)
     if '.DS_Store' in nii_label:
         continue
-    image = nib.load(os.path.join(nii_image_loc, nii_label))
-    label = nib.load(os.path.join(nii_label_loc, nii_label))
+    try:
+        image = nib.load(os.path.join(nii_image_loc, nii_label))
+        label = nib.load(os.path.join(nii_label_loc, nii_label))
+    except Exception as e:
+        print('Error loading image or label for {}'.format(nii_label))
+        print(e)
+        continue
     label_data = amu.nifti_2_correctarr(label)
     label_spacing = np.abs(image.header['pixdim'][1:4])
     #find mode of label shape
